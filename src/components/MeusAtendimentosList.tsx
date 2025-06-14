@@ -14,12 +14,11 @@ import { toast } from 'sonner';
 export const MeusAtendimentosList: React.FC = () => {
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
   const [loading, setLoading] = useState(true);
-  const [atendenteNome, setAtendenteNome] = useState<string>('');
-  const { user, signOut } = useAuth();
+  const { user, userProfile, signOut } = useAuth();
   const navigate = useNavigate();
 
   const fetchMeusAtendimentos = async () => {
-    if (!user) return;
+    if (!user || !userProfile) return;
 
     try {
       setLoading(true);
@@ -36,8 +35,6 @@ export const MeusAtendimentosList: React.FC = () => {
         toast.error('Erro ao carregar dados do atendente');
         return;
       }
-
-      setAtendenteNome(atendenteData.nome_atendente);
 
       // Buscar atendimentos atribuídos ao atendente logado
       const { data: atendimentosData, error: atendimentosError } = await supabase
@@ -57,14 +54,14 @@ export const MeusAtendimentosList: React.FC = () => {
       }
 
       // Mapear dados para o formato esperado
-      const atendimentosMapeados = atendimentosData.map(atendimento => ({
+      const atendimentosMapeados: Atendimento[] = atendimentosData.map(atendimento => ({
         atendimento_id: atendimento.atendimento_id,
         tutor_id: atendimento.tutor_id,
         pet_id: atendimento.pet_id,
         data_inicio: atendimento.data_inicio,
-        status: atendimento.status,
-        status_atendimento: atendimento.status_atendimento,
-        tipo_atendimento: atendimento.tipo_atendimento,
+        status: atendimento.status as 'Em andamento' | 'Sugestão enviada' | 'Finalizado',
+        status_atendimento: atendimento.status_atendimento as 'BOT_ATIVO' | 'ATRIBUIDO_HUMANO' | 'FINALIZADO',
+        tipo_atendimento: atendimento.tipo_atendimento as 'Imediato' | 'Preventivo',
         dados_coletados: atendimento.dados_coletados,
         sugestoes_geradas: atendimento.sugestoes_geradas,
         atendente_responsavel_id: atendimento.atendente_responsavel_id,
@@ -74,7 +71,7 @@ export const MeusAtendimentosList: React.FC = () => {
           nome_tutor: atendimento.tutores.nome_tutor,
           profissao: atendimento.tutores.profissao,
           endereco: atendimento.tutores.endereco,
-          perfil_calculado: atendimento.tutores.perfil_calculado
+          perfil_calculado: atendimento.tutores.perfil_calculado as 'Padrão' | 'Intermediário' | 'Luxo'
         } : undefined,
         pet: atendimento.pets ? {
           pet_id: atendimento.pets.pet_id,
@@ -95,7 +92,7 @@ export const MeusAtendimentosList: React.FC = () => {
 
   useEffect(() => {
     fetchMeusAtendimentos();
-  }, [user]);
+  }, [user, userProfile]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -148,8 +145,13 @@ export const MeusAtendimentosList: React.FC = () => {
             Meus Atendimentos
           </h1>
           <p className="text-gray-600">
-            Olá, {atendenteNome}! Aqui estão os atendimentos atribuídos a você.
+            Olá, {userProfile?.nome}! Aqui estão os atendimentos atribuídos a você.
           </p>
+          <div className="mt-2">
+            <Badge variant="outline" className="bg-purple-100 text-purple-800">
+              {userProfile?.role === 'atendente' ? 'Atendente' : 'Administrador'}
+            </Badge>
+          </div>
         </div>
         <div className="flex space-x-2">
           <Button onClick={fetchMeusAtendimentos} variant="outline">

@@ -36,7 +36,7 @@ const App = () => (
             <Route 
               path="/meus-atendimentos" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireAtendente={true}>
                   <MeusAtendimentos />
                 </ProtectedRoute>
               } 

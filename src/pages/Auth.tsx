@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Heart, User, Lock, Mail } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Heart, User, Lock, Mail, UserCheck } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
@@ -14,15 +15,20 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nomeAtendente, setNomeAtendente] = useState('');
+  const [role, setRole] = useState<'atendente' | 'admin'>('atendente');
   const [loading, setLoading] = useState(false);
-  const { user, signIn, signUp } = useAuth();
+  const { user, userProfile, signIn, signUp, isAtendente } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate('/meus-atendimentos');
+    if (user && userProfile) {
+      if (isAtendente()) {
+        navigate('/meus-atendimentos');
+      } else {
+        navigate('/');
+      }
     }
-  }, [user, navigate]);
+  }, [user, userProfile, navigate, isAtendente]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +45,6 @@ const Auth = () => {
         }
       } else {
         toast.success('Login realizado com sucesso!');
-        navigate('/meus-atendimentos');
       }
     } catch (error) {
       toast.error('Erro inesperado. Tente novamente.');
@@ -53,7 +58,7 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await signUp(email, password, nomeAtendente);
+      const { error } = await signUp(email, password, nomeAtendente, role);
       
       if (error) {
         if (error.message.includes('already registered')) {
@@ -62,7 +67,7 @@ const Auth = () => {
           toast.error(`Erro no cadastro: ${error.message}`);
         }
       } else {
-        toast.success('Cadastro realizado com sucesso! Você já pode fazer login.');
+        toast.success('Cadastro realizado com sucesso! Verifique seu email para confirmar a conta.');
       }
     } catch (error) {
       toast.error('Erro inesperado. Tente novamente.');
@@ -81,7 +86,7 @@ const Auth = () => {
           <CardTitle className="text-2xl text-purple-primary">
             Pet Memorial
           </CardTitle>
-          <p className="text-gray-600">Acesse sua conta de atendente</p>
+          <p className="text-gray-600">Sistema de atendimento</p>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
@@ -149,6 +154,22 @@ const Auth = () => {
                       className="pl-10"
                       required
                     />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="role-signup">Tipo de Conta</Label>
+                  <div className="relative">
+                    <UserCheck className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
+                    <Select value={role} onValueChange={(value: 'atendente' | 'admin') => setRole(value)}>
+                      <SelectTrigger className="pl-10">
+                        <SelectValue placeholder="Selecione o tipo de conta" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="atendente">Atendente</SelectItem>
+                        <SelectItem value="admin">Administrador</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 
