@@ -1,3 +1,4 @@
+
 import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento, Pet, Atendente, AtribuirAtendimentoRequest, StatusAtendimentoResponse } from '@/types';
 import { mockItensDeVenda, mockPlanos, mockTutores, mockAtendimentos, mockPets, mockAtendentes } from './mockData';
 
@@ -338,15 +339,95 @@ export class PetMemorialAPI {
 
   static async getDashboardStats() {
     await delay(300);
-    return {
-      atendimentosHoje: mockAtendimentos.filter(a => {
-        const hoje = new Date().toDateString();
+    
+    const hoje = new Date();
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const ultimaSemana = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    // Métricas Principais
+    const totalAtendimentos = mockAtendimentos.length;
+    const atendimentosHoje = mockAtendimentos.filter(a => {
+      const dataAtendimento = new Date(a.data_inicio).toDateString();
+      return hoje.toDateString() === dataAtendimento;
+    }).length;
+    
+    const atendimentosMes = mockAtendimentos.filter(a => {
+      const dataAtendimento = new Date(a.data_inicio);
+      return dataAtendimento >= inicioMes;
+    }).length;
+    
+    const atendimentosFinalizados = mockAtendimentos.filter(a => a.status === 'Finalizado').length;
+    const taxaConversao = totalAtendimentos > 0 ? ((atendimentosFinalizados / totalAtendimentos) * 100).toFixed(1) : '0';
+    
+    // Simular ticket médio baseado nos preços dos pacotes
+    const ticketMedio = 850.50;
+    
+    // Atendimentos por dia da semana (últimos 7 dias)
+    const atendimentosPorDia = [];
+    const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    
+    for (let i = 6; i >= 0; i--) {
+      const data = new Date(hoje.getTime() - i * 24 * 60 * 60 * 1000);
+      const dia = diasSemana[data.getDay()];
+      const count = mockAtendimentos.filter(a => {
         const dataAtendimento = new Date(a.data_inicio).toDateString();
-        return hoje === dataAtendimento;
-      }).length,
-      totalClientes: mockTutores.length,
-      clicksVenda: 47, // Simulando clicks em links de venda
-      atendimentosRecentes: mockAtendimentos.slice(-5).reverse()
+        return data.toDateString() === dataAtendimento;
+      }).length + Math.floor(Math.random() * 5); // Adiciona dados simulados
+      
+      atendimentosPorDia.push({ day: dia, count });
+    }
+    
+    // Produtos/Planos mais vendidos
+    const produtosMaisVendidos = [
+      { name: 'Pacote Homenagem Superior', count: 12, percentage: 35 },
+      { name: 'Plano Ouro', count: 9, percentage: 27 },
+      { name: 'Pacote Homenagem Completa', count: 7, percentage: 20 },
+      { name: 'Plano Prata', count: 4, percentage: 12 },
+      { name: 'Plano Bronze', count: 2, percentage: 6 }
+    ];
+    
+    // Performance por atendente
+    const performanceAtendentes = mockAtendentes.map(atendente => {
+      const atendimentosAtribuidos = mockAtendimentos.filter(a => 
+        a.atendente_responsavel_id === atendente.atendente_id
+      ).length + Math.floor(Math.random() * 15); // Dados simulados
+      
+      const atendimentosConcluidos = Math.floor(atendimentosAtribuidos * 0.6); // 60% de conclusão
+      const taxaConversaoAtendente = atendimentosAtribuidos > 0 
+        ? ((atendimentosConcluidos / atendimentosAtribuidos) * 100).toFixed(1)
+        : '0';
+      
+      return {
+        nome: atendente.nome_atendente,
+        atribuidos: atendimentosAtribuidos,
+        concluidos: atendimentosConcluidos,
+        taxaConversao: taxaConversaoAtendente,
+        status: atendente.status_disponibilidade
+      };
+    });
+    
+    // Distribuição por tipo de atendimento
+    const distribuicaoTipos = [
+      { tipo: 'Imediato', count: 15, percentage: 65 },
+      { tipo: 'Preventivo', count: 8, percentage: 35 }
+    ];
+    
+    return {
+      summary: {
+        totalAtendimentos,
+        atendimentosHoje,
+        atendimentosMes,
+        taxaConversao: `${taxaConversao}%`,
+        ticketMedio
+      },
+      charts: {
+        atendimentosPorDia,
+        produtosMaisVendidos,
+        performanceAtendentes,
+        distribuicaoTipos
+      },
+      atendimentosRecentes: mockAtendimentos.slice(-5).reverse(),
+      clicksVenda: 47 // Mantendo compatibilidade com o dashboard existente
     };
   }
 }
