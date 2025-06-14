@@ -30,18 +30,27 @@ export interface Tutor {
   perfil_calculado: 'Padrão' | 'Intermediário' | 'Luxo';
 }
 
+export interface Atendente {
+  atendente_id: number;
+  nome_atendente: string;
+  whatsapp_atendente: string;
+  status_disponibilidade: 'Online' | 'Offline';
+}
+
 export interface Atendimento {
   atendimento_id: number;
   tutor_id: number;
   pet_id: number;
   data_inicio: string;
   status: 'Em andamento' | 'Sugestão enviada' | 'Finalizado';
-  status_atendimento: 'BOT_ATIVO' | 'HUMANO_ASSUMIU' | 'FINALIZADO';
+  status_atendimento: 'BOT_ATIVO' | 'ATRIBUIDO_HUMANO' | 'FINALIZADO';
   tipo_atendimento: 'Imediato' | 'Preventivo';
   dados_coletados: any;
   sugestoes_geradas: any;
+  atendente_responsavel_id?: number;
   tutor?: Tutor;
   pet?: Pet;
+  atendente?: Atendente;
 }
 
 export interface RecomendacaoRequest {
@@ -69,4 +78,8 @@ export interface RecomendacaoResponse {
     descricao: string;
     preco?: string;
   }[];
+}
+
+export interface AtribuirAtendimentoRequest {
+  atendente_id: number;
 }

@@ -1,5 +1,5 @@
 
-import { Plano, ItemDeVenda, Tutor, Atendimento, Pet } from '@/types';
+import { Plano, ItemDeVenda, Tutor, Atendimento, Pet, Atendente } from '@/types';
 
 export const mockPlanos: Plano[] = [
   {
@@ -85,6 +85,27 @@ export const mockPets: Pet[] = [
     tutor_id: 2,
     nome_pet: "Luna",
     idade_pet: 8
+  }
+];
+
+export const mockAtendentes: Atendente[] = [
+  {
+    atendente_id: 1,
+    nome_atendente: "Ana Paula",
+    whatsapp_atendente: "5538999991111",
+    status_disponibilidade: "Online"
+  },
+  {
+    atendente_id: 2,
+    nome_atendente: "Carlos Santos",
+    whatsapp_atendente: "5538999992222",
+    status_disponibilidade: "Online"
+  },
+  {
+    atendente_id: 3,
+    nome_atendente: "Lucia Ferreira",
+    whatsapp_atendente: "5538999993333",
+    status_disponibilidade: "Offline"
   }
 ];
 

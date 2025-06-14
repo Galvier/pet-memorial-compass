@@ -1,6 +1,5 @@
-
-import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento, Pet } from '@/types';
-import { mockItensDeVenda, mockPlanos, mockTutores, mockAtendimentos, mockPets } from './mockData';
+import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento, Pet, Atendente, AtribuirAtendimentoRequest } from '@/types';
+import { mockItensDeVenda, mockPlanos, mockTutores, mockAtendimentos, mockPets, mockAtendentes } from './mockData';
 
 // Simula delay de API
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -125,7 +124,7 @@ export class PetMemorialAPI {
     };
   }
 
-  // Novos métodos para controle de atendimento
+  // Métodos para controle de atendimento
   static async assumirAtendimento(atendimentoId: number): Promise<boolean> {
     await delay(300);
     
@@ -134,8 +133,34 @@ export class PetMemorialAPI {
       throw new Error('Atendimento não encontrado');
     }
     
-    atendimento.status_atendimento = 'HUMANO_ASSUMIU';
+    atendimento.status_atendimento = 'ATRIBUIDO_HUMANO';
     console.log('👤 Atendimento assumido por humano:', atendimentoId);
+    
+    return true;
+  }
+
+  static async atribuirAtendimento(atendimentoId: number, request: AtribuirAtendimentoRequest): Promise<boolean> {
+    await delay(500);
+    
+    const atendimento = mockAtendimentos.find(a => a.atendimento_id === atendimentoId);
+    if (!atendimento) {
+      throw new Error('Atendimento não encontrado');
+    }
+
+    const atendente = mockAtendentes.find(a => a.atendente_id === request.atendente_id);
+    if (!atendente) {
+      throw new Error('Atendente não encontrado');
+    }
+
+    atendimento.atendente_responsavel_id = request.atendente_id;
+    atendimento.status_atendimento = 'ATRIBUIDO_HUMANO';
+    atendimento.atendente = atendente;
+    
+    console.log('📋 Atendimento atribuído ao atendente:', atendente.nome_atendente);
+    
+    // Simulando notificação via webhook/WhatsApp
+    console.log(`📲 Notificação enviada para ${atendente.whatsapp_atendente}:`, 
+      `Olá, ${atendente.nome_atendente}. Um novo atendimento foi atribuído a você.\n\nCliente: ${atendimento.tutor?.nome_tutor}\nPet: ${atendimento.pet?.nome_pet}\n\nPor favor, acesse o painel para assumir a conversa.`);
     
     return true;
   }
@@ -156,6 +181,55 @@ export class PetMemorialAPI {
     }
     
     return { status_atendimento: atendimento.status_atendimento };
+  }
+
+  // CRUD Operations para Atendentes
+  static async getAtendentes(): Promise<Atendente[]> {
+    await delay(500);
+    return [...mockAtendentes];
+  }
+
+  static async getAtendentesOnline(): Promise<Atendente[]> {
+    await delay(300);
+    return mockAtendentes.filter(a => a.status_disponibilidade === 'Online');
+  }
+
+  static async createAtendente(atendente: Omit<Atendente, 'atendente_id'>): Promise<Atendente> {
+    await delay(500);
+    const newAtendente = {
+      ...atendente,
+      atendente_id: Math.max(...mockAtendentes.map(a => a.atendente_id)) + 1
+    };
+    mockAtendentes.push(newAtendente);
+    return newAtendente;
+  }
+
+  static async updateAtendente(atendente: Atendente): Promise<Atendente> {
+    await delay(500);
+    const index = mockAtendentes.findIndex(a => a.atendente_id === atendente.atendente_id);
+    if (index !== -1) {
+      mockAtendentes[index] = atendente;
+    }
+    return atendente;
+  }
+
+  static async deleteAtendente(id: number): Promise<void> {
+    await delay(500);
+    const index = mockAtendentes.findIndex(a => a.atendente_id === id);
+    if (index !== -1) {
+      mockAtendentes.splice(index, 1);
+    }
+  }
+
+  static async toggleAtendenteStatus(id: number): Promise<Atendente> {
+    await delay(300);
+    const atendente = mockAtendentes.find(a => a.atendente_id === id);
+    if (!atendente) {
+      throw new Error('Atendente não encontrado');
+    }
+    
+    atendente.status_disponibilidade = atendente.status_disponibilidade === 'Online' ? 'Offline' : 'Online';
+    return atendente;
   }
 
   // CRUD Operations para Planos
@@ -242,7 +316,9 @@ export class PetMemorialAPI {
     return mockAtendimentos.map(atendimento => ({
       ...atendimento,
       tutor: mockTutores.find(t => t.tutor_id === atendimento.tutor_id),
-      pet: mockPets.find(p => p.pet_id === atendimento.pet_id)
+      pet: mockPets.find(p => p.pet_id === atendimento.pet_id),
+      atendente: atendimento.atendente_responsavel_id ? 
+        mockAtendentes.find(a => a.atendente_id === atendimento.atendente_responsavel_id) : undefined
     }));
   }
 
@@ -254,7 +330,9 @@ export class PetMemorialAPI {
     return {
       ...atendimento,
       tutor: mockTutores.find(t => t.tutor_id === atendimento.tutor_id),
-      pet: mockPets.find(p => p.pet_id === atendimento.pet_id)
+      pet: mockPets.find(p => p.pet_id === atendimento.pet_id),
+      atendente: atendimento.atendente_responsavel_id ? 
+        mockAtendentes.find(a => a.atendente_id === atendimento.atendente_responsavel_id) : undefined
     };
   }
 
