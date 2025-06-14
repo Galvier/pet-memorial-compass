@@ -1,6 +1,6 @@
-
 import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento, Pet, Atendente, AtribuirAtendimentoRequest, StatusAtendimentoResponse } from '@/types';
 import { mockItensDeVenda, mockPlanos, mockTutores, mockAtendimentos, mockPets, mockAtendentes } from './mockData';
+import { NotificationService } from '@/services/NotificationService';
 
 // Simula delay de API
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -166,7 +166,7 @@ export class PetMemorialAPI {
     return true;
   }
 
-  // Nova função: Lógica de Round-Robin para atribuição automática
+  // Nova função: Lógica de Round-Robin para atribuição automática COM NOTIFICAÇÃO
   static async solicitarAtendimentoHumano(atendimentoId: number): Promise<{message: string, atendente_atribuido: string}> {
     await delay(800);
     
@@ -218,9 +218,29 @@ export class PetMemorialAPI {
     atendimento.status_atendimento = 'ATRIBUIDO_HUMANO';
     atendimento.atendente = atendenteEscolhido.atendente;
 
-    // Passo 6: Simular notificação automática
-    console.log(`🔔 Notificação automática enviada para ${atendenteEscolhido.atendente.whatsapp_atendente}:`, 
-      `🤖 ATRIBUIÇÃO AUTOMÁTICA\n\nOlá, ${atendenteEscolhido.atendente.nome_atendente}!\n\nUm cliente solicitou atendimento humano e você foi automaticamente selecionado.\n\nCliente: ${atendimento.tutor?.nome_tutor}\nPet: ${atendimento.pet?.nome_pet}\nTipo: ${atendimento.tipo_atendimento}\n\n⚡ Por favor, assuma a conversa o mais rápido possível!`);
+    // Passo 6: NOVA FUNCIONALIDADE - Enviar notificação automática via NotificationService
+    if (atendimento.tutor) {
+      try {
+        const notificationResult = await NotificationService.notifyAutomaticAssignment(
+          atendenteEscolhido.atendente,
+          atendimento.tutor,
+          atendimentoId,
+          atendimento.tipo_atendimento
+        );
+
+        if (notificationResult.success) {
+          console.log('🔔 Notificação automática enviada com sucesso!');
+        } else {
+          console.warn('⚠️ Falha na notificação:', notificationResult.error);
+        }
+      } catch (error) {
+        console.error('❌ Erro crítico na notificação:', error);
+        // Não falha a atribuição por causa da notificação
+      }
+    }
+
+    // Passo 7: Log da notificação (mantendo compatibilidade)
+    console.log(`🔔 Notificação automática processada para ${atendenteEscolhido.atendente.whatsapp_atendente}`);
     
     return {
       message: `Atendimento atribuído automaticamente via Round-Robin para ${atendenteEscolhido.atendente.nome_atendente}`,
