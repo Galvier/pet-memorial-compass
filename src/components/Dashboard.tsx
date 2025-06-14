@@ -65,61 +65,61 @@ export const Dashboard: React.FC = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-yellow-primary/60 bg-yellow-primary/5">
+        <Card className="border-l-4 border-purple-primary bg-white hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">
+            <CardTitle className="text-sm font-medium text-gray-600">
               Atendimentos Hoje
             </CardTitle>
-            <CalendarDays className="h-4 w-4 text-yellow-primary/80" />
+            <CalendarDays className="h-5 w-5 text-purple-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-primary">{stats.atendimentosHoje}</div>
-            <p className="text-xs text-gray-500">
+            <div className="text-3xl font-bold text-purple-primary">{stats.atendimentosHoje}</div>
+            <p className="text-xs text-green-600 font-medium">
               +20% desde ontem
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-purple-primary/60 bg-purple-primary/5">
+        <Card className="border-l-4 border-purple-primary/60 bg-white hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">
+            <CardTitle className="text-sm font-medium text-gray-600">
               Total de Planos
             </CardTitle>
-            <Shield className="h-4 w-4 text-purple-primary/80" />
+            <Shield className="h-5 w-5 text-purple-primary/70" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-primary">{stats.totalPlanos}</div>
+            <div className="text-3xl font-bold text-purple-primary">{stats.totalPlanos}</div>
             <p className="text-xs text-gray-500">
               Bronze, Prata e Ouro
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-purple-primary/40 bg-gray-50">
+        <Card className="border-l-4 border-gray-300 bg-white hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">
+            <CardTitle className="text-sm font-medium text-gray-600">
               Itens de Venda
             </CardTitle>
-            <Package className="h-4 w-4 text-purple-primary/70" />
+            <Package className="h-5 w-5 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-primary">{stats.totalItens}</div>
+            <div className="text-3xl font-bold text-gray-700">{stats.totalItens}</div>
             <p className="text-xs text-gray-500">
               Cremação, urnas e acessórios
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-yellow-primary/40 bg-gray-50">
+        <Card className="border-l-4 border-gray-300 bg-white hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">
+            <CardTitle className="text-sm font-medium text-gray-600">
               Taxa de Conversão
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-yellow-primary/80" />
+            <TrendingUp className="h-5 w-5 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-primary">78%</div>
-            <p className="text-xs text-gray-500">
+            <div className="text-3xl font-bold text-gray-700">78%</div>
+            <p className="text-xs text-green-600 font-medium">
               +5% desde a semana passada
             </p>
           </CardContent>
@@ -129,7 +129,7 @@ export const Dashboard: React.FC = () => {
       {/* Charts and Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Chart */}
-        <Card className="bg-white border-gray-200">
+        <Card className="bg-white border-gray-200 hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-purple-primary">Atendimentos da Semana</CardTitle>
           </CardHeader>
@@ -137,24 +137,29 @@ export const Dashboard: React.FC = () => {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                <XAxis dataKey="name" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Bar dataKey="atendimentos" fill="rgb(239, 215, 3)" opacity={0.8} />
+                <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
+                <YAxis stroke="#6b7280" fontSize={12} />
+                <Bar 
+                  dataKey="atendimentos" 
+                  fill="rgb(85, 12, 116)" 
+                  opacity={0.8}
+                  radius={[4, 4, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
         {/* Recent Activity */}
-        <Card className="bg-white border-gray-200">
+        <Card className="bg-white border-gray-200 hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-purple-primary">Atendimentos Recentes</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {stats.atendimentosRecentes.slice(0, 5).map((atendimento: any) => (
-                <div key={atendimento.atendimento_id} className="flex items-center space-x-4 p-3 rounded-lg bg-gray-50 hover:bg-purple-primary/5 transition-colors">
-                  <div className="w-2 h-2 bg-yellow-primary/80 rounded-full"></div>
+                <div key={atendimento.atendimento_id} className="flex items-center space-x-4 p-3 rounded-lg bg-gray-50 hover:bg-purple-primary/5 transition-colors border border-gray-100">
+                  <div className="w-2 h-2 bg-purple-primary rounded-full"></div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-purple-primary truncate">
                       {atendimento.tutor?.nome_tutor}
