@@ -173,10 +173,10 @@ export const PlanosList: React.FC = () => {
       )}
 
       <PlanoDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        isOpen={dialogOpen}
+        onClose={() => setDialogOpen(false)}
         plano={editingPlano}
-        onSave={handleSave}
+        onSubmit={handleSave}
       />
     </div>
   );
