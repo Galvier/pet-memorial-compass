@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { CalendarDays, Users, MousePointer, TrendingUp, DollarSign, Target, Clock, Award } from 'lucide-react';
-import { PetMemorialAPI } from '@/lib/api';
+import { getDashboardAnalytics } from '@/api/analytics';
+import { AdvancedMetrics } from './AdvancedMetrics';
+import { InsightsPanel } from './InsightsPanel';
 
 const COLORS = ['#550c74', '#7c2d9e', '#a855f7', '#c084fc', '#ddd6fe'];
 
@@ -15,7 +17,10 @@ export const Dashboard: React.FC = () => {
       atendimentosHoje: 0,
       atendimentosMes: 0,
       taxaConversao: '0%',
-      ticketMedio: 0
+      ticketMedio: 0,
+      tempoMedioAtendimento: '0min',
+      satisfacaoCliente: '0/5',
+      atendimentosEmAndamento: 0
     },
     charts: {
       atendimentosPorDia: [],
@@ -23,16 +28,24 @@ export const Dashboard: React.FC = () => {
       performanceAtendentes: [],
       distribuicaoTipos: []
     },
-    atendimentosRecentes: [],
-    clicksVenda: 0
+    insights: {
+      melhorAtendente: 'N/A',
+      picoAtendimento: 'N/A',
+      produtoDestaque: 'N/A',
+      recomendacoes: []
+    },
+    atendimentosRecentes: []
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const data = await PetMemorialAPI.getDashboardStats();
-        setDashboardData(data);
+        const data = await getDashboardAnalytics();
+        setDashboardData({
+          ...data,
+          atendimentosRecentes: [] // Manter vazio por agora
+        });
       } catch (error) {
         console.error('Erro ao carregar dados do dashboard:', error);
       } finally {
@@ -60,7 +73,7 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  const { summary, charts } = dashboardData;
+  const { summary, charts, insights } = dashboardData;
 
   return (
     <div className="space-y-4 lg:space-y-6">
@@ -134,6 +147,9 @@ export const Dashboard: React.FC = () => {
         </Card>
       </div>
 
+      {/* Métricas Avançadas */}
+      <AdvancedMetrics analytics={{ summary, insights }} />
+
       {/* Gráficos Principais */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
         {/* Atendimentos por Dia */}
@@ -188,88 +204,60 @@ export const Dashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Performance da Equipe e Atendimentos Recentes */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
-        {/* Performance da Equipe */}
-        <Card className="bg-white border-gray-200 hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg lg:text-xl text-purple-primary flex items-center gap-2">
-              <Award className="h-5 w-5" />
-              Performance da Equipe
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Atendente</TableHead>
-                  <TableHead className="text-center">Atribuídos</TableHead>
-                  <TableHead className="text-center">Concluídos</TableHead>
-                  <TableHead className="text-center">Taxa</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
+      {/* Performance da Equipe */}
+      <Card className="bg-white border-gray-200 hover:shadow-md transition-shadow">
+        <CardHeader>
+          <CardTitle className="text-lg lg:text-xl text-purple-primary flex items-center gap-2">
+            <Award className="h-5 w-5" />
+            Performance da Equipe
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Atendente</TableHead>
+                <TableHead className="text-center">Atribuídos</TableHead>
+                <TableHead className="text-center">Concluídos</TableHead>
+                <TableHead className="text-center">Taxa</TableHead>
+                <TableHead className="text-center">Eficiência</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {charts.performanceAtendentes.map((atendente, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{atendente.nome}</TableCell>
+                  <TableCell className="text-center">{atendente.atribuidos}</TableCell>
+                  <TableCell className="text-center">{atendente.concluidos}</TableCell>
+                  <TableCell className="text-center">
+                    <span className={`font-medium ${parseFloat(atendente.taxaConversao) > 50 ? 'text-green-600' : 'text-orange-600'}`}>
+                      {atendente.taxaConversao}%
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="text-purple-600 font-medium">
+                      {atendente.eficiencia}%
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      atendente.status === 'Online' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {atendente.status}
+                    </span>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {charts.performanceAtendentes.map((atendente, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{atendente.nome}</TableCell>
-                    <TableCell className="text-center">{atendente.atribuidos}</TableCell>
-                    <TableCell className="text-center">{atendente.concluidos}</TableCell>
-                    <TableCell className="text-center">
-                      <span className={`font-medium ${parseFloat(atendente.taxaConversao) > 50 ? 'text-green-600' : 'text-orange-600'}`}>
-                        {atendente.taxaConversao}%
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        atendente.status === 'Online' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {atendente.status}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Atendimentos Recentes */}
-        <Card className="bg-white border-gray-200 hover:shadow-md transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg lg:text-xl text-purple-primary flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Atendimentos Recentes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 lg:space-y-4">
-              {dashboardData.atendimentosRecentes.slice(0, 5).map((atendimento: any) => (
-                <div key={atendimento.atendimento_id} className="flex items-center space-x-3 lg:space-x-4 p-2 lg:p-3 rounded-lg bg-gray-50 hover:bg-purple-primary/5 transition-colors border border-gray-100">
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    atendimento.status === 'Finalizado' ? 'bg-green-500' :
-                    atendimento.status === 'Sugestão enviada' ? 'bg-blue-500' :
-                    'bg-purple-primary'
-                  }`}></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-purple-primary truncate">
-                      {atendimento.tutor?.nome_tutor}
-                    </p>
-                    <p className="text-xs lg:text-sm text-gray-500 truncate">
-                      {atendimento.tipo_atendimento} - {atendimento.status}
-                    </p>
-                  </div>
-                  <div className="text-xs text-gray-400 flex-shrink-0">
-                    {new Date(atendimento.data_inicio).toLocaleDateString('pt-BR')}
-                  </div>
-                </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Insights e Recomendações */}
+      <InsightsPanel insights={insights} />
     </div>
   );
 };
