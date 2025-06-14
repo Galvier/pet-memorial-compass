@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { History, Eye, User, Phone, MapPin, Briefcase, Calendar, Heart } from 'lucide-react';
+import { History, Eye, User, Phone, MapPin, Briefcase, Calendar, Heart, Bot, UserCheck } from 'lucide-react';
 import { PetMemorialAPI } from '@/lib/api';
 import { Atendimento } from '@/types';
 
@@ -38,6 +38,23 @@ export const AtendimentosList: React.FC = () => {
       <Badge className={`${colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-700 border-gray-200'} text-xs px-2 py-1`}>
         {status}
       </Badge>
+    );
+  };
+
+  const getStatusAtendimentoIcon = (statusAtendimento: string) => {
+    const config = {
+      'BOT_ATIVO': { icon: Bot, color: 'text-blue-600', label: 'Bot Ativo' },
+      'HUMANO_ASSUMIU': { icon: UserCheck, color: 'text-orange-600', label: 'Atendente' },
+      'FINALIZADO': { icon: UserCheck, color: 'text-green-600', label: 'Finalizado' }
+    } as const;
+
+    const { icon: Icon, color, label } = config[statusAtendimento as keyof typeof config] || config.BOT_ATIVO;
+    
+    return (
+      <div className={`flex items-center space-x-1 ${color}`} title={label}>
+        <Icon className="w-3 h-3" />
+        <span className="text-xs">{label}</span>
+      </div>
     );
   };
 
@@ -93,7 +110,9 @@ export const AtendimentosList: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  {getStatusBadge(atendimento.status)}
+                  <div className="flex items-center space-x-2">
+                    {getStatusBadge(atendimento.status)}
+                  </div>
                 </div>
                 
                 {/* Contact and basic info */}
@@ -118,10 +137,15 @@ export const AtendimentosList: React.FC = () => {
                   </div>
                 )}
                 
-                {/* Date */}
-                <div className="flex items-center space-x-2 text-xs lg:text-sm text-gray-600">
-                  <Calendar className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
-                  <span>{formatDate(atendimento.data_inicio)}</span>
+                {/* Date and status control */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs lg:text-sm">
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <Calendar className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
+                    <span>{formatDate(atendimento.data_inicio)}</span>
+                  </div>
+                  <div className="flex items-center">
+                    {getStatusAtendimentoIcon(atendimento.status_atendimento)}
+                  </div>
                 </div>
                 
                 {/* Address */}

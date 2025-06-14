@@ -95,6 +95,7 @@ export const mockAtendimentos: Atendimento[] = [
     pet_id: 1,
     data_inicio: "2024-06-14T10:30:00",
     status: "Sugestão enviada",
+    status_atendimento: "BOT_ATIVO",
     tipo_atendimento: "Imediato",
     dados_coletados: {
       preferencias: { quer_cinzas: true },
@@ -113,6 +114,7 @@ export const mockAtendimentos: Atendimento[] = [
     pet_id: 2,
     data_inicio: "2024-06-13T14:15:00",
     status: "Finalizado",
+    status_atendimento: "FINALIZADO",
     tipo_atendimento: "Preventivo",
     dados_coletados: {
       interesse: "planos_preventivos"

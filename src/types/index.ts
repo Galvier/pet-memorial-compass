@@ -36,6 +36,7 @@ export interface Atendimento {
   pet_id: number;
   data_inicio: string;
   status: 'Em andamento' | 'Sugestão enviada' | 'Finalizado';
+  status_atendimento: 'BOT_ATIVO' | 'HUMANO_ASSUMIU' | 'FINALIZADO';
   tipo_atendimento: 'Imediato' | 'Preventivo';
   dados_coletados: any;
   sugestoes_geradas: any;

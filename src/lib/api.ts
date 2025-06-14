@@ -58,6 +58,7 @@ export class PetMemorialAPI {
       pet_id: novoPet.pet_id,
       data_inicio: new Date().toISOString(),
       status: 'Em andamento',
+      status_atendimento: 'BOT_ATIVO',
       tipo_atendimento: request.tipo_atendimento,
       dados_coletados: {
         preferencias: request.preferencias,
@@ -122,6 +123,39 @@ export class PetMemorialAPI {
       tipo_sugestao: "Pacote Imediato",
       sugestoes: [pacoteSugerido]
     };
+  }
+
+  // Novos métodos para controle de atendimento
+  static async assumirAtendimento(atendimentoId: number): Promise<boolean> {
+    await delay(300);
+    
+    const atendimento = mockAtendimentos.find(a => a.atendimento_id === atendimentoId);
+    if (!atendimento) {
+      throw new Error('Atendimento não encontrado');
+    }
+    
+    atendimento.status_atendimento = 'HUMANO_ASSUMIU';
+    console.log('👤 Atendimento assumido por humano:', atendimentoId);
+    
+    return true;
+  }
+
+  static async verificarStatusAtendimento(idWhatsapp: string): Promise<{ status_atendimento: string }> {
+    await delay(200);
+    
+    // Buscar o atendimento mais recente para este WhatsApp
+    const atendimento = mockAtendimentos
+      .filter(a => {
+        const tutor = mockTutores.find(t => t.tutor_id === a.tutor_id);
+        return tutor?.id_whatsapp === idWhatsapp;
+      })
+      .sort((a, b) => new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime())[0];
+    
+    if (!atendimento) {
+      return { status_atendimento: 'BOT_ATIVO' }; // Novo atendimento
+    }
+    
+    return { status_atendimento: atendimento.status_atendimento };
   }
 
   // CRUD Operations para Planos
