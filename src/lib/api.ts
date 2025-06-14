@@ -1,6 +1,6 @@
 
-import { RecomendacaoRequest, RecomendacaoResponse, Produto, Tutor, Atendimento } from '@/types';
-import { mockProdutos, mockTutores, mockAtendimentos } from './mockData';
+import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento } from '@/types';
+import { mockItensDeVenda, mockPlanos, mockTutores, mockAtendimentos } from './mockData';
 
 // Simula delay de API
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -21,54 +21,117 @@ export class PetMemorialAPI {
   }
 
   static async processarRecomendacao(request: RecomendacaoRequest): Promise<RecomendacaoResponse> {
-    await delay(1000); // Simula processamento
+    await delay(1000);
     
+    if (request.tipo_atendimento === 'Preventivo') {
+      // Retorna os planos Bronze, Prata e Ouro
+      return {
+        tipo_sugestao: "Planos Preventivos",
+        sugestoes: mockPlanos.map(plano => ({
+          nome: plano.nome_plano,
+          descricao: plano.descricao_curta
+        }))
+      };
+    }
+    
+    // Lógica para atendimento "Imediato"
     const perfil = await this.calcularPerfil(request.profissao);
-    const produtosCompativeis = mockProdutos.filter(p => p.perfil_afinidade === perfil);
     
-    // Seleciona até 3 produtos
-    const sugestoes = produtosCompativeis.slice(0, 3).map(produto => ({
-      nome_produto: produto.nome_produto,
-      descricao: produto.descricao,
-      preco: produto.preco.toFixed(2)
-    }));
+    let pacoteSugerido;
     
-    return { sugestoes };
-  }
-
-  // CRUD Operations
-  static async getProdutos(): Promise<Produto[]> {
-    await delay(500);
-    return [...mockProdutos];
-  }
-
-  static async createProduto(produto: Omit<Produto, 'produto_id'>): Promise<Produto> {
-    await delay(500);
-    const newProduto = {
-      ...produto,
-      produto_id: Math.max(...mockProdutos.map(p => p.produto_id)) + 1
+    if (perfil === 'Padrão') {
+      pacoteSugerido = {
+        nome: "Pacote Cremação Coletiva",
+        descricao: "Inclui Cremação Coletiva (Imediata).",
+        preco: "400.00"
+      };
+    } else if (perfil === 'Intermediário') {
+      pacoteSugerido = {
+        nome: "Pacote Homenagem Completa",
+        descricao: "Inclui Cremação Individual e uma Urna Padrão.",
+        preco: "950.00"
+      };
+    } else { // Luxo
+      pacoteSugerido = {
+        nome: "Pacote Homenagem Superior",
+        descricao: "Inclui Cremação Individual e uma Urna Superior.",
+        preco: "1150.00"
+      };
+    }
+    
+    return {
+      tipo_sugestao: "Pacote Imediato",
+      sugestoes: [pacoteSugerido]
     };
-    mockProdutos.push(newProduto);
-    return newProduto;
   }
 
-  static async updateProduto(produto: Produto): Promise<Produto> {
+  // CRUD Operations para Planos
+  static async getPlanos(): Promise<Plano[]> {
     await delay(500);
-    const index = mockProdutos.findIndex(p => p.produto_id === produto.produto_id);
-    if (index !== -1) {
-      mockProdutos[index] = produto;
-    }
-    return produto;
+    return [...mockPlanos];
   }
 
-  static async deleteProduto(id: number): Promise<void> {
+  static async createPlano(plano: Omit<Plano, 'plano_id'>): Promise<Plano> {
     await delay(500);
-    const index = mockProdutos.findIndex(p => p.produto_id === id);
+    const newPlano = {
+      ...plano,
+      plano_id: Math.max(...mockPlanos.map(p => p.plano_id)) + 1
+    };
+    mockPlanos.push(newPlano);
+    return newPlano;
+  }
+
+  static async updatePlano(plano: Plano): Promise<Plano> {
+    await delay(500);
+    const index = mockPlanos.findIndex(p => p.plano_id === plano.plano_id);
     if (index !== -1) {
-      mockProdutos.splice(index, 1);
+      mockPlanos[index] = plano;
+    }
+    return plano;
+  }
+
+  static async deletePlano(id: number): Promise<void> {
+    await delay(500);
+    const index = mockPlanos.findIndex(p => p.plano_id === id);
+    if (index !== -1) {
+      mockPlanos.splice(index, 1);
     }
   }
 
+  // CRUD Operations para Itens de Venda
+  static async getItensDeVenda(): Promise<ItemDeVenda[]> {
+    await delay(500);
+    return [...mockItensDeVenda];
+  }
+
+  static async createItemDeVenda(item: Omit<ItemDeVenda, 'item_id'>): Promise<ItemDeVenda> {
+    await delay(500);
+    const newItem = {
+      ...item,
+      item_id: Math.max(...mockItensDeVenda.map(i => i.item_id)) + 1
+    };
+    mockItensDeVenda.push(newItem);
+    return newItem;
+  }
+
+  static async updateItemDeVenda(item: ItemDeVenda): Promise<ItemDeVenda> {
+    await delay(500);
+    const index = mockItensDeVenda.findIndex(i => i.item_id === item.item_id);
+    if (index !== -1) {
+      mockItensDeVenda[index] = item;
+    }
+    return item;
+  }
+
+  static async deleteItemDeVenda(id: number): Promise<void> {
+    await delay(500);
+    const index = mockItensDeVenda.findIndex(i => i.item_id === id);
+    if (index !== -1) {
+      mockItensDeVenda.splice(index, 1);
+    }
+  }
+
+  // CRUD Operations para Atendimentos (mantendo compatibilidade)
   static async getAtendimentos(): Promise<Atendimento[]> {
     await delay(500);
     return [...mockAtendimentos];
@@ -87,7 +150,8 @@ export class PetMemorialAPI {
         const dataAtendimento = new Date(a.data_inicio).toDateString();
         return hoje === dataAtendimento;
       }).length,
-      totalProdutos: mockProdutos.length,
+      totalItens: mockItensDeVenda.length,
+      totalPlanos: mockPlanos.length,
       atendimentosRecentes: mockAtendimentos.slice(-5).reverse()
     };
   }

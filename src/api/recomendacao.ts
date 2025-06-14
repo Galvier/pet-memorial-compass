@@ -9,9 +9,9 @@ export async function POST(request: Request) {
     console.log('Recebendo dados do n8n:', body);
     
     // Validar dados obrigatórios
-    if (!body.id_whatsapp || !body.nome_tutor || !body.profissao) {
+    if (!body.id_whatsapp || !body.nome_tutor || !body.tipo_atendimento) {
       return Response.json(
-        { error: 'Dados obrigatórios: id_whatsapp, nome_tutor, profissao' },
+        { error: 'Dados obrigatórios: id_whatsapp, nome_tutor, tipo_atendimento' },
         { status: 400 }
       );
     }

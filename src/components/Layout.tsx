@@ -1,103 +1,82 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Package, History, Menu, X, Heart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { 
+  LayoutDashboard, 
+  Package, 
+  Shield, 
+  History, 
+  Heart 
+} from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-const Navigation = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  
-  const navItems = [
-    { path: '/', label: 'Dashboard', icon: Home },
-    { path: '/produtos', label: 'Produtos', icon: Package },
-    { path: '/atendimentos', label: 'Atendimentos', icon: History },
+
+  const navigation = [
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Planos', href: '/planos', icon: Shield },
+    { name: 'Itens de Venda', href: '/itens', icon: Package },
+    { name: 'Atendimentos', href: '/atendimentos', icon: History },
   ];
 
+  const isActive = (href: string) => {
+    if (href === '/') return location.pathname === '/';
+    return location.pathname.startsWith(href);
+  };
+
   return (
-    <nav className={`fixed left-0 top-0 h-full bg-white shadow-lg z-50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} w-64 lg:translate-x-0 lg:static lg:shadow-none lg:border-r lg:border-gray-200`}>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Heart className="w-6 h-6 text-white" />
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="fixed inset-y-0 left-0 z-50 w-64 bg-[#04422c] shadow-lg">
+        <div className="flex h-16 items-center justify-center border-b border-[#04422c]/20">
+          <div className="flex items-center space-x-2">
+            <Heart className="h-8 w-8 text-[#d3a85b]" />
             <div>
-              <h1 className="text-xl font-bold text-gray-800">Pet Memorial</h1>
-              <p className="text-sm text-gray-500">Admin Panel</p>
+              <h1 className="text-xl font-bold text-white">Terranova Pet</h1>
+              <p className="text-xs text-[#d3a85b]">Painel Administrativo</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="lg:hidden"
-          >
-            <X className="w-5 h-5" />
-          </Button>
         </div>
         
-        <div className="space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={onClose}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-    </nav>
-  );
-};
-
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Navigation isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <div className="flex-1 lg:ml-0">
-        <header className="bg-white shadow-sm border-b border-gray-200 lg:hidden">
-          <div className="px-4 py-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="w-6 h-6" />
-            </Button>
+        <nav className="mt-6 px-3">
+          <div className="space-y-1">
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                    isActive(item.href)
+                      ? 'bg-[#d3a85b] text-white'
+                      : 'text-gray-300 hover:bg-[#04422c]/50 hover:text-white'
+                  }`}
+                >
+                  <Icon
+                    className={`mr-3 h-5 w-5 ${
+                      isActive(item.href) ? 'text-white' : 'text-gray-400 group-hover:text-gray-300'
+                    }`}
+                  />
+                  {item.name}
+                </Link>
+              );
+            })}
           </div>
-        </header>
-        
-        <main className="p-6">
-          {children}
+        </nav>
+      </div>
+
+      {/* Main content */}
+      <div className="pl-64">
+        <main className="py-6">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
         </main>
       </div>
-      
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
     </div>
   );
 };

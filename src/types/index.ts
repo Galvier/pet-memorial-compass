@@ -1,10 +1,16 @@
 
-export interface Produto {
-  produto_id: number;
-  nome_produto: string;
+export interface Plano {
+  plano_id: number;
+  nome_plano: string;
+  descricao_curta: string;
+}
+
+export interface ItemDeVenda {
+  item_id: number;
+  nome: string;
   descricao: string;
   preco: number;
-  categoria: 'Urna' | 'Cerimônia' | 'Acessório' | 'Pacote';
+  categoria: 'Cremação' | 'Urna' | 'Acessório' | 'Cerimônia';
   perfil_afinidade: 'Padrão' | 'Intermediário' | 'Luxo';
 }
 
@@ -22,6 +28,7 @@ export interface Atendimento {
   tutor_id: number;
   data_inicio: string;
   status: 'Em andamento' | 'Sugestão enviada' | 'Finalizado';
+  tipo_atendimento: 'Imediato' | 'Preventivo';
   dados_coletados: any;
   sugestoes_geradas: any;
   tutor?: Tutor;
@@ -32,13 +39,15 @@ export interface RecomendacaoRequest {
   nome_tutor: string;
   profissao: string;
   endereco: string;
+  tipo_atendimento: 'Imediato' | 'Preventivo';
   preferencias: string[];
 }
 
 export interface RecomendacaoResponse {
+  tipo_sugestao: string;
   sugestoes: {
-    nome_produto: string;
+    nome: string;
     descricao: string;
-    preco: string;
+    preco?: string;
   }[];
 }

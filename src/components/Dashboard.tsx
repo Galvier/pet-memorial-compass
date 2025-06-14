@@ -1,19 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Package, History, TrendingUp, Clock } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { CalendarDays, Package, Shield, TrendingUp } from 'lucide-react';
 import { PetMemorialAPI } from '@/lib/api';
-import { Atendimento } from '@/types';
-
-interface DashboardStats {
-  atendimentosHoje: number;
-  totalProdutos: number;
-  atendimentosRecentes: Atendimento[];
-}
 
 export const Dashboard: React.FC = () => {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [stats, setStats] = useState({
+    atendimentosHoje: 0,
+    totalItens: 0,
+    totalPlanos: 0,
+    atendimentosRecentes: []
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,37 +29,25 @@ export const Dashboard: React.FC = () => {
     fetchStats();
   }, []);
 
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      'Em andamento': 'default',
-      'Sugestão enviada': 'secondary',
-      'Finalizado': 'outline'
-    } as const;
-    
-    return (
-      <Badge variant={variants[status as keyof typeof variants] || 'default'}>
-        {status}
-      </Badge>
-    );
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  const chartData = [
+    { name: 'Seg', atendimentos: 4 },
+    { name: 'Ter', atendimentos: 3 },
+    { name: 'Qua', atendimentos: 6 },
+    { name: 'Qui', atendimentos: 8 },
+    { name: 'Sex', atendimentos: 5 },
+    { name: 'Sáb', atendimentos: 7 },
+    { name: 'Dom', atendimentos: 2 },
+  ];
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
+        <div className="h-8 bg-gray-200 rounded w-64 animate-pulse"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-20 bg-gray-200 rounded"></div>
+                <div className="h-16 bg-gray-200 rounded"></div>
               </CardContent>
             </Card>
           ))}
@@ -71,98 +57,121 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-        <p className="text-gray-600">Visão geral da plataforma Pet Memorial</p>
+        <h1 className="text-3xl font-bold text-[#04422c] mb-2">Dashboard Terranova Pet</h1>
+        <p className="text-gray-600">Visão geral dos atendimentos e operações</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-blue-500 rounded-lg">
-                <Clock className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-blue-700">Atendimentos Hoje</p>
-                <p className="text-3xl font-bold text-blue-900">{stats?.atendimentosHoje || 0}</p>
-              </div>
-            </div>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border-l-4 border-[#d3a85b]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Atendimentos Hoje
+            </CardTitle>
+            <CalendarDays className="h-4 w-4 text-[#d3a85b]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-[#04422c]">{stats.atendimentosHoje}</div>
+            <p className="text-xs text-gray-500">
+              +20% desde ontem
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-purple-500 rounded-lg">
-                <Package className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-purple-700">Total de Produtos</p>
-                <p className="text-3xl font-bold text-purple-900">{stats?.totalProdutos || 0}</p>
-              </div>
-            </div>
+        <Card className="border-l-4 border-[#04422c]">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Total de Planos
+            </CardTitle>
+            <Shield className="h-4 w-4 text-[#04422c]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-[#04422c]">{stats.totalPlanos}</div>
+            <p className="text-xs text-gray-500">
+              Bronze, Prata e Ouro
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-green-500 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-green-700">Taxa de Conversão</p>
-                <p className="text-3xl font-bold text-green-900">85%</p>
-              </div>
-            </div>
+        <Card className="border-l-4 border-green-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Itens de Venda
+            </CardTitle>
+            <Package className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-[#04422c]">{stats.totalItens}</div>
+            <p className="text-xs text-gray-500">
+              Cremação, urnas e acessórios
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-blue-500">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Taxa de Conversão
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-[#04422c]">78%</div>
+            <p className="text-xs text-gray-500">
+              +5% desde a semana passada
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <History className="w-5 h-5" />
-            <span>Atendimentos Recentes</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {stats?.atendimentosRecentes.map((atendimento) => (
-              <div
-                key={atendimento.atendimento_id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <p className="font-medium text-gray-900">
+      {/* Charts and Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-[#04422c]">Atendimentos da Semana</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Bar dataKey="atendimentos" fill="#d3a85b" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-[#04422c]">Atendimentos Recentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {stats.atendimentosRecentes.slice(0, 5).map((atendimento: any) => (
+                <div key={atendimento.atendimento_id} className="flex items-center space-x-4">
+                  <div className="w-2 h-2 bg-[#d3a85b] rounded-full"></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#04422c] truncate">
                       {atendimento.tutor?.nome_tutor}
                     </p>
-                    {getStatusBadge(atendimento.status)}
+                    <p className="text-sm text-gray-500">
+                      {atendimento.tipo_atendimento} - {atendimento.status}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-600">
-                    {atendimento.tutor?.profissao} • {formatDate(atendimento.data_inicio)}
-                  </p>
+                  <div className="text-sm text-gray-400">
+                    {new Date(atendimento.data_inicio).toLocaleDateString('pt-BR')}
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">
-                    WhatsApp: {atendimento.tutor?.id_whatsapp}
-                  </p>
-                </div>
-              </div>
-            ))}
-            
-            {(!stats?.atendimentosRecentes || stats.atendimentosRecentes.length === 0) && (
-              <div className="text-center py-8 text-gray-500">
-                <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Nenhum atendimento registrado ainda.</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
