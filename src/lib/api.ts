@@ -1,4 +1,4 @@
-import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento, Pet, Atendente, AtribuirAtendimentoRequest } from '@/types';
+import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento, Pet, Atendente, AtribuirAtendimentoRequest, StatusAtendimentoResponse } from '@/types';
 import { mockItensDeVenda, mockPlanos, mockTutores, mockAtendimentos, mockPets, mockAtendentes } from './mockData';
 
 // Simula delay de API
@@ -165,7 +165,7 @@ export class PetMemorialAPI {
     return true;
   }
 
-  static async verificarStatusAtendimento(idWhatsapp: string): Promise<{ status_atendimento: string }> {
+  static async verificarStatusAtendimento(idWhatsapp: string): Promise<StatusAtendimentoResponse> {
     await delay(200);
     
     // Buscar o atendimento mais recente para este WhatsApp
@@ -177,10 +177,10 @@ export class PetMemorialAPI {
       .sort((a, b) => new Date(b.data_inicio).getTime() - new Date(a.data_inicio).getTime())[0];
     
     if (!atendimento) {
-      return { status_atendimento: 'BOT_ATIVO' }; // Novo atendimento
+      return { status: 'BOT_ATIVO' }; // Novo atendimento
     }
     
-    return { status_atendimento: atendimento.status_atendimento };
+    return { status: atendimento.status_atendimento };
   }
 
   // CRUD Operations para Atendentes

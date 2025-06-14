@@ -83,3 +83,8 @@ export interface RecomendacaoResponse {
 export interface AtribuirAtendimentoRequest {
   atendente_id: number;
 }
+
+// Novos tipos para os endpoints de status
+export interface StatusAtendimentoResponse {
+  status: 'BOT_ATIVO' | 'ATRIBUIDO_HUMANO' | 'FINALIZADO';
+}
