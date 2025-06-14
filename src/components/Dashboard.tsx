@@ -59,36 +59,36 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-[#04422c] mb-2">Dashboard Terranova Pet</h1>
+        <h1 className="text-3xl font-bold text-purple-primary mb-2">Dashboard Terranova Pet</h1>
         <p className="text-gray-600">Visão geral dos atendimentos e operações</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-[#d3a85b]">
+        <Card className="border-l-4 border-yellow-primary">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
               Atendimentos Hoje
             </CardTitle>
-            <CalendarDays className="h-4 w-4 text-[#d3a85b]" />
+            <CalendarDays className="h-4 w-4 text-yellow-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[#04422c]">{stats.atendimentosHoje}</div>
+            <div className="text-2xl font-bold text-purple-primary">{stats.atendimentosHoje}</div>
             <p className="text-xs text-gray-500">
               +20% desde ontem
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-[#04422c]">
+        <Card className="border-l-4 border-purple-primary">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
               Total de Planos
             </CardTitle>
-            <Shield className="h-4 w-4 text-[#04422c]" />
+            <Shield className="h-4 w-4 text-purple-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[#04422c]">{stats.totalPlanos}</div>
+            <div className="text-2xl font-bold text-purple-primary">{stats.totalPlanos}</div>
             <p className="text-xs text-gray-500">
               Bronze, Prata e Ouro
             </p>
@@ -103,7 +103,7 @@ export const Dashboard: React.FC = () => {
             <Package className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[#04422c]">{stats.totalItens}</div>
+            <div className="text-2xl font-bold text-purple-primary">{stats.totalItens}</div>
             <p className="text-xs text-gray-500">
               Cremação, urnas e acessórios
             </p>
@@ -118,7 +118,7 @@ export const Dashboard: React.FC = () => {
             <TrendingUp className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[#04422c]">78%</div>
+            <div className="text-2xl font-bold text-purple-primary">78%</div>
             <p className="text-xs text-gray-500">
               +5% desde a semana passada
             </p>
@@ -131,7 +131,7 @@ export const Dashboard: React.FC = () => {
         {/* Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-[#04422c]">Atendimentos da Semana</CardTitle>
+            <CardTitle className="text-purple-primary">Atendimentos da Semana</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -139,7 +139,7 @@ export const Dashboard: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Bar dataKey="atendimentos" fill="#d3a85b" />
+                <Bar dataKey="atendimentos" fill="rgb(239, 215, 3)" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -148,15 +148,15 @@ export const Dashboard: React.FC = () => {
         {/* Recent Activity */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-[#04422c]">Atendimentos Recentes</CardTitle>
+            <CardTitle className="text-purple-primary">Atendimentos Recentes</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {stats.atendimentosRecentes.slice(0, 5).map((atendimento: any) => (
                 <div key={atendimento.atendimento_id} className="flex items-center space-x-4">
-                  <div className="w-2 h-2 bg-[#d3a85b] rounded-full"></div>
+                  <div className="w-2 h-2 bg-yellow-primary rounded-full"></div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#04422c] truncate">
+                    <p className="text-sm font-medium text-purple-primary truncate">
                       {atendimento.tutor?.nome_tutor}
                     </p>
                     <p className="text-sm text-gray-500">
