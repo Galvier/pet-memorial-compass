@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { History, Eye, User, Phone, MapPin, Briefcase, Calendar } from 'lucide-react';
+import { History, Eye, User, Phone, MapPin, Briefcase, Calendar, Heart } from 'lucide-react';
 import { PetMemorialAPI } from '@/lib/api';
 import { Atendimento } from '@/types';
 
