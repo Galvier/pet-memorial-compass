@@ -8,6 +8,7 @@ import { ArrowLeft, User, Phone, MapPin, Calendar, Package, Heart, UserCheck, Al
 import { PetMemorialAPI } from '@/lib/api';
 import { Atendimento, Atendente } from '@/types';
 import { simulateAtendimentoAPI } from '@/api/atendimento';
+import { GerarPagamento } from '@/components/GerarPagamento';
 
 export const AtendimentoDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -354,6 +355,15 @@ export const AtendimentoDetail: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Seção de Pagamento - Nova */}
+      {foiAtribuido && atendimento.tutor?.id_whatsapp && (
+        <GerarPagamento
+          atendimentoId={atendimento.atendimento_id}
+          tutorWhatsapp={atendimento.tutor.id_whatsapp}
+          sugestoesGeradas={atendimento.sugestoes_geradas}
+        />
+      )}
 
       {/* Dados Coletados */}
       <Card>
