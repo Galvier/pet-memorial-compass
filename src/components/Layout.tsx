@@ -10,6 +10,8 @@ import {
   Menu,
   X
 } from 'lucide-react';
+import { AuthHeader } from '@/components/AuthHeader';
+import { useAuth } from '@/hooks/useAuth';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,6 +20,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -34,6 +37,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Auth Header - só mostra se o usuário estiver logado */}
+      {user && <AuthHeader />}
+      
       {/* Mobile Header */}
       <div className="lg:hidden bg-purple-primary shadow-lg">
         <div className="flex items-center justify-between p-4">
@@ -135,7 +141,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className={`${user ? 'lg:pl-64' : ''}`}>
         <main className="py-4 lg:py-6">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {children}

@@ -45,3 +45,42 @@ export interface UserProfile {
   role: 'atendente' | 'admin' | 'cliente';
   nome: string;
 }
+
+// Tipos adicionais que estavam faltando
+export interface Plano {
+  plano_id: number;
+  nome_plano: string;
+  preco_base: number;
+  descricao?: string;
+  perfil_indicado: 'Padrão' | 'Intermediário' | 'Luxo';
+}
+
+export interface ItemDeVenda {
+  item_id: number;
+  nome_item: string;
+  preco: number;
+  descricao?: string;
+  categoria: string;
+  perfil_indicado: 'Padrão' | 'Intermediário' | 'Luxo';
+}
+
+export interface RecomendacaoRequest {
+  dadosColetados: any;
+  perfilTutor: 'Padrão' | 'Intermediário' | 'Luxo';
+}
+
+export interface RecomendacaoResponse {
+  planos: Plano[];
+  itens: ItemDeVenda[];
+  justificativa: string;
+}
+
+export interface AtribuirAtendimentoRequest {
+  atendimentoId: number;
+  atendenteId: number;
+}
+
+export interface StatusAtendimentoResponse {
+  status: 'BOT_ATIVO' | 'ATRIBUIDO_HUMANO' | 'FINALIZADO';
+  atendente?: Atendente;
+}

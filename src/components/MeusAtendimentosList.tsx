@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { User, Heart, Calendar, ArrowRight, RefreshCw, LogOut } from 'lucide-react';
+import { User, Heart, Calendar, ArrowRight, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Atendimento } from '@/types';
@@ -14,8 +14,7 @@ import { toast } from 'sonner';
 export const MeusAtendimentosList: React.FC = () => {
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user, userProfile, signOut } = useAuth();
-  const navigate = useNavigate();
+  const { user, userProfile } = useAuth();
 
   const fetchMeusAtendimentos = async () => {
     if (!user || !userProfile) return;
@@ -94,12 +93,6 @@ export const MeusAtendimentosList: React.FC = () => {
     fetchMeusAtendimentos();
   }, [user, userProfile]);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-    toast.success('Logout realizado com sucesso');
-  };
-
   const getStatusBadge = (status: string) => {
     const colors = {
       'Em andamento': 'bg-yellow-100 text-yellow-800',
@@ -147,22 +140,11 @@ export const MeusAtendimentosList: React.FC = () => {
           <p className="text-gray-600">
             Olá, {userProfile?.nome}! Aqui estão os atendimentos atribuídos a você.
           </p>
-          <div className="mt-2">
-            <Badge variant="outline" className="bg-purple-100 text-purple-800">
-              {userProfile?.role === 'atendente' ? 'Atendente' : 'Administrador'}
-            </Badge>
-          </div>
         </div>
-        <div className="flex space-x-2">
-          <Button onClick={fetchMeusAtendimentos} variant="outline">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Atualizar
-          </Button>
-          <Button onClick={handleSignOut} variant="outline">
-            <LogOut className="w-4 h-4 mr-2" />
-            Sair
-          </Button>
-        </div>
+        <Button onClick={fetchMeusAtendimentos} variant="outline">
+          <RefreshCw className="w-4 h-4 mr-2" />
+          Atualizar
+        </Button>
       </div>
 
       {/* Cards de Resumo */}
