@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { History, Eye, User, Phone } from 'lucide-react';
+import { History, Eye, User, Phone, MapPin, Briefcase, Calendar } from 'lucide-react';
 import { PetMemorialAPI } from '@/lib/api';
 import { Atendimento } from '@/types';
 
@@ -35,7 +35,7 @@ export const AtendimentosList: React.FC = () => {
     } as const;
     
     return (
-      <Badge className={colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-700 border-gray-200'}>
+      <Badge className={`${colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-700 border-gray-200'} text-xs px-2 py-1`}>
         {status}
       </Badge>
     );
@@ -53,13 +53,13 @@ export const AtendimentosList: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 bg-gray-200 rounded w-48 animate-pulse"></div>
-        <div className="space-y-4">
+      <div className="space-y-4 lg:space-y-6">
+        <div className="h-6 lg:h-8 bg-gray-200 rounded w-48 lg:w-64 animate-pulse"></div>
+        <div className="space-y-3 lg:space-y-4">
           {[1, 2, 3, 4, 5].map((i) => (
             <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-20 bg-gray-200 rounded"></div>
+              <CardContent className="p-4 lg:p-6">
+                <div className="h-16 lg:h-20 bg-gray-200 rounded"></div>
               </CardContent>
             </Card>
           ))}
@@ -69,54 +69,61 @@ export const AtendimentosList: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-purple-primary mb-2">Atendimentos</h1>
-        <p className="text-gray-600">Histórico completo de atendimentos realizados</p>
+    <div className="space-y-4 lg:space-y-6">
+      <div className="text-center lg:text-left">
+        <h1 className="text-2xl lg:text-3xl font-bold text-purple-primary mb-1 lg:mb-2">Atendimentos</h1>
+        <p className="text-sm lg:text-base text-gray-600">Histórico completo de atendimentos realizados</p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 lg:space-y-4">
         {atendimentos.map((atendimento) => (
           <Card key={atendimento.atendimento_id} className="hover:shadow-md transition-shadow border-l-4 border-purple-primary/20 bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-4 mb-3">
-                    <div className="flex items-center space-x-2">
-                      <User className="w-4 h-4 text-purple-primary/60" />
-                      <span className="font-semibold text-purple-primary">
-                        {atendimento.tutor?.nome_tutor}
-                      </span>
-                    </div>
-                    {getStatusBadge(atendimento.status)}
+            <CardContent className="p-4 lg:p-6">
+              <div className="space-y-3 lg:space-y-4">
+                {/* Header with name and status */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="flex items-center space-x-2">
+                    <User className="w-4 h-4 text-purple-primary/60 flex-shrink-0" />
+                    <span className="font-semibold text-purple-primary text-sm lg:text-base">
+                      {atendimento.tutor?.nome_tutor}
+                    </span>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                    <div className="flex items-center space-x-2">
-                      <Phone className="w-4 h-4" />
-                      <span>{atendimento.tutor?.id_whatsapp}</span>
-                    </div>
-                    <div>
-                      <strong>Profissão:</strong> {atendimento.tutor?.profissao}
-                    </div>
-                    <div>
-                      <strong>Data:</strong> {formatDate(atendimento.data_inicio)}
-                    </div>
+                  {getStatusBadge(atendimento.status)}
+                </div>
+                
+                {/* Contact and basic info */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-3 text-xs lg:text-sm text-gray-600">
+                  <div className="flex items-center space-x-2">
+                    <Phone className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
+                    <span className="truncate">{atendimento.tutor?.id_whatsapp}</span>
                   </div>
-                  
-                  <div className="mt-2 text-sm text-gray-600">
-                    <strong>Endereço:</strong> {atendimento.tutor?.endereco}
+                  <div className="flex items-center space-x-2">
+                    <Briefcase className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
+                    <span className="truncate">{atendimento.tutor?.profissao}</span>
                   </div>
                 </div>
                 
-                <div className="ml-4">
-                  <Link to={`/atendimentos/${atendimento.atendimento_id}`}>
+                {/* Date */}
+                <div className="flex items-center space-x-2 text-xs lg:text-sm text-gray-600">
+                  <Calendar className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
+                  <span>{formatDate(atendimento.data_inicio)}</span>
+                </div>
+                
+                {/* Address */}
+                <div className="flex items-start space-x-2 text-xs lg:text-sm text-gray-600">
+                  <MapPin className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{atendimento.tutor?.endereco}</span>
+                </div>
+                
+                {/* Action button */}
+                <div className="pt-2 border-t border-gray-100">
+                  <Link to={`/atendimentos/${atendimento.atendimento_id}`} className="block">
                     <Button 
                       variant="outline" 
                       size="sm"
-                      className="border-purple-primary/30 text-purple-primary hover:bg-purple-primary hover:text-white"
+                      className="w-full sm:w-auto border-purple-primary/30 text-purple-primary hover:bg-purple-primary hover:text-white text-xs lg:text-sm"
                     >
-                      <Eye className="w-4 h-4 mr-2" />
+                      <Eye className="w-3 h-3 lg:w-4 lg:h-4 mr-1 lg:mr-2" />
                       Ver Detalhes
                     </Button>
                   </Link>
@@ -128,12 +135,12 @@ export const AtendimentosList: React.FC = () => {
       </div>
 
       {atendimentos.length === 0 && (
-        <div className="text-center py-12">
-          <History className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-600 mb-2">
+        <div className="text-center py-8 lg:py-12">
+          <History className="w-12 h-12 lg:w-16 lg:h-16 text-gray-400 mx-auto mb-3 lg:mb-4" />
+          <h3 className="text-base lg:text-lg font-medium text-gray-600 mb-2">
             Nenhum atendimento registrado
           </h3>
-          <p className="text-gray-500">
+          <p className="text-sm lg:text-base text-gray-500">
             Os atendimentos aparecerão aqui conforme forem realizados via WhatsApp.
           </p>
         </div>
