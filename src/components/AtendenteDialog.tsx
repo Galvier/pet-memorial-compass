@@ -24,6 +24,7 @@ export const AtendenteDialog: React.FC<AtendenteDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nome_atendente: '',
+    email: '',
     whatsapp_atendente: '',
     status_disponibilidade: 'Online' as 'Online' | 'Offline'
   });
@@ -32,12 +33,14 @@ export const AtendenteDialog: React.FC<AtendenteDialogProps> = ({
     if (atendente) {
       setFormData({
         nome_atendente: atendente.nome_atendente,
+        email: atendente.email,
         whatsapp_atendente: atendente.whatsapp_atendente,
         status_disponibilidade: atendente.status_disponibilidade
       });
     } else {
       setFormData({
         nome_atendente: '',
+        email: '',
         whatsapp_atendente: '',
         status_disponibilidade: 'Online'
       });
@@ -87,6 +90,21 @@ export const AtendenteDialog: React.FC<AtendenteDialogProps> = ({
                 nome_atendente: e.target.value
               })}
               placeholder="Ex: Ana Paula Silva"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({
+                ...formData,
+                email: e.target.value
+              })}
+              placeholder="Ex: ana.paula@terranovapet.com"
               required
             />
           </div>

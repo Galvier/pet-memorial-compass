@@ -37,6 +37,7 @@ export interface Atendimento {
   sugestoes_geradas?: any;
   tutor?: Tutor;
   pet?: Pet;
+  atendente?: Atendente;
 }
 
 export interface UserProfile {
@@ -46,38 +47,58 @@ export interface UserProfile {
   nome: string;
 }
 
-// Tipos adicionais que estavam faltando
+// Tipos para Planos
 export interface Plano {
   plano_id: number;
   nome_plano: string;
   preco_base: number;
   descricao?: string;
+  descricao_curta: string;
   perfil_indicado: 'Padrão' | 'Intermediário' | 'Luxo';
 }
 
+// Tipos para Itens de Venda
 export interface ItemDeVenda {
   item_id: number;
   nome_item: string;
+  nome: string; // Alias para compatibilidade
   preco: number;
   descricao?: string;
   categoria: string;
   perfil_indicado: 'Padrão' | 'Intermediário' | 'Luxo';
+  perfil_afinidade: 'Padrão' | 'Intermediário' | 'Luxo'; // Alias para compatibilidade
 }
 
+// Tipos para requisições de recomendação
 export interface RecomendacaoRequest {
-  dadosColetados: any;
-  perfilTutor: 'Padrão' | 'Intermediário' | 'Luxo';
+  id_whatsapp: string;
+  nome_tutor: string;
+  tipo_atendimento: 'Imediato' | 'Preventivo';
+  pet: {
+    nome: string;
+    idade: number;
+  };
+  tutor: {
+    profissao: string;
+    endereco: string;
+  };
+  preferencias?: any;
+  dadosColetados?: any;
+  perfilTutor?: 'Padrão' | 'Intermediário' | 'Luxo';
 }
 
 export interface RecomendacaoResponse {
-  planos: Plano[];
-  itens: ItemDeVenda[];
-  justificativa: string;
+  tipo_sugestao?: string;
+  sugestoes: any[];
+  planos?: Plano[];
+  itens?: ItemDeVenda[];
+  justificativa?: string;
 }
 
 export interface AtribuirAtendimentoRequest {
   atendimentoId: number;
   atendenteId: number;
+  atendente_id: number; // Alias para compatibilidade
 }
 
 export interface StatusAtendimentoResponse {

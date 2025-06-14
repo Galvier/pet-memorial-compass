@@ -27,6 +27,8 @@ export const AtendimentoAssignment: React.FC<AtendimentoAssignmentProps> = ({
     setAtribuindo(true);
     try {
       await simulateAtendimentoAPI.atribuir(atendimentoId, {
+        atendimentoId: atendimentoId,
+        atendenteId: parseInt(selectedAtendente),
         atendente_id: parseInt(selectedAtendente)
       });
       

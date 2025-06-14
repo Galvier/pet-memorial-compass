@@ -5,51 +5,65 @@ export const mockPlanos: Plano[] = [
   {
     plano_id: 1,
     nome_plano: "Plano Bronze",
-    descricao_curta: "Cremação Coletiva e acesso ao Clube de Benefícios."
+    preco_base: 299.00,
+    descricao_curta: "Cremação Coletiva e acesso ao Clube de Benefícios.",
+    perfil_indicado: "Padrão"
   },
   {
     plano_id: 2,
-    nome_plano: "Plano Prata", 
-    descricao_curta: "Cremação Individual e acesso ao Clube de Benefícios."
+    nome_plano: "Plano Prata",
+    preco_base: 599.00,
+    descricao_curta: "Cremação Individual e acesso ao Clube de Benefícios.",
+    perfil_indicado: "Intermediário"
   },
   {
     plano_id: 3,
     nome_plano: "Plano Ouro",
-    descricao_curta: "Cremação Individual com uma urna superior inclusa."
+    preco_base: 899.00,
+    descricao_curta: "Cremação Individual com uma urna superior inclusa.",
+    perfil_indicado: "Luxo"
   }
 ];
 
 export const mockItensDeVenda: ItemDeVenda[] = [
   {
     item_id: 1,
+    nome_item: "Cremação Coletiva (Imediata)",
     nome: "Cremação Coletiva (Imediata)",
     descricao: "Serviço de cremação coletiva para atendimento imediato",
     preco: 400.00,
     categoria: "Cremação",
+    perfil_indicado: "Padrão",
     perfil_afinidade: "Padrão"
   },
   {
     item_id: 2,
+    nome_item: "Cremação Individual (Imediata)",
     nome: "Cremação Individual (Imediata)",
     descricao: "Serviço de cremação individual para atendimento imediato",
     preco: 800.00,
     categoria: "Cremação",
+    perfil_indicado: "Intermediário",
     perfil_afinidade: "Intermediário"
   },
   {
     item_id: 3,
+    nome_item: "Urna Padrão",
     nome: "Urna Padrão",
     descricao: "Urna de qualidade padrão para conservação das cinzas",
     preco: 150.00,
     categoria: "Urna",
+    perfil_indicado: "Intermediário",
     perfil_afinidade: "Intermediário"
   },
   {
     item_id: 4,
+    nome_item: "Urna Superior",
     nome: "Urna Superior",
     descricao: "Urna premium com acabamento superior",
     preco: 350.00,
     categoria: "Urna",
+    perfil_indicado: "Luxo",
     perfil_afinidade: "Luxo"
   }
 ];
@@ -92,18 +106,21 @@ export const mockAtendentes: Atendente[] = [
   {
     atendente_id: 1,
     nome_atendente: "Ana Paula",
+    email: "ana.paula@terranovapet.com",
     whatsapp_atendente: "5538999991111",
     status_disponibilidade: "Online"
   },
   {
     atendente_id: 2,
     nome_atendente: "Carlos Santos",
+    email: "carlos.santos@terranovapet.com",
     whatsapp_atendente: "5538999992222",
     status_disponibilidade: "Online"
   },
   {
     atendente_id: 3,
     nome_atendente: "Lucia Ferreira",
+    email: "lucia.ferreira@terranovapet.com",
     whatsapp_atendente: "5538999993333",
     status_disponibilidade: "Offline"
   }
