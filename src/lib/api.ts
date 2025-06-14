@@ -150,8 +150,8 @@ export class PetMemorialAPI {
         const dataAtendimento = new Date(a.data_inicio).toDateString();
         return hoje === dataAtendimento;
       }).length,
-      totalItens: mockItensDeVenda.length,
-      totalPlanos: mockPlanos.length,
+      totalClientes: mockTutores.length,
+      clicksVenda: 47, // Simulando clicks em links de venda
       atendimentosRecentes: mockAtendimentos.slice(-5).reverse()
     };
   }

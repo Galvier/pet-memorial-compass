@@ -1,15 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { CalendarDays, Package, Shield, TrendingUp } from 'lucide-react';
+import { CalendarDays, Users, MousePointer, TrendingUp } from 'lucide-react';
 import { PetMemorialAPI } from '@/lib/api';
 
 export const Dashboard: React.FC = () => {
   const [stats, setStats] = useState({
     atendimentosHoje: 0,
-    totalItens: 0,
-    totalPlanos: 0,
+    totalClientes: 0,
+    clicksVenda: 0,
     atendimentosRecentes: []
   });
   const [loading, setLoading] = useState(true);
@@ -83,14 +82,14 @@ export const Dashboard: React.FC = () => {
         <Card className="border-l-4 border-purple-primary/60 bg-white hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Total de Planos
+              Total de Clientes
             </CardTitle>
-            <Shield className="h-5 w-5 text-purple-primary/70" />
+            <Users className="h-5 w-5 text-purple-primary/70" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-primary">{stats.totalPlanos}</div>
+            <div className="text-3xl font-bold text-purple-primary">{stats.totalClientes}</div>
             <p className="text-xs text-gray-500">
-              Bronze, Prata e Ouro
+              Clientes atendidos
             </p>
           </CardContent>
         </Card>
@@ -98,14 +97,14 @@ export const Dashboard: React.FC = () => {
         <Card className="border-l-4 border-gray-300 bg-white hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              Itens de Venda
+              Clicks em Vendas
             </CardTitle>
-            <Package className="h-5 w-5 text-gray-500" />
+            <MousePointer className="h-5 w-5 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-700">{stats.totalItens}</div>
+            <div className="text-3xl font-bold text-gray-700">{stats.clicksVenda}</div>
             <p className="text-xs text-gray-500">
-              Cremação, urnas e acessórios
+              Links de venda acessados
             </p>
           </CardContent>
         </Card>
