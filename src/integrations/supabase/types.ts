@@ -9,7 +9,168 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      atendentes: {
+        Row: {
+          atendente_id: number
+          created_at: string | null
+          email: string
+          nome_atendente: string
+          status_disponibilidade: string | null
+          updated_at: string | null
+          user_id: string | null
+          whatsapp_atendente: string | null
+        }
+        Insert: {
+          atendente_id?: number
+          created_at?: string | null
+          email: string
+          nome_atendente: string
+          status_disponibilidade?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp_atendente?: string | null
+        }
+        Update: {
+          atendente_id?: number
+          created_at?: string | null
+          email?: string
+          nome_atendente?: string
+          status_disponibilidade?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          whatsapp_atendente?: string | null
+        }
+        Relationships: []
+      }
+      atendimentos: {
+        Row: {
+          atendente_responsavel_id: number | null
+          atendimento_id: number
+          created_at: string | null
+          dados_coletados: Json | null
+          data_inicio: string | null
+          pet_id: number | null
+          status: string | null
+          status_atendimento: string | null
+          sugestoes_geradas: Json | null
+          tipo_atendimento: string | null
+          tutor_id: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          atendente_responsavel_id?: number | null
+          atendimento_id?: number
+          created_at?: string | null
+          dados_coletados?: Json | null
+          data_inicio?: string | null
+          pet_id?: number | null
+          status?: string | null
+          status_atendimento?: string | null
+          sugestoes_geradas?: Json | null
+          tipo_atendimento?: string | null
+          tutor_id?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          atendente_responsavel_id?: number | null
+          atendimento_id?: number
+          created_at?: string | null
+          dados_coletados?: Json | null
+          data_inicio?: string | null
+          pet_id?: number | null
+          status?: string | null
+          status_atendimento?: string | null
+          sugestoes_geradas?: Json | null
+          tipo_atendimento?: string | null
+          tutor_id?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atendimentos_atendente_responsavel_id_fkey"
+            columns: ["atendente_responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "atendentes"
+            referencedColumns: ["atendente_id"]
+          },
+          {
+            foreignKeyName: "atendimentos_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["pet_id"]
+          },
+          {
+            foreignKeyName: "atendimentos_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutores"
+            referencedColumns: ["tutor_id"]
+          },
+        ]
+      }
+      pets: {
+        Row: {
+          created_at: string | null
+          idade_pet: number | null
+          nome_pet: string
+          pet_id: number
+          tutor_id: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          idade_pet?: number | null
+          nome_pet: string
+          pet_id?: number
+          tutor_id?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          idade_pet?: number | null
+          nome_pet?: string
+          pet_id?: number
+          tutor_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pets_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutores"
+            referencedColumns: ["tutor_id"]
+          },
+        ]
+      }
+      tutores: {
+        Row: {
+          created_at: string | null
+          endereco: string | null
+          id_whatsapp: string
+          nome_tutor: string
+          perfil_calculado: string | null
+          profissao: string | null
+          tutor_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          endereco?: string | null
+          id_whatsapp: string
+          nome_tutor: string
+          perfil_calculado?: string | null
+          profissao?: string | null
+          tutor_id?: number
+        }
+        Update: {
+          created_at?: string | null
+          endereco?: string | null
+          id_whatsapp?: string
+          nome_tutor?: string
+          perfil_calculado?: string | null
+          profissao?: string | null
+          tutor_id?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

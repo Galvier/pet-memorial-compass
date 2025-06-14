@@ -1,34 +1,93 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { User, Heart, Calendar, ArrowRight, RefreshCw } from 'lucide-react';
-import { PetMemorialAPI } from '@/lib/api';
+import { User, Heart, Calendar, ArrowRight, RefreshCw, LogOut } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Atendimento } from '@/types';
+import { toast } from 'sonner';
 
 export const MeusAtendimentosList: React.FC = () => {
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
   const [loading, setLoading] = useState(true);
   const [atendenteNome, setAtendenteNome] = useState<string>('');
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const fetchMeusAtendimentos = async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
-      // Simular dados para o atendente logado
-      const todosAtendimentos = await PetMemorialAPI.getAtendimentos();
-      
-      // Filtrar apenas atendimentos atribuídos (simulando autenticação)
-      const meusAtendimentos = todosAtendimentos.filter(
-        atendimento => atendimento.status_atendimento === 'ATRIBUIDO_HUMANO'
-      );
-      
-      setAtendimentos(meusAtendimentos);
-      setAtendenteNome('João Silva'); // Simular nome do atendente logado
+
+      // Primeiro, obter dados do atendente logado
+      const { data: atendenteData, error: atendenteError } = await supabase
+        .from('atendentes')
+        .select('atendente_id, nome_atendente')
+        .eq('user_id', user.id)
+        .single();
+
+      if (atendenteError) {
+        console.error('Erro ao buscar dados do atendente:', atendenteError);
+        toast.error('Erro ao carregar dados do atendente');
+        return;
+      }
+
+      setAtendenteNome(atendenteData.nome_atendente);
+
+      // Buscar atendimentos atribuídos ao atendente logado
+      const { data: atendimentosData, error: atendimentosError } = await supabase
+        .from('atendimentos')
+        .select(`
+          *,
+          tutores (*),
+          pets (*)
+        `)
+        .eq('atendente_responsavel_id', atendenteData.atendente_id)
+        .order('data_inicio', { ascending: false });
+
+      if (atendimentosError) {
+        console.error('Erro ao buscar atendimentos:', atendimentosError);
+        toast.error('Erro ao carregar atendimentos');
+        return;
+      }
+
+      // Mapear dados para o formato esperado
+      const atendimentosMapeados = atendimentosData.map(atendimento => ({
+        atendimento_id: atendimento.atendimento_id,
+        tutor_id: atendimento.tutor_id,
+        pet_id: atendimento.pet_id,
+        data_inicio: atendimento.data_inicio,
+        status: atendimento.status,
+        status_atendimento: atendimento.status_atendimento,
+        tipo_atendimento: atendimento.tipo_atendimento,
+        dados_coletados: atendimento.dados_coletados,
+        sugestoes_geradas: atendimento.sugestoes_geradas,
+        atendente_responsavel_id: atendimento.atendente_responsavel_id,
+        tutor: atendimento.tutores ? {
+          tutor_id: atendimento.tutores.tutor_id,
+          id_whatsapp: atendimento.tutores.id_whatsapp,
+          nome_tutor: atendimento.tutores.nome_tutor,
+          profissao: atendimento.tutores.profissao,
+          endereco: atendimento.tutores.endereco,
+          perfil_calculado: atendimento.tutores.perfil_calculado
+        } : undefined,
+        pet: atendimento.pets ? {
+          pet_id: atendimento.pets.pet_id,
+          tutor_id: atendimento.pets.tutor_id,
+          nome_pet: atendimento.pets.nome_pet,
+          idade_pet: atendimento.pets.idade_pet
+        } : undefined
+      }));
+
+      setAtendimentos(atendimentosMapeados);
     } catch (error) {
       console.error('Erro ao carregar meus atendimentos:', error);
+      toast.error('Erro inesperado ao carregar atendimentos');
     } finally {
       setLoading(false);
     }
@@ -36,7 +95,13 @@ export const MeusAtendimentosList: React.FC = () => {
 
   useEffect(() => {
     fetchMeusAtendimentos();
-  }, []);
+  }, [user]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+    toast.success('Logout realizado com sucesso');
+  };
 
   const getStatusBadge = (status: string) => {
     const colors = {
@@ -86,10 +151,16 @@ export const MeusAtendimentosList: React.FC = () => {
             Olá, {atendenteNome}! Aqui estão os atendimentos atribuídos a você.
           </p>
         </div>
-        <Button onClick={fetchMeusAtendimentos} variant="outline">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Atualizar
-        </Button>
+        <div className="flex space-x-2">
+          <Button onClick={fetchMeusAtendimentos} variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Atualizar
+          </Button>
+          <Button onClick={handleSignOut} variant="outline">
+            <LogOut className="w-4 h-4 mr-2" />
+            Sair
+          </Button>
+        </div>
       </div>
 
       {/* Cards de Resumo */}
