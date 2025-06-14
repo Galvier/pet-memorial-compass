@@ -166,6 +166,68 @@ export class PetMemorialAPI {
     return true;
   }
 
+  // Nova função: Lógica de Round-Robin para atribuição automática
+  static async solicitarAtendimentoHumano(atendimentoId: number): Promise<{message: string, atendente_atribuido: string}> {
+    await delay(800);
+    
+    console.log('🔄 Iniciando processo Round-Robin para atendimento:', atendimentoId);
+    
+    // Passo 1: Encontrar o atendimento
+    const atendimento = mockAtendimentos.find(a => a.atendimento_id === atendimentoId);
+    if (!atendimento) {
+      throw new Error('Atendimento não encontrado');
+    }
+
+    // Passo 2: Encontrar atendentes online
+    const atendentesOnline = mockAtendentes.filter(a => a.status_disponibilidade === 'Online');
+    
+    if (atendentesOnline.length === 0) {
+      console.log('⏳ Nenhum atendente online - atendimento em fila de espera');
+      return {
+        message: 'Nenhum atendente online. Atendimento em fila de espera.',
+        atendente_atribuido: 'Nenhum disponível'
+      };
+    }
+
+    // Passo 3: Calcular carga de trabalho de cada atendente online
+    const cargaTrabalho = atendentesOnline.map(atendente => {
+      const atendimentosAtivos = mockAtendimentos.filter(a => 
+        a.atendente_responsavel_id === atendente.atendente_id && 
+        a.status_atendimento === 'ATRIBUIDO_HUMANO'
+      ).length;
+      
+      return {
+        atendente,
+        carga: atendimentosAtivos
+      };
+    });
+
+    console.log('📊 Carga de trabalho atual:', cargaTrabalho.map(c => 
+      `${c.atendente.nome_atendente}: ${c.carga} atendimentos`
+    ));
+
+    // Passo 4: Encontrar atendente com menor carga (Round-Robin)
+    const atendenteEscolhido = cargaTrabalho.reduce((menor, atual) => 
+      atual.carga < menor.carga ? atual : menor
+    );
+
+    console.log(`🎯 Atendente escolhido: ${atendenteEscolhido.atendente.nome_atendente} (${atendenteEscolhido.carga} atendimentos ativos)`);
+
+    // Passo 5: Atribuir o atendimento
+    atendimento.atendente_responsavel_id = atendenteEscolhido.atendente.atendente_id;
+    atendimento.status_atendimento = 'ATRIBUIDO_HUMANO';
+    atendimento.atendente = atendenteEscolhido.atendente;
+
+    // Passo 6: Simular notificação automática
+    console.log(`🔔 Notificação automática enviada para ${atendenteEscolhido.atendente.whatsapp_atendente}:`, 
+      `🤖 ATRIBUIÇÃO AUTOMÁTICA\n\nOlá, ${atendenteEscolhido.atendente.nome_atendente}!\n\nUm cliente solicitou atendimento humano e você foi automaticamente selecionado.\n\nCliente: ${atendimento.tutor?.nome_tutor}\nPet: ${atendimento.pet?.nome_pet}\nTipo: ${atendimento.tipo_atendimento}\n\n⚡ Por favor, assuma a conversa o mais rápido possível!`);
+    
+    return {
+      message: `Atendimento atribuído automaticamente via Round-Robin para ${atendenteEscolhido.atendente.nome_atendente}`,
+      atendente_atribuido: atendenteEscolhido.atendente.nome_atendente
+    };
+  }
+
   static async verificarStatusAtendimento(idWhatsapp: string): Promise<StatusAtendimentoResponse> {
     await delay(200);
     

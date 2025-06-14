@@ -34,6 +34,26 @@ export async function atribuirAtendimento(atendimentoId: number, request: Atribu
   }
 }
 
+// Endpoint para solicitação automática de atendimento humano (Round-Robin)
+export async function solicitarAtendimentoHumano(atendimentoId: number) {
+  try {
+    console.log('🤖 Solicitando atendimento humano automático (Round-Robin) para:', atendimentoId);
+    
+    const result = await PetMemorialAPI.solicitarAtendimentoHumano(atendimentoId);
+    
+    console.log('✅ Atendimento atribuído automaticamente via Round-Robin');
+    
+    return { 
+      success: true, 
+      message: result.message,
+      atendente_atribuido: result.atendente_atribuido 
+    };
+  } catch (error) {
+    console.error('❌ Erro na atribuição automática:', error);
+    throw new Error('Erro interno do servidor');
+  }
+}
+
 // Endpoint para verificar status do atendimento
 export async function verificarStatusAtendimento(idWhatsapp: string) {
   try {
@@ -54,5 +74,6 @@ export async function verificarStatusAtendimento(idWhatsapp: string) {
 export const simulateAtendimentoAPI = {
   assumir: assumirAtendimento,
   atribuir: atribuirAtendimento,
+  solicitarHumano: solicitarAtendimentoHumano,
   verificarStatus: verificarStatusAtendimento
 };
