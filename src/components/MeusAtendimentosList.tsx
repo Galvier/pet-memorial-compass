@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { User, Heart, Calendar, ArrowRight, RefreshCw } from 'lucide-react';
+import { User, Heart, Calendar, ArrowRight, RefreshCw, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Atendimento } from '@/types';
@@ -119,45 +119,49 @@ export const MeusAtendimentosList: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 bg-gray-200 rounded w-64 animate-pulse"></div>
-        <Card className="animate-pulse">
-          <CardContent className="p-6">
-            <div className="h-40 bg-gray-200 rounded"></div>
-          </CardContent>
-        </Card>
+      <div className="space-y-4 lg:space-y-6">
+        <div className="h-6 lg:h-8 bg-gray-200 rounded w-48 lg:w-64 animate-pulse"></div>
+        <div className="space-y-3 lg:space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-4 lg:p-6">
+                <div className="h-16 lg:h-20 bg-gray-200 rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+    <div className="space-y-4 lg:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="text-center sm:text-left">
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
             Meus Atendimentos
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm lg:text-base text-gray-600">
             Olá, {userProfile?.nome}! Aqui estão os atendimentos atribuídos a você.
           </p>
         </div>
-        <Button onClick={fetchMeusAtendimentos} variant="outline">
+        <Button onClick={fetchMeusAtendimentos} variant="outline" size="sm" className="self-center sm:self-auto">
           <RefreshCw className="w-4 h-4 mr-2" />
           Atualizar
         </Button>
       </div>
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs lg:text-sm font-medium">
               Atendimentos Ativos
             </CardTitle>
-            <User className="h-4 w-4 text-muted-foreground" />
+            <User className="h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-primary">
+          <CardContent className="pb-3">
+            <div className="text-xl lg:text-2xl font-bold text-purple-primary">
               {atendimentos.length}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -168,13 +172,13 @@ export const MeusAtendimentosList: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs lg:text-sm font-medium">
               Em Andamento
             </CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Calendar className="h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+          <CardContent className="pb-3">
+            <div className="text-xl lg:text-2xl font-bold text-yellow-600">
               {atendimentos.filter(a => a.status === 'Em andamento').length}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -185,13 +189,13 @@ export const MeusAtendimentosList: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-xs lg:text-sm font-medium">
               Finalizados Hoje
             </CardTitle>
-            <Heart className="h-4 w-4 text-muted-foreground" />
+            <Heart className="h-3 w-3 lg:h-4 lg:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className="pb-3">
+            <div className="text-xl lg:text-2xl font-bold text-green-600">
               {atendimentos.filter(a => a.status === 'Finalizado').length}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -203,80 +207,138 @@ export const MeusAtendimentosList: React.FC = () => {
 
       {/* Lista de Atendimentos */}
       <Card>
-        <CardHeader>
-          <CardTitle>Lista de Atendimentos</CardTitle>
+        <CardHeader className="pb-3 lg:pb-6">
+          <CardTitle className="text-lg lg:text-xl">Lista de Atendimentos</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 lg:p-6">
           {atendimentos.length === 0 ? (
-            <div className="text-center py-12">
-              <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="text-center py-8 lg:py-12">
+              <Heart className="w-8 h-8 lg:w-12 lg:h-12 text-gray-400 mx-auto mb-3 lg:mb-4" />
+              <h3 className="text-base lg:text-lg font-medium text-gray-900 mb-2">
                 Nenhum atendimento atribuído
               </h3>
-              <p className="text-gray-600">
+              <p className="text-sm lg:text-base text-gray-600">
                 Quando houver novos atendimentos, eles aparecerão aqui.
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Tutor</TableHead>
-                    <TableHead>Pet</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {atendimentos.map((atendimento) => (
-                    <TableRow key={atendimento.atendimento_id}>
-                      <TableCell className="font-medium">
-                        #{atendimento.atendimento_id}
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">
-                            {atendimento.tutor?.nome_tutor}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {atendimento.tutor?.id_whatsapp}
+            <>
+              {/* Mobile View - Cards */}
+              <div className="block lg:hidden space-y-3">
+                {atendimentos.map((atendimento) => (
+                  <Card key={atendimento.atendimento_id} className="border-l-4 border-purple-primary/20">
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        {/* Header */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="text-sm font-medium text-purple-primary">
+                                #{atendimento.atendimento_id}
+                              </span>
+                              {getStatusBadge(atendimento.status)}
+                            </div>
+                            <div className="font-medium text-sm truncate">
+                              {atendimento.tutor?.nome_tutor}
+                            </div>
+                            <div className="text-xs text-gray-600 truncate">
+                              {atendimento.tutor?.id_whatsapp}
+                            </div>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Heart className="w-4 h-4 text-purple-primary" />
-                          <span>{atendimento.pet?.nome_pet}</span>
+                        
+                        {/* Pet Info */}
+                        {atendimento.pet && (
+                          <div className="flex items-center space-x-2 text-xs text-purple-primary/70">
+                            <Heart className="w-3 h-3 flex-shrink-0" />
+                            <span>{atendimento.pet.nome_pet}</span>
+                          </div>
+                        )}
+                        
+                        {/* Type and Date */}
+                        <div className="flex items-center justify-between text-xs">
+                          <Badge variant="outline" className="text-xs">
+                            {atendimento.tipo_atendimento}
+                          </Badge>
+                          <span className="text-gray-600">
+                            {formatDate(atendimento.data_inicio)}
+                          </span>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {atendimento.tipo_atendimento}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(atendimento.status)}
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(atendimento.data_inicio)}
-                      </TableCell>
-                      <TableCell>
-                        <Link to={`/atendimentos/${atendimento.atendimento_id}`}>
-                          <Button size="sm" variant="outline">
+                        
+                        {/* Action */}
+                        <Link to={`/atendimentos/${atendimento.atendimento_id}`} className="block">
+                          <Button size="sm" variant="outline" className="w-full text-xs">
+                            <Eye className="w-3 h-3 mr-2" />
                             Ver Detalhes
-                            <ArrowRight className="w-4 h-4 ml-2" />
                           </Button>
                         </Link>
-                      </TableCell>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop View - Table */}
+              <div className="hidden lg:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Tutor</TableHead>
+                      <TableHead>Pet</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Ações</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {atendimentos.map((atendimento) => (
+                      <TableRow key={atendimento.atendimento_id}>
+                        <TableCell className="font-medium">
+                          #{atendimento.atendimento_id}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">
+                              {atendimento.tutor?.nome_tutor}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {atendimento.tutor?.id_whatsapp}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <Heart className="w-4 h-4 text-purple-primary" />
+                            <span>{atendimento.pet?.nome_pet}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {atendimento.tipo_atendimento}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(atendimento.status)}
+                        </TableCell>
+                        <TableCell>
+                          {formatDate(atendimento.data_inicio)}
+                        </TableCell>
+                        <TableCell>
+                          <Link to={`/atendimentos/${atendimento.atendimento_id}`}>
+                            <Button size="sm" variant="outline">
+                              Ver Detalhes
+                              <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
