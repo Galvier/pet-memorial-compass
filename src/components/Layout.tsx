@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   LogOut,
-  User
+  User,
+  UserCheck
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,15 +26,38 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, userProfile, signOut } = useAuth();
+  const { user, userProfile, signOut, isAdmin, isAtendente } = useAuth();
 
-  const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Planos', href: '/planos', icon: Shield },
-    { name: 'Itens de Venda', href: '/itens', icon: Package },
-    { name: 'Atendimentos', href: '/atendimentos', icon: History },
-    { name: 'Atendentes', href: '/atendentes', icon: Users },
-  ];
+  // Filtrar navegação baseado no papel do usuário
+  const getFilteredNavigation = () => {
+    const baseNavigation = [
+      { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'atendente'] },
+    ];
+
+    // Adicionar "Meus Atendimentos" para atendentes
+    if (isAtendente()) {
+      baseNavigation.push({
+        name: 'Meus Atendimentos',
+        href: '/meus-atendimentos',
+        icon: UserCheck,
+        roles: ['atendente']
+      });
+    }
+
+    // Adicionar páginas administrativas apenas para admins
+    if (isAdmin()) {
+      baseNavigation.push(
+        { name: 'Planos', href: '/planos', icon: Shield, roles: ['admin'] },
+        { name: 'Itens de Venda', href: '/itens', icon: Package, roles: ['admin'] },
+        { name: 'Atendimentos', href: '/atendimentos', icon: History, roles: ['admin'] },
+        { name: 'Atendentes', href: '/atendentes', icon: Users, roles: ['admin'] }
+      );
+    }
+
+    return baseNavigation;
+  };
+
+  const navigation = getFilteredNavigation();
 
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
