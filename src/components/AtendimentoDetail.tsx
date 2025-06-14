@@ -4,7 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, Phone, MapPin, Calendar, Package } from 'lucide-react';
+import { ArrowLeft, User, Phone, MapPin, Calendar, Package, Heart } from 'lucide-react';
 import { PetMemorialAPI } from '@/lib/api';
 import { Atendimento } from '@/types';
 
@@ -108,7 +108,33 @@ export const AtendimentoDetail: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Informações do Pet */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-purple-primary">
+              <Heart className="w-5 h-5" />
+              <span>Dados do Pet</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-500">Nome do Pet</label>
+              <p className="text-lg font-semibold text-purple-primary">
+                {atendimento.pet?.nome_pet || 'Não informado'}
+              </p>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-500">Idade</label>
+              <p className="text-base">
+                {atendimento.pet?.idade_pet ? `${atendimento.pet.idade_pet} anos` : 'Não informado'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dados do Tutor */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -152,6 +178,7 @@ export const AtendimentoDetail: React.FC = () => {
           </CardContent>
         </Card>
 
+        {/* Informações do Atendimento */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -166,24 +193,35 @@ export const AtendimentoDetail: React.FC = () => {
             </div>
             
             <div>
-              <label className="text-sm font-medium text-gray-500">Status</label>
-              <div className="mt-1">
-                {getStatusBadge(atendimento.status)}
-              </div>
+              <label className="text-sm font-medium text-gray-500">Tipo</label>
+              <p>{atendimento.tipo_atendimento}</p>
             </div>
             
             <div>
-              <label className="text-sm font-medium text-gray-500">Dados Coletados</label>
-              <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {JSON.stringify(atendimento.dados_coletados, null, 2)}
-                </pre>
+              <label className="text-sm font-medium text-gray-500">Status</label>
+              <div className="mt-1">
+                {getStatusBadge(atendimento.status)}
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Dados Coletados */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Dados Coletados Detalhados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="p-4 bg-gray-50 rounded-lg">
+            <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+              {JSON.stringify(atendimento.dados_coletados, null, 2)}
+            </pre>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Produtos Sugeridos */}
       {atendimento.sugestoes_geradas && atendimento.sugestoes_geradas.length > 0 && (
         <Card>
           <CardHeader>
@@ -197,16 +235,18 @@ export const AtendimentoDetail: React.FC = () => {
               {atendimento.sugestoes_geradas.map((sugestao: any, index: number) => (
                 <div key={index} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
                   <h3 className="font-semibold text-gray-900 mb-2">
-                    {sugestao.nome_produto}
+                    {sugestao.nome}
                   </h3>
                   {sugestao.descricao && (
                     <p className="text-sm text-gray-600 mb-3">
                       {sugestao.descricao}
                     </p>
                   )}
-                  <div className="text-lg font-bold text-green-600">
-                    {formatPrice(sugestao.preco)}
-                  </div>
+                  {sugestao.preco && (
+                    <div className="text-lg font-bold text-green-600">
+                      {formatPrice(sugestao.preco)}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

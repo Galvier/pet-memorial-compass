@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   try {
     const body: RecomendacaoRequest = await request.json();
     
-    console.log('Recebendo dados do n8n:', body);
+    console.log('Recebendo dados estruturados do n8n:', body);
     
     // Validar dados obrigatórios
     if (!body.id_whatsapp || !body.nome_tutor || !body.tipo_atendimento) {
@@ -15,8 +15,24 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Validar dados do pet
+    if (!body.pet || !body.pet.nome || !body.pet.idade) {
+      return Response.json(
+        { error: 'Dados do pet obrigatórios: nome e idade' },
+        { status: 400 }
+      );
+    }
+
+    // Validar dados do tutor
+    if (!body.tutor || !body.tutor.profissao || !body.tutor.endereco) {
+      return Response.json(
+        { error: 'Dados do tutor obrigatórios: profissao e endereco' },
+        { status: 400 }
+      );
+    }
     
-    // Processar recomendação
+    // Processar recomendação com nova estrutura
     const response = await PetMemorialAPI.processarRecomendacao(body);
     
     console.log('Enviando sugestões para n8n:', response);
@@ -33,7 +49,7 @@ export async function POST(request: Request) {
 
 // Simulação de endpoint - em uma aplicação real, isso seria configurado no servidor
 export const simulateRecomendacaoAPI = async (request: RecomendacaoRequest): Promise<RecomendacaoResponse> => {
-  console.log('📥 API Recebeu dados do n8n:', request);
+  console.log('📥 API Recebeu dados estruturados do n8n:', request);
   
   const response = await PetMemorialAPI.processarRecomendacao(request);
   

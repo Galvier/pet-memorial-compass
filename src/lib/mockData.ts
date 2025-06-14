@@ -1,5 +1,5 @@
 
-import { Plano, ItemDeVenda, Tutor, Atendimento } from '@/types';
+import { Plano, ItemDeVenda, Tutor, Atendimento, Pet } from '@/types';
 
 export const mockPlanos: Plano[] = [
   {
@@ -73,26 +73,44 @@ export const mockTutores: Tutor[] = [
   }
 ];
 
+export const mockPets: Pet[] = [
+  {
+    pet_id: 1,
+    tutor_id: 1,
+    nome_pet: "Rex",
+    idade_pet: 14
+  },
+  {
+    pet_id: 2,
+    tutor_id: 2,
+    nome_pet: "Luna",
+    idade_pet: 8
+  }
+];
+
 export const mockAtendimentos: Atendimento[] = [
   {
     atendimento_id: 1,
     tutor_id: 1,
+    pet_id: 1,
     data_inicio: "2024-06-14T10:30:00",
     status: "Sugestão enviada",
     tipo_atendimento: "Imediato",
     dados_coletados: {
-      preferencias: ["quer_cinzas", "urna_em_casa"],
+      preferencias: { quer_cinzas: true },
       tipo_pet: "Cão",
-      idade_pet: "12 anos"
+      idade_pet: 14
     },
     sugestoes_geradas: [
-      { nome: "Pacote Homenagem Superior", descricao: "Inclui Cremação Individual e uma Urna Superior." }
+      { nome: "Pacote Homenagem Superior", descricao: "Inclui Cremação Individual e uma Urna Superior.", preco: "1150.00" }
     ],
-    tutor: mockTutores[0]
+    tutor: mockTutores[0],
+    pet: mockPets[0]
   },
   {
     atendimento_id: 2,
     tutor_id: 2,
+    pet_id: 2,
     data_inicio: "2024-06-13T14:15:00",
     status: "Finalizado",
     tipo_atendimento: "Preventivo",
@@ -104,6 +122,7 @@ export const mockAtendimentos: Atendimento[] = [
       { nome: "Plano Prata", descricao: "Cremação Individual e acesso ao Clube de Benefícios." },
       { nome: "Plano Ouro", descricao: "Cremação Individual com uma urna superior inclusa." }
     ],
-    tutor: mockTutores[1]
+    tutor: mockTutores[1],
+    pet: mockPets[1]
   }
 ];

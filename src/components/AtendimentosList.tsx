@@ -87,6 +87,11 @@ export const AtendimentosList: React.FC = () => {
                     <span className="font-semibold text-purple-primary text-sm lg:text-base">
                       {atendimento.tutor?.nome_tutor}
                     </span>
+                    {atendimento.pet?.nome_pet && (
+                      <span className="text-gray-500 text-xs lg:text-sm">
+                        (Pet: {atendimento.pet.nome_pet})
+                      </span>
+                    )}
                   </div>
                   {getStatusBadge(atendimento.status)}
                 </div>
@@ -102,6 +107,16 @@ export const AtendimentosList: React.FC = () => {
                     <span className="truncate">{atendimento.tutor?.profissao}</span>
                   </div>
                 </div>
+                
+                {/* Pet info if available */}
+                {atendimento.pet && (
+                  <div className="flex items-center space-x-2 text-xs lg:text-sm text-purple-primary/70">
+                    <Heart className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
+                    <span>
+                      {atendimento.pet.nome_pet} ({atendimento.pet.idade_pet} anos)
+                    </span>
+                  </div>
+                )}
                 
                 {/* Date */}
                 <div className="flex items-center space-x-2 text-xs lg:text-sm text-gray-600">

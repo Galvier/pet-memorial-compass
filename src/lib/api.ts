@@ -1,6 +1,6 @@
 
-import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento } from '@/types';
-import { mockItensDeVenda, mockPlanos, mockTutores, mockAtendimentos } from './mockData';
+import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento, Pet } from '@/types';
+import { mockItensDeVenda, mockPlanos, mockTutores, mockAtendimentos, mockPets } from './mockData';
 
 // Simula delay de API
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -23,19 +23,72 @@ export class PetMemorialAPI {
   static async processarRecomendacao(request: RecomendacaoRequest): Promise<RecomendacaoResponse> {
     await delay(1000);
     
+    console.log('📥 Processando nova estrutura de dados:', request);
+    
+    // Registrar/Atualizar Tutor
+    let tutor = mockTutores.find(t => t.id_whatsapp === request.id_whatsapp);
+    if (!tutor) {
+      const novoTutor: Tutor = {
+        tutor_id: Math.max(...mockTutores.map(t => t.tutor_id)) + 1,
+        id_whatsapp: request.id_whatsapp,
+        nome_tutor: request.nome_tutor,
+        profissao: request.tutor.profissao,
+        endereco: request.tutor.endereco,
+        perfil_calculado: await this.calcularPerfil(request.tutor.profissao)
+      };
+      mockTutores.push(novoTutor);
+      tutor = novoTutor;
+      console.log('🆕 Novo tutor criado:', tutor);
+    }
+    
+    // Registrar Pet
+    const novoPet: Pet = {
+      pet_id: Math.max(...mockPets.map(p => p.pet_id)) + 1,
+      tutor_id: tutor.tutor_id,
+      nome_pet: request.pet.nome,
+      idade_pet: request.pet.idade
+    };
+    mockPets.push(novoPet);
+    console.log('🐕 Novo pet registrado:', novoPet);
+    
+    // Registrar Atendimento
+    const novoAtendimento: Atendimento = {
+      atendimento_id: Math.max(...mockAtendimentos.map(a => a.atendimento_id)) + 1,
+      tutor_id: tutor.tutor_id,
+      pet_id: novoPet.pet_id,
+      data_inicio: new Date().toISOString(),
+      status: 'Em andamento',
+      tipo_atendimento: request.tipo_atendimento,
+      dados_coletados: {
+        preferencias: request.preferencias,
+        pet: request.pet,
+        tutor: request.tutor
+      },
+      sugestoes_geradas: [],
+      tutor: tutor,
+      pet: novoPet
+    };
+    
     if (request.tipo_atendimento === 'Preventivo') {
-      // Retorna os planos Bronze, Prata e Ouro
+      const sugestoes = mockPlanos.map(plano => ({
+        nome: plano.nome_plano,
+        descricao: plano.descricao_curta
+      }));
+      
+      novoAtendimento.sugestoes_geradas = sugestoes;
+      novoAtendimento.status = 'Sugestão enviada';
+      
+      mockAtendimentos.push(novoAtendimento);
+      console.log('📋 Atendimento preventivo registrado:', novoAtendimento);
+      
       return {
         tipo_sugestao: "Planos Preventivos",
-        sugestoes: mockPlanos.map(plano => ({
-          nome: plano.nome_plano,
-          descricao: plano.descricao_curta
-        }))
+        sugestoes: sugestoes
       };
     }
     
     // Lógica para atendimento "Imediato"
-    const perfil = await this.calcularPerfil(request.profissao);
+    const perfil = tutor.perfil_calculado;
     
     let pacoteSugerido;
     
@@ -58,6 +111,12 @@ export class PetMemorialAPI {
         preco: "1150.00"
       };
     }
+    
+    novoAtendimento.sugestoes_geradas = [pacoteSugerido];
+    novoAtendimento.status = 'Sugestão enviada';
+    
+    mockAtendimentos.push(novoAtendimento);
+    console.log('🚨 Atendimento imediato registrado:', novoAtendimento);
     
     return {
       tipo_sugestao: "Pacote Imediato",
@@ -131,15 +190,38 @@ export class PetMemorialAPI {
     }
   }
 
-  // CRUD Operations para Atendimentos (mantendo compatibilidade)
+  // CRUD Operations para Pets
+  static async getPets(): Promise<Pet[]> {
+    await delay(500);
+    return [...mockPets];
+  }
+
+  static async getPet(id: number): Promise<Pet | null> {
+    await delay(500);
+    return mockPets.find(p => p.pet_id === id) || null;
+  }
+
+  // CRUD Operations para Atendimentos
   static async getAtendimentos(): Promise<Atendimento[]> {
     await delay(500);
-    return [...mockAtendimentos];
+    // Garantir que os relacionamentos estão populados
+    return mockAtendimentos.map(atendimento => ({
+      ...atendimento,
+      tutor: mockTutores.find(t => t.tutor_id === atendimento.tutor_id),
+      pet: mockPets.find(p => p.pet_id === atendimento.pet_id)
+    }));
   }
 
   static async getAtendimento(id: number): Promise<Atendimento | null> {
     await delay(500);
-    return mockAtendimentos.find(a => a.atendimento_id === id) || null;
+    const atendimento = mockAtendimentos.find(a => a.atendimento_id === id);
+    if (!atendimento) return null;
+    
+    return {
+      ...atendimento,
+      tutor: mockTutores.find(t => t.tutor_id === atendimento.tutor_id),
+      pet: mockPets.find(p => p.pet_id === atendimento.pet_id)
+    };
   }
 
   static async getDashboardStats() {
