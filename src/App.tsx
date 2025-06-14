@@ -14,6 +14,8 @@ import Atendimentos from "./pages/Atendimentos";
 import AtendimentoDetailPage from "./pages/AtendimentoDetail";
 import Atendentes from "./pages/Atendentes";
 import MeusAtendimentos from "./pages/MeusAtendimentos";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancelled from "./pages/PaymentCancelled";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-cancelled" element={<PaymentCancelled />} />
             <Route 
               path="/planos" 
               element={

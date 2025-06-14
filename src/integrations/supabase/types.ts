@@ -49,6 +49,7 @@ export type Database = {
           created_at: string | null
           dados_coletados: Json | null
           data_inicio: string | null
+          payment_id: string | null
           pet_id: number | null
           status: string | null
           status_atendimento: string | null
@@ -63,6 +64,7 @@ export type Database = {
           created_at?: string | null
           dados_coletados?: Json | null
           data_inicio?: string | null
+          payment_id?: string | null
           pet_id?: number | null
           status?: string | null
           status_atendimento?: string | null
@@ -77,6 +79,7 @@ export type Database = {
           created_at?: string | null
           dados_coletados?: Json | null
           data_inicio?: string | null
+          payment_id?: string | null
           pet_id?: number | null
           status?: string | null
           status_atendimento?: string | null
@@ -94,6 +97,13 @@ export type Database = {
             referencedColumns: ["atendente_id"]
           },
           {
+            foreignKeyName: "atendimentos_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "atendimentos_pet_id_fkey"
             columns: ["pet_id"]
             isOneToOne: false
@@ -106,6 +116,62 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tutores"
             referencedColumns: ["tutor_id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          atendimento_id: number | null
+          created_at: string
+          currency: string
+          customer_info: Json | null
+          gateway_payment_id: string | null
+          gateway_type: string
+          id: string
+          items: Json | null
+          payment_link: string | null
+          status: string
+          updated_at: string
+          webhook_data: Json | null
+        }
+        Insert: {
+          amount: number
+          atendimento_id?: number | null
+          created_at?: string
+          currency?: string
+          customer_info?: Json | null
+          gateway_payment_id?: string | null
+          gateway_type?: string
+          id?: string
+          items?: Json | null
+          payment_link?: string | null
+          status?: string
+          updated_at?: string
+          webhook_data?: Json | null
+        }
+        Update: {
+          amount?: number
+          atendimento_id?: number | null
+          created_at?: string
+          currency?: string
+          customer_info?: Json | null
+          gateway_payment_id?: string | null
+          gateway_type?: string
+          id?: string
+          items?: Json | null
+          payment_link?: string | null
+          status?: string
+          updated_at?: string
+          webhook_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_atendimento_id_fkey"
+            columns: ["atendimento_id"]
+            isOneToOne: false
+            referencedRelation: "atendimentos"
+            referencedColumns: ["atendimento_id"]
           },
         ]
       }
