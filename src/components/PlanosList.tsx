@@ -72,9 +72,9 @@ export const PlanosList: React.FC = () => {
   };
 
   const getPlanoBadge = (nome: string) => {
-    if (nome.includes('Bronze')) return <Badge className="bg-amber-600 text-white">Bronze</Badge>;
-    if (nome.includes('Prata')) return <Badge className="bg-gray-400 text-white">Prata</Badge>;
-    if (nome.includes('Ouro')) return <Badge className="bg-yellow-500 text-white">Ouro</Badge>;
+    if (nome.includes('Bronze')) return <Badge className="bg-purple-primary/10 text-purple-primary border-purple-primary/20">Bronze</Badge>;
+    if (nome.includes('Prata')) return <Badge className="bg-gray-100 text-gray-700 border-gray-200">Prata</Badge>;
+    if (nome.includes('Ouro')) return <Badge className="bg-yellow-primary/10 text-yellow-primary border-yellow-primary/20">Ouro</Badge>;
     return <Badge variant="outline">Plano</Badge>;
   };
 
@@ -102,12 +102,12 @@ export const PlanosList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-[#04422c] mb-2">Planos Terranova Pet</h1>
+          <h1 className="text-3xl font-bold text-purple-primary mb-2">Planos Terranova Pet</h1>
           <p className="text-gray-600">Gerencie os planos preventivos disponíveis</p>
         </div>
         <Button 
           onClick={handleCreate} 
-          className="bg-[#04422c] hover:bg-[#04422c]/90 text-white"
+          className="bg-yellow-primary hover:bg-yellow-primary/90 text-purple-primary font-semibold"
         >
           <Plus className="w-4 h-4 mr-2" />
           Novo Plano
@@ -116,16 +116,16 @@ export const PlanosList: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {planos.map((plano) => (
-          <Card key={plano.plano_id} className="hover:shadow-lg transition-shadow border-l-4 border-[#d3a85b]">
+          <Card key={plano.plano_id} className="hover:shadow-lg transition-shadow border-l-4 border-purple-primary/20 bg-white">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-lg mb-2 text-[#04422c]">{plano.nome_plano}</CardTitle>
+                  <CardTitle className="text-lg mb-2 text-purple-primary">{plano.nome_plano}</CardTitle>
                   <div className="flex items-center space-x-2 mb-2">
                     {getPlanoBadge(plano.nome_plano)}
                   </div>
                 </div>
-                <Shield className="w-5 h-5 text-[#d3a85b]" />
+                <Shield className="w-5 h-5 text-purple-primary/60" />
               </div>
             </CardHeader>
             <CardContent>
@@ -138,7 +138,7 @@ export const PlanosList: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => handleEdit(plano)}
-                  className="border-[#04422c] text-[#04422c] hover:bg-[#04422c] hover:text-white"
+                  className="border-purple-primary/30 text-purple-primary hover:bg-purple-primary hover:text-white"
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
@@ -165,7 +165,7 @@ export const PlanosList: React.FC = () => {
           <p className="text-gray-500 mb-4">
             Comece adicionando os planos Bronze, Prata e Ouro.
           </p>
-          <Button onClick={handleCreate} className="bg-[#04422c] hover:bg-[#04422c]/90">
+          <Button onClick={handleCreate} className="bg-yellow-primary hover:bg-yellow-primary/90 text-purple-primary font-semibold">
             <Plus className="w-4 h-4 mr-2" />
             Adicionar Plano
           </Button>

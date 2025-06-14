@@ -28,20 +28,14 @@ export const AtendimentosList: React.FC = () => {
   }, []);
 
   const getStatusBadge = (status: string) => {
-    const variants = {
-      'Em andamento': 'default',
-      'Sugestão enviada': 'secondary',
-      'Finalizado': 'outline'
-    } as const;
-    
     const colors = {
-      'Em andamento': 'bg-yellow-100 text-yellow-800',
-      'Sugestão enviada': 'bg-blue-100 text-blue-800',
-      'Finalizado': 'bg-green-100 text-green-800'
+      'Em andamento': 'bg-yellow-primary/10 text-yellow-primary border-yellow-primary/20',
+      'Sugestão enviada': 'bg-purple-primary/10 text-purple-primary border-purple-primary/20',
+      'Finalizado': 'bg-green-50 text-green-700 border-green-200'
     } as const;
     
     return (
-      <Badge className={colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'}>
+      <Badge className={colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-700 border-gray-200'}>
         {status}
       </Badge>
     );
@@ -77,20 +71,20 @@ export const AtendimentosList: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Atendimentos</h1>
+        <h1 className="text-3xl font-bold text-purple-primary mb-2">Atendimentos</h1>
         <p className="text-gray-600">Histórico completo de atendimentos realizados</p>
       </div>
 
       <div className="space-y-4">
         {atendimentos.map((atendimento) => (
-          <Card key={atendimento.atendimento_id} className="hover:shadow-md transition-shadow">
+          <Card key={atendimento.atendimento_id} className="hover:shadow-md transition-shadow border-l-4 border-purple-primary/20 bg-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-4 mb-3">
                     <div className="flex items-center space-x-2">
-                      <User className="w-4 h-4 text-gray-500" />
-                      <span className="font-semibold text-gray-900">
+                      <User className="w-4 h-4 text-purple-primary/60" />
+                      <span className="font-semibold text-purple-primary">
                         {atendimento.tutor?.nome_tutor}
                       </span>
                     </div>
@@ -117,7 +111,11 @@ export const AtendimentosList: React.FC = () => {
                 
                 <div className="ml-4">
                   <Link to={`/atendimentos/${atendimento.atendimento_id}`}>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="border-purple-primary/30 text-purple-primary hover:bg-purple-primary hover:text-white"
+                    >
                       <Eye className="w-4 h-4 mr-2" />
                       Ver Detalhes
                     </Button>

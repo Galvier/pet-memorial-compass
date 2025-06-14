@@ -73,13 +73,13 @@ export const ItensDeVendaList: React.FC = () => {
 
   const getPerfilBadge = (perfil: string) => {
     const variants = {
-      'Padrão': 'bg-gray-100 text-gray-800',
-      'Intermediário': 'bg-blue-100 text-blue-800',
-      'Luxo': 'bg-[#d3a85b] text-white'
+      'Padrão': 'bg-gray-100 text-gray-700 border-gray-200',
+      'Intermediário': 'bg-purple-primary/10 text-purple-primary border-purple-primary/20',
+      'Luxo': 'bg-yellow-primary/10 text-yellow-primary border-yellow-primary/20'
     } as const;
     
     return (
-      <Badge className={variants[perfil as keyof typeof variants] || 'bg-gray-100 text-gray-800'}>
+      <Badge className={variants[perfil as keyof typeof variants] || 'bg-gray-100 text-gray-700 border-gray-200'}>
         {perfil}
       </Badge>
     );
@@ -87,14 +87,14 @@ export const ItensDeVendaList: React.FC = () => {
 
   const getCategoryBadge = (categoria: string) => {
     const variants = {
-      'Cremação': 'bg-red-100 text-red-800',
-      'Urna': 'bg-green-100 text-green-800',
-      'Acessório': 'bg-purple-100 text-purple-800',
-      'Cerimônia': 'bg-orange-100 text-orange-800'
+      'Cremação': 'bg-red-50 text-red-700 border-red-200',
+      'Urna': 'bg-green-50 text-green-700 border-green-200',
+      'Acessório': 'bg-purple-primary/5 text-purple-primary border-purple-primary/10',
+      'Cerimônia': 'bg-orange-50 text-orange-700 border-orange-200'
     } as const;
     
     return (
-      <Badge className={variants[categoria as keyof typeof variants] || 'bg-gray-100 text-gray-800'}>
+      <Badge className={variants[categoria as keyof typeof variants] || 'bg-gray-100 text-gray-700 border-gray-200'}>
         {categoria}
       </Badge>
     );
@@ -131,12 +131,12 @@ export const ItensDeVendaList: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-[#04422c] mb-2">Itens de Venda</h1>
+          <h1 className="text-3xl font-bold text-purple-primary mb-2">Itens de Venda</h1>
           <p className="text-gray-600">Gerencie os itens e serviços disponíveis</p>
         </div>
         <Button 
           onClick={handleCreate} 
-          className="bg-[#04422c] hover:bg-[#04422c]/90"
+          className="bg-yellow-primary hover:bg-yellow-primary/90 text-purple-primary font-semibold"
         >
           <Plus className="w-4 h-4 mr-2" />
           Novo Item
@@ -145,17 +145,17 @@ export const ItensDeVendaList: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {itens.map((item) => (
-          <Card key={item.item_id} className="hover:shadow-lg transition-shadow border-l-4 border-[#d3a85b]">
+          <Card key={item.item_id} className="hover:shadow-lg transition-shadow border-l-4 border-purple-primary/20 bg-white">
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-lg mb-2 text-[#04422c]">{item.nome}</CardTitle>
+                  <CardTitle className="text-lg mb-2 text-purple-primary">{item.nome}</CardTitle>
                   <div className="flex items-center space-x-2 mb-2 flex-wrap gap-1">
                     {getCategoryBadge(item.categoria)}
                     {getPerfilBadge(item.perfil_afinidade)}
                   </div>
                 </div>
-                <Package className="w-5 h-5 text-[#d3a85b]" />
+                <Package className="w-5 h-5 text-purple-primary/60" />
               </div>
             </CardHeader>
             <CardContent>
@@ -164,7 +164,7 @@ export const ItensDeVendaList: React.FC = () => {
               </p>
               
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold text-[#04422c]">
+                <div className="text-2xl font-bold text-purple-primary">
                   {formatPrice(item.preco)}
                 </div>
                 <div className="flex space-x-2">
@@ -172,7 +172,7 @@ export const ItensDeVendaList: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleEdit(item)}
-                    className="border-[#04422c] text-[#04422c] hover:bg-[#04422c] hover:text-white"
+                    className="border-purple-primary/30 text-purple-primary hover:bg-purple-primary hover:text-white"
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -200,7 +200,7 @@ export const ItensDeVendaList: React.FC = () => {
           <p className="text-gray-500 mb-4">
             Comece adicionando seus primeiros itens de venda.
           </p>
-          <Button onClick={handleCreate} className="bg-[#04422c] hover:bg-[#04422c]/90">
+          <Button onClick={handleCreate} className="bg-yellow-primary hover:bg-yellow-primary/90 text-purple-primary font-semibold">
             <Plus className="w-4 h-4 mr-2" />
             Adicionar Item
           </Button>
