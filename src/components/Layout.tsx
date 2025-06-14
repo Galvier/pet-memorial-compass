@@ -30,9 +30,17 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Filtrar navegação baseado no papel do usuário
   const getFilteredNavigation = () => {
-    const baseNavigation = [
-      { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'atendente'] },
-    ];
+    const baseNavigation = [];
+
+    // Adicionar Dashboard apenas para admins
+    if (isAdmin()) {
+      baseNavigation.push({
+        name: 'Dashboard',
+        href: '/',
+        icon: LayoutDashboard,
+        roles: ['admin']
+      });
+    }
 
     // Adicionar "Meus Atendimentos" para atendentes
     if (isAtendente()) {
