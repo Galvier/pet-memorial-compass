@@ -6,6 +6,7 @@ import {
   Package, 
   Shield, 
   History,
+  Users,
   Menu,
   X
 } from 'lucide-react';
@@ -23,6 +24,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Planos', href: '/planos', icon: Shield },
     { name: 'Itens de Venda', href: '/itens', icon: Package },
     { name: 'Atendimentos', href: '/atendimentos', icon: History },
+    { name: 'Atendentes', href: '/atendentes', icon: Users },
   ];
 
   const isActive = (href: string) => {
