@@ -28,11 +28,46 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/planos" element={<Planos />} />
-            <Route path="/itens" element={<Itens />} />
-            <Route path="/atendimentos" element={<Atendimentos />} />
-            <Route path="/atendimentos/:id" element={<AtendimentoDetailPage />} />
-            <Route path="/atendentes" element={<Atendentes />} />
+            <Route 
+              path="/planos" 
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <Planos />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/itens" 
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <Itens />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/atendimentos" 
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <Atendimentos />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/atendimentos/:id" 
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <AtendimentoDetailPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/atendentes" 
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <Atendentes />
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/meus-atendimentos" 
               element={

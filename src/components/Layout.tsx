@@ -1,19 +1,35 @@
 
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Package, 
-  Shield, 
-  History,
-  Users,
-  Menu,
-  X,
-  LogOut,
-  User
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  SidebarInset,
+} from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Heart, 
+  BarChart3, 
+  Shield, 
+  Package, 
+  Users, 
+  UserCheck, 
+  HeadphonesIcon, 
+  LogOut, 
+  User,
+  Menu
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
@@ -22,23 +38,9 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, userProfile, signOut } = useAuth();
-
-  const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Planos', href: '/planos', icon: Shield },
-    { name: 'Itens de Venda', href: '/itens', icon: Package },
-    { name: 'Atendimentos', href: '/atendimentos', icon: History },
-    { name: 'Atendentes', href: '/atendentes', icon: Users },
-  ];
-
-  const isActive = (href: string) => {
-    if (href === '/') return location.pathname === '/';
-    return location.pathname.startsWith(href);
-  };
+  const location = useLocation();
+  const { user, userProfile, signOut, isAtendente, isAdmin } = useAuth();
 
   const handleSignOut = async () => {
     try {
@@ -50,168 +52,132 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <div className="lg:hidden bg-purple-primary shadow-lg">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-2">
-            <img 
-              src="/lovable-uploads/e05dec48-f72b-4ede-af54-afc2d1bebeef.png" 
-              alt="Terranova Pet Logo" 
-              className="h-8 w-8"
-            />
-            <div>
-              <h1 className="text-lg font-bold text-white">Terranova Pet</h1>
-              <p className="text-xs text-yellow-primary">Painel Administrativo</p>
-            </div>
+  // Itens do menu baseados no tipo de usuário
+  const getMenuItems = () => {
+    const baseItems = [
+      {
+        title: "Dashboard",
+        url: "/",
+        icon: BarChart3,
+        show: true
+      }
+    ];
+
+    const adminItems = [
+      {
+        title: "Planos",
+        url: "/planos",
+        icon: Shield,
+        show: isAdmin()
+      },
+      {
+        title: "Itens de Venda",
+        url: "/itens",
+        icon: Package,
+        show: isAdmin()
+      },
+      {
+        title: "Atendimentos",
+        url: "/atendimentos",
+        icon: HeadphonesIcon,
+        show: isAdmin()
+      },
+      {
+        title: "Atendentes",
+        url: "/atendentes",
+        icon: Users,
+        show: isAdmin()
+      }
+    ];
+
+    const atendenteItems = [
+      {
+        title: "Meus Atendimentos",
+        url: "/meus-atendimentos",
+        icon: UserCheck,
+        show: isAtendente()
+      }
+    ];
+
+    return [...baseItems, ...adminItems, ...atendenteItems].filter(item => item.show);
+  };
+
+  const AppSidebar = () => (
+    <Sidebar>
+      <SidebarHeader className="border-b border-purple-primary/20 p-4">
+        <div className="flex items-center space-x-3">
+          <Heart className="w-8 h-8 text-purple-primary" />
+          <div>
+            <h2 className="font-bold text-purple-primary">Terranova Pet</h2>
+            <p className="text-sm text-gray-600">Painel Administrativo</p>
           </div>
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="text-white p-2"
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
         </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="border-t border-purple-primary/20">
-            <nav className="px-4 py-2">
-              <div className="space-y-1">
-                {navigation.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors ${
-                        isActive(item.href)
-                          ? 'bg-yellow-primary text-purple-primary'
-                          : 'text-gray-300 hover:bg-purple-primary/50 hover:text-white'
-                      }`}
-                    >
-                      <Icon
-                        className={`mr-3 h-5 w-5 ${
-                          isActive(item.href) ? 'text-purple-primary' : 'text-gray-400 group-hover:text-gray-300'
-                        }`}
-                      />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-                
-                {/* User info and logout for mobile */}
-                {user && userProfile && (
-                  <div className="border-t border-purple-primary/20 mt-4 pt-4">
-                    <div className="flex items-center space-x-3 px-3 py-2">
-                      <User className="w-6 h-6 text-yellow-primary" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{userProfile.nome}</p>
-                        <p className="text-xs text-gray-300 truncate">{userProfile.email}</p>
-                        <Badge variant="outline" className="bg-yellow-primary/20 text-yellow-primary border-yellow-primary mt-1">
-                          {userProfile.role === 'atendente' ? 'Atendente' : 
-                           userProfile.role === 'admin' ? 'Administrador' : 'Cliente'}
-                        </Badge>
-                      </div>
-                    </div>
-                    <Button 
-                      onClick={handleSignOut} 
-                      variant="ghost" 
-                      size="sm"
-                      className="w-full justify-start text-gray-300 hover:text-white hover:bg-purple-primary/50 mt-2"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sair
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </nav>
-          </div>
-        )}
-      </div>
-
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:block">
-        <div className="bg-purple-primary shadow-lg h-full flex flex-col">
-          <div className="flex h-16 items-center justify-center border-b border-purple-primary/20">
-            <div className="flex items-center space-x-2">
-              <img 
-                src="/lovable-uploads/e05dec48-f72b-4ede-af54-afc2d1bebeef.png" 
-                alt="Terranova Pet Logo" 
-                className="h-8 w-8 text-yellow-primary"
-              />
-              <div>
-                <h1 className="text-xl font-bold text-white">Terranova Pet</h1>
-                <p className="text-xs text-yellow-primary">Painel Administrativo</p>
-              </div>
-            </div>
-          </div>
-          
-          <nav className="mt-6 px-3 flex-1">
-            <div className="space-y-1">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      isActive(item.href)
-                        ? 'bg-yellow-primary text-purple-primary'
-                        : 'text-gray-300 hover:bg-purple-primary/50 hover:text-white'
-                    }`}
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Navegação</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {getMenuItems().map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild
+                    isActive={location.pathname === item.url}
                   >
-                    <Icon
-                      className={`mr-3 h-5 w-5 ${
-                        isActive(item.href) ? 'text-purple-primary' : 'text-gray-400 group-hover:text-gray-300'
-                      }`}
-                    />
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </div>
-          </nav>
-
-          {/* User info and logout for desktop */}
-          {user && userProfile && (
-            <div className="border-t border-purple-primary/20 p-4">
-              <div className="flex items-center space-x-3 mb-3">
-                <User className="w-8 h-8 text-yellow-primary" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{userProfile.nome}</p>
-                  <p className="text-xs text-gray-300 truncate">{userProfile.email}</p>
-                </div>
+                    <button
+                      onClick={() => navigate(item.url)}
+                      className="w-full flex items-center"
+                    >
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.title}</span>
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      
+      <SidebarFooter className="border-t border-purple-primary/20 p-4">
+        {user && userProfile && (
+          <div className="space-y-3">
+            <div className="flex items-center space-x-3">
+              <User className="w-8 h-8 text-purple-primary" />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 truncate">{userProfile.nome}</h3>
+                <p className="text-sm text-gray-600 truncate">{userProfile.email}</p>
               </div>
-              <Badge variant="outline" className="bg-yellow-primary/20 text-yellow-primary border-yellow-primary mb-3 w-full justify-center">
+            </div>
+            <div className="flex items-center justify-between">
+              <Badge variant="outline" className="bg-purple-100 text-purple-800">
                 {userProfile.role === 'atendente' ? 'Atendente' : 
                  userProfile.role === 'admin' ? 'Administrador' : 'Cliente'}
               </Badge>
-              <Button 
-                onClick={handleSignOut} 
-                variant="ghost" 
-                size="sm"
-                className="w-full justify-start text-gray-300 hover:text-white hover:bg-purple-primary/50"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sair
+              <Button onClick={handleSignOut} variant="outline" size="sm">
+                <LogOut className="w-4 h-4" />
               </Button>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className={`${user ? 'lg:pl-64' : ''}`}>
-        <main className="py-4 lg:py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            {children}
           </div>
-        </main>
+        )}
+      </SidebarFooter>
+    </Sidebar>
+  );
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <SidebarInset className="flex-1">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger className="-ml-1" />
+          </header>
+          <main className="flex-1 p-6">
+            {children}
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
