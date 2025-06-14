@@ -27,8 +27,8 @@ export const ProdutoDialog: React.FC<ProdutoDialogProps> = ({
     nome_produto: '',
     descricao: '',
     preco: '',
-    categoria: 'Urna' as const,
-    perfil_afinidade: 'Padrão' as const
+    categoria: 'Urna' as Produto['categoria'],
+    perfil_afinidade: 'Padrão' as Produto['perfil_afinidade']
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
