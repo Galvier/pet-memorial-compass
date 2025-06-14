@@ -33,21 +33,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (atendenteData) {
+        // Determinar role baseado nos metadados do usuário ou usar 'atendente' como padrão
+        const { data: userData } = await supabase.auth.getUser();
+        const userRole = userData.user?.user_metadata?.role || 'atendente';
+        
         setUserProfile({
           id: userId,
           email: atendenteData.email,
-          role: 'atendente',
+          role: userRole as 'atendente' | 'admin',
           nome: atendenteData.nome_atendente
         });
       } else {
-        // Se não é atendente, verificar se é admin ou cliente
+        // Se não é atendente, verificar se é admin nos metadados
         const { data: userData } = await supabase.auth.getUser();
         if (userData.user) {
+          const userRole = userData.user.user_metadata?.role || 'cliente';
           setUserProfile({
             id: userId,
             email: userData.user.email || '',
-            role: 'cliente', // Padrão para cliente
-            nome: userData.user.user_metadata?.nome || 'Usuário'
+            role: userRole as 'atendente' | 'admin' | 'cliente',
+            nome: userData.user.user_metadata?.nome_atendente || userData.user.user_metadata?.nome || 'Usuário'
           });
         }
       }
@@ -100,6 +105,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, nomeAtendente: string, role: 'atendente' | 'admin' = 'atendente') => {
     const redirectUrl = `${window.location.origin}/`;
     
+    console.log('Cadastrando usuário com role:', role);
+    
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -107,7 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         emailRedirectTo: redirectUrl,
         data: {
           nome_atendente: nomeAtendente,
-          role: role
+          role: role // Garantir que o role seja salvo nos metadados
         }
       }
     });
