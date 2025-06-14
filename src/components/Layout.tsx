@@ -1,23 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Package, 
   Shield, 
-  History
+  History,
+  Menu,
+  X
 } from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarInset
-} from '@/components/ui/sidebar';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -25,6 +16,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -39,67 +31,115 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <Sidebar variant="floating" collapsible="icon">
-          <SidebarHeader className="border-b border-purple-primary/20">
-            <div className="flex items-center space-x-2 p-2">
-              <img 
-                src="/lovable-uploads/e05dec48-f72b-4ede-af54-afc2d1bebeef.png" 
-                alt="Terranova Pet Logo" 
-                className="h-8 w-8"
-              />
-              <div className="group-data-[collapsible=icon]:hidden">
-                <h1 className="text-lg font-bold text-purple-primary">Terranova Pet</h1>
-                <p className="text-xs text-yellow-primary">Painel Administrativo</p>
-              </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-purple-primary shadow-lg">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center space-x-2">
+            <img 
+              src="/lovable-uploads/e05dec48-f72b-4ede-af54-afc2d1bebeef.png" 
+              alt="Terranova Pet Logo" 
+              className="h-8 w-8"
+            />
+            <div>
+              <h1 className="text-lg font-bold text-white">Terranova Pet</h1>
+              <p className="text-xs text-yellow-primary">Painel Administrativo</p>
             </div>
-          </SidebarHeader>
-          
-          <SidebarContent className="bg-purple-primary">
-            <SidebarMenu className="px-2 mt-4">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton 
-                      asChild
-                      isActive={isActive(item.href)}
-                      className={`w-full transition-colors duration-200 ${
+          </div>
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="text-white p-2"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="border-t border-purple-primary/20">
+            <nav className="px-4 py-2">
+              <div className="space-y-1">
+                {navigation.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`group flex items-center px-3 py-3 text-sm font-medium rounded-md transition-colors ${
                         isActive(item.href)
-                          ? 'bg-yellow-primary text-purple-primary hover:bg-yellow-primary/90'
+                          ? 'bg-yellow-primary text-purple-primary'
                           : 'text-gray-300 hover:bg-purple-primary/50 hover:text-white'
                       }`}
                     >
-                      <Link to={item.href} className="flex items-center space-x-3 px-3 py-2">
-                        <Icon className="h-5 w-5" />
-                        <span className="group-data-[collapsible=icon]:hidden">{item.name}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarContent>
-        </Sidebar>
+                      <Icon
+                        className={`mr-3 h-5 w-5 ${
+                          isActive(item.href) ? 'text-purple-primary' : 'text-gray-400 group-hover:text-gray-300'
+                        }`}
+                      />
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </div>
+            </nav>
+          </div>
+        )}
+      </div>
 
-        <SidebarInset className="flex-1">
-          <header className="flex h-16 shrink-0 items-center gap-2 bg-white border-b border-gray-200 px-4">
-            <SidebarTrigger className="text-purple-primary hover:bg-purple-primary/10" />
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-64 lg:block">
+        <div className="bg-purple-primary shadow-lg h-full">
+          <div className="flex h-16 items-center justify-center border-b border-purple-primary/20">
             <div className="flex items-center space-x-2">
-              <div className="lg:hidden">
-                <h1 className="text-lg font-bold text-purple-primary">Terranova Pet</h1>
+              <img 
+                src="/lovable-uploads/e05dec48-f72b-4ede-af54-afc2d1bebeef.png" 
+                alt="Terranova Pet Logo" 
+                className="h-8 w-8 text-yellow-primary"
+              />
+              <div>
+                <h1 className="text-xl font-bold text-white">Terranova Pet</h1>
+                <p className="text-xs text-yellow-primary">Painel Administrativo</p>
               </div>
             </div>
-          </header>
+          </div>
           
-          <main className="flex-1 p-4 lg:p-6">
-            <div className="mx-auto max-w-7xl">
-              {children}
+          <nav className="mt-6 px-3">
+            <div className="space-y-1">
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      isActive(item.href)
+                        ? 'bg-yellow-primary text-purple-primary'
+                        : 'text-gray-300 hover:bg-purple-primary/50 hover:text-white'
+                    }`}
+                  >
+                    <Icon
+                      className={`mr-3 h-5 w-5 ${
+                        isActive(item.href) ? 'text-purple-primary' : 'text-gray-400 group-hover:text-gray-300'
+                      }`}
+                    />
+                    {item.name}
+                  </Link>
+                );
+              })}
             </div>
-          </main>
-        </SidebarInset>
+          </nav>
+        </div>
       </div>
-    </SidebarProvider>
+
+      {/* Main content */}
+      <div className="lg:pl-64">
+        <main className="py-4 lg:py-6">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
   );
 };
