@@ -49,15 +49,15 @@ export const SystemStatus: React.FC = () => {
     checkSystemHealth();
   }, []);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
+  const getStatusIcon = (status: string | boolean) => {
+    const normalizedStatus = typeof status === 'boolean' ? (status ? 'healthy' : 'error') : status;
+    
+    switch (normalizedStatus) {
       case 'healthy':
-      case true:
         return <CheckCircle className="h-5 w-5 text-green-500" />;
       case 'warning':
         return <AlertCircle className="h-5 w-5 text-yellow-500" />;
       case 'error':
-      case false:
         return <XCircle className="h-5 w-5 text-red-500" />;
       default:
         return <AlertCircle className="h-5 w-5 text-gray-500" />;
