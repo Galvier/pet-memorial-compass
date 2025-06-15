@@ -37,4 +37,32 @@ export class SecretsService {
       return { success: false, message: `Erro de conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}` };
     }
   }
+
+  // Métodos específicos para n8n
+  static async testN8nWebhook(): Promise<{ success: boolean; message: string }> {
+    return this.testSecret('N8N_WEBHOOK_URL', 'n8n-webhook');
+  }
+
+  static async checkN8nWebhookExists(): Promise<boolean> {
+    return this.checkSecretExists('N8N_WEBHOOK_URL');
+  }
+
+  // Método para validar formato de URL do webhook
+  static validateWebhookUrl(url: string): { valid: boolean; message: string } {
+    try {
+      const parsedUrl = new URL(url);
+      
+      if (!parsedUrl.protocol.startsWith('http')) {
+        return { valid: false, message: 'URL deve usar protocolo HTTP ou HTTPS' };
+      }
+      
+      if (!parsedUrl.hostname) {
+        return { valid: false, message: 'URL deve conter um hostname válido' };
+      }
+      
+      return { valid: true, message: 'URL válida' };
+    } catch (error) {
+      return { valid: false, message: 'Formato de URL inválido' };
+    }
+  }
 }

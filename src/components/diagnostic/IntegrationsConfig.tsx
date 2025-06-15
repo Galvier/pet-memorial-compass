@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { IntegrationCard } from './IntegrationCard';
 import { SecretKeyForm } from './SecretKeyForm';
+import { N8nConfig } from './N8nConfig';
 import { SecretsService } from '@/services/SecretsService';
 import { DiagnosticService } from '@/services/DiagnosticService';
 import { useToast } from '@/hooks/use-toast';
@@ -51,8 +52,9 @@ export const IntegrationsConfig: React.FC = () => {
       // Verificar quais secrets existem
       const googleMapsExists = await SecretsService.checkSecretExists('GOOGLE_MAPS_API_KEY');
       const stripeExists = await SecretsService.checkSecretExists('STRIPE_SECRET_KEY');
+      const n8nExists = await SecretsService.checkSecretExists('N8N_WEBHOOK_URL');
       
-      console.log('📊 Status dos secrets:', { googleMapsExists, stripeExists });
+      console.log('📊 Status dos secrets:', { googleMapsExists, stripeExists, n8nExists });
       
       // Atualizar status baseado na existência das chaves
       setIntegrations(prev => prev.map(integration => {
@@ -68,6 +70,12 @@ export const IntegrationsConfig: React.FC = () => {
               ...integration,
               configured: stripeExists,
               status: stripeExists ? 'warning' : 'disconnected'
+            };
+          case 'n8n-webhook':
+            return {
+              ...integration,
+              configured: n8nExists,
+              status: n8nExists ? 'warning' : 'disconnected'
             };
           default:
             return integration;
@@ -101,6 +109,9 @@ export const IntegrationsConfig: React.FC = () => {
           break;
         case 'stripe':
           result = await SecretsService.testSecret('STRIPE_SECRET_KEY', 'stripe');
+          break;
+        case 'n8n-webhook':
+          result = await SecretsService.testSecret('N8N_WEBHOOK_URL', 'n8n-webhook');
           break;
         default:
           result = await DiagnosticService.runIntegrationTest(integrationId);
@@ -152,10 +163,11 @@ export const IntegrationsConfig: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="google-maps">Google Maps</TabsTrigger>
           <TabsTrigger value="stripe">Stripe</TabsTrigger>
+          <TabsTrigger value="n8n">n8n</TabsTrigger>
           <TabsTrigger value="supabase">Supabase</TabsTrigger>
         </TabsList>
 
@@ -176,7 +188,7 @@ export const IntegrationsConfig: React.FC = () => {
                     configured={integration.configured}
                     lastTested={integration.lastTested}
                     onTest={testIntegration}
-                    onConfigure={(id) => setActiveTab(id === 'n8n-webhook' ? 'overview' : id)}
+                    onConfigure={(id) => setActiveTab(id === 'n8n-webhook' ? 'n8n' : id)}
                     isLoading={loading}
                   />
                 ))}
@@ -209,6 +221,10 @@ export const IntegrationsConfig: React.FC = () => {
             onSave={handleSecretSave}
             isLoading={loading}
           />
+        </TabsContent>
+
+        <TabsContent value="n8n" className="space-y-4">
+          <N8nConfig />
         </TabsContent>
 
         <TabsContent value="supabase" className="space-y-4">
