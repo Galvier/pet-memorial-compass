@@ -1,3 +1,4 @@
+
 export interface Tutor {
   tutor_id: number;
   id_whatsapp: string;
@@ -42,7 +43,7 @@ export interface Atendimento {
 export interface UserProfile {
   id: string;
   email: string;
-  role: 'atendente' | 'admin' | 'cliente' | 'developer';
+  role: 'atendente' | 'admin' | 'developer';
   nome: string;
 }
 
