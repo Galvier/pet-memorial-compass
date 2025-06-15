@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface BairroMontesClaros {
@@ -41,11 +40,16 @@ export class BairrosMontesService {
 
       if (data) {
         console.log(`✅ Dados encontrados para ${nomeBairro}: fator ${data.fator_atualizacao_calculado}x`);
+        // Cast do tipo do Supabase para o tipo local
+        return {
+          ...data,
+          categoria: data.categoria as 'alto' | 'medio' | 'padrao'
+        } as BairroMontesClaros;
       } else {
         console.log(`❌ Bairro ${nomeBairro} não encontrado na base`);
       }
 
-      return data;
+      return null;
     } catch (error) {
       console.error(`❌ Erro na consulta do bairro ${nomeBairro}:`, error);
       return null;
@@ -122,7 +126,7 @@ export class BairrosMontesService {
    */
   static async updateBairroData(
     nomeBairro: string, 
-    updates: Partial<Pick<BairroMontesClaros, 'fator_imobiliario' | 'fator_comercial' | 'preco_medio_m2' | 'perfil_comercial'>>
+    updates: Partial<Pick<BairroMontesClaros, 'fator_imobiliario' | 'fator_comercial' | 'fator_atualizacao_calculado' | 'preco_medio_m2' | 'perfil_comercial'>>
   ): Promise<boolean> {
     try {
       console.log(`📝 Atualizando dados do bairro: ${nomeBairro}`);
@@ -184,7 +188,11 @@ export class BairrosMontesService {
         return [];
       }
 
-      return data || [];
+      // Cast dos tipos do Supabase para os tipos locais
+      return (data || []).map(item => ({
+        ...item,
+        categoria: item.categoria as 'alto' | 'medio' | 'padrao'
+      })) as BairroMontesClaros[];
     } catch (error) {
       console.error('❌ Erro na consulta de bairros:', error);
       return [];

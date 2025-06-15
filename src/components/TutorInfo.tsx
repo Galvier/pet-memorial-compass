@@ -42,7 +42,7 @@ export const TutorInfo: React.FC<TutorInfoProps> = ({ tutor }) => {
           <div>
             <label className="text-sm font-medium text-gray-500">Endereço</label>
             <div className="flex items-start space-x-2 mt-1">
-              <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+              <MapPin className="w-4 w-4 text-gray-400 mt-0.5" />
               <p className="text-sm">{tutor?.endereco}</p>
             </div>
           </div>
@@ -58,7 +58,11 @@ export const TutorInfo: React.FC<TutorInfoProps> = ({ tutor }) => {
 
       {/* Análise Detalhada do Perfil */}
       {tutor?.perfilAnalysis && (
-        <PerfilAnalysisCard perfilAnalysis={tutor.perfilAnalysis} />
+        <PerfilAnalysisCard 
+          profissao={tutor.profissao}
+          endereco={tutor.endereco}
+          locationAnalysis={tutor.perfilAnalysis.localizacaoAnalysis}
+        />
       )}
     </div>
   );
