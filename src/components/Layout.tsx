@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -26,11 +27,23 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, userProfile, signOut, isAdmin, isAtendente } = useAuth();
+  const { user, userProfile, signOut, isAdmin, isAtendente, isDeveloper } = useAuth();
+
+  // Se é desenvolvedor, redirecionar para área específica
+  React.useEffect(() => {
+    if (user && userProfile && isDeveloper()) {
+      navigate('/diagnostico');
+    }
+  }, [user, userProfile, isDeveloper, navigate]);
 
   // Filtrar navegação baseado no papel do usuário
   const getFilteredNavigation = () => {
     const baseNavigation = [];
+
+    // Desenvolvedores não devem ver nenhuma navegação administrativa
+    if (isDeveloper()) {
+      return [];
+    }
 
     // Adicionar Dashboard apenas para admins
     if (isAdmin()) {
@@ -93,6 +106,26 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   };
 
+  const getUserRoleLabel = () => {
+    if (!userProfile) return 'Usuário';
+    
+    switch (userProfile.role) {
+      case 'atendente':
+        return 'Atendente';
+      case 'admin':
+        return 'Administrador';
+      case 'developer':
+        return 'Desenvolvedor';
+      default:
+        return 'Usuário';
+    }
+  };
+
+  // Se é desenvolvedor, não renderizar este layout
+  if (user && userProfile && isDeveloper()) {
+    return null; // O useEffect vai redirecionar
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
@@ -154,8 +187,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                         <p className="text-sm font-medium text-white truncate">{userProfile.nome}</p>
                         <p className="text-xs text-gray-300 truncate">{userProfile.email}</p>
                         <Badge variant="outline" className="bg-yellow-primary/20 text-yellow-primary border-yellow-primary mt-1">
-                          {userProfile.role === 'atendente' ? 'Atendente' : 
-                           userProfile.role === 'admin' ? 'Administrador' : 'Cliente'}
+                          {getUserRoleLabel()}
                         </Badge>
                       </div>
                     </div>
@@ -230,8 +262,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
               </div>
               <Badge variant="outline" className="bg-yellow-primary/20 text-yellow-primary border-yellow-primary mb-3 w-full justify-center">
-                {userProfile.role === 'atendente' ? 'Atendente' : 
-                 userProfile.role === 'admin' ? 'Administrador' : 'Cliente'}
+                {getUserRoleLabel()}
               </Badge>
               <Button 
                 onClick={handleSignOut} 
