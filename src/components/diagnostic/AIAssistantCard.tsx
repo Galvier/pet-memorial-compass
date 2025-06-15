@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -130,11 +129,11 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
     }
   };
 
-  const applySuggestion = (result: AIAnalysisResult) => {
-    onSuggestionApplied(result.bairro, result.fator_sugerido);
+  const applySuggestion = (bairro: string, newFactor: number) => {
+    onSuggestionApplied(bairro, newFactor);
     toast({
       title: "✅ Sugestão Aplicada",
-      description: `Fator de ${result.bairro} atualizado para ${result.fator_sugerido}x`,
+      description: `Fator de ${bairro} atualizado para ${newFactor}x`,
     });
   };
 
@@ -275,7 +274,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            onClick={() => applySuggestion(result)}
+                            onClick={() => applySuggestion(result.bairro, result.fator_sugerido)}
                             className="text-xs h-7"
                           >
                             <CheckCircle className="h-3 w-3 mr-1" />
