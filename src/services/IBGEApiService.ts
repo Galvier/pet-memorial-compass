@@ -28,6 +28,15 @@ interface IBGEIncomeData {
   dataYear: number;
 }
 
+interface ConnectivityResults {
+  municipalities: boolean;
+  income: boolean;
+  details: {
+    municipalities?: string;
+    income?: string;
+  };
+}
+
 /**
  * Serviço para integração com APIs do IBGE
  * Atualizado para usar dados municipais quando setores censitários não estão disponíveis
@@ -234,7 +243,7 @@ export class IBGEApiService {
   /**
    * Testa conectividade com as APIs do IBGE de forma mais robusta
    */
-  static async testConnectivity(): Promise<{ municipalities: boolean; income: boolean; details: any }> {
+  static async testConnectivity(): Promise<ConnectivityResults> {
     console.log('🔍 Testando conectividade com APIs IBGE...');
 
     // Verificar cache de status primeiro
@@ -244,7 +253,11 @@ export class IBGEApiService {
       return cachedStatus;
     }
 
-    const results = { municipalities: false, income: false, details: {} };
+    const results: ConnectivityResults = { 
+      municipalities: false, 
+      income: false, 
+      details: {} 
+    };
 
     // Teste 1: API de municípios com endpoint simples
     try {
@@ -401,7 +414,7 @@ export class IBGEApiService {
   /**
    * Cache de status de conectividade
    */
-  private static getCachedStatus(): any {
+  private static getCachedStatus(): ConnectivityResults | null {
     try {
       const cached = localStorage.getItem('ibge_connectivity_status');
       if (!cached) return null;
@@ -420,7 +433,7 @@ export class IBGEApiService {
     }
   }
 
-  private static saveCachedStatus(status: any): void {
+  private static saveCachedStatus(status: ConnectivityResults): void {
     try {
       const cached = {
         data: status,
