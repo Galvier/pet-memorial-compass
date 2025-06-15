@@ -226,18 +226,19 @@ export const HeatmapVisualization: React.FC = () => {
   return (
     <Card className="bg-white border-gray-200 hover:shadow-md transition-shadow">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-lg lg:text-xl text-purple-primary flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Mapa de Calor - Distribuição de Clientes
+            <MapPin className="h-5 w-5 flex-shrink-0" />
+            <span className="truncate">Mapa de Calor - Distribuição de Clientes</span>
           </CardTitle>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
             {mapData && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={centerOnData}
                 disabled={loading}
+                className="min-w-[40px]"
               >
                 <Target className="h-4 w-4" />
               </Button>
@@ -247,17 +248,17 @@ export const HeatmapVisualization: React.FC = () => {
               size="sm"
               onClick={toggleDataSource}
               disabled={loading}
-              className={isUsingRealData ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}
+              className={`min-w-[70px] ${isUsingRealData ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}`}
             >
               {isUsingRealData ? (
                 <>
-                  <Database className="h-4 w-4 mr-1" />
-                  Real
+                  <Database className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Real</span>
                 </>
               ) : (
                 <>
-                  <TestTube className="h-4 w-4 mr-1" />
-                  Demo
+                  <TestTube className="h-4 w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Demo</span>
                 </>
               )}
             </Button>
@@ -266,6 +267,7 @@ export const HeatmapVisualization: React.FC = () => {
               size="sm"
               onClick={refreshData}
               disabled={loading}
+              className="min-w-[40px]"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -276,43 +278,45 @@ export const HeatmapVisualization: React.FC = () => {
           </div>
         </div>
         
-        {/* Status and warnings */}
-        {!isUsingRealData && (
-          <p className="text-sm text-orange-600 flex items-center gap-1">
-            <TestTube className="h-4 w-4" />
-            Exibindo dados de demonstração - Clique em "Real" para ver dados dos tutores cadastrados
-          </p>
-        )}
-        {isUsingRealData && (
-          <p className="text-sm text-green-600 flex items-center gap-1">
-            <Database className="h-4 w-4" />
-            Exibindo dados reais dos tutores cadastrados no sistema
-          </p>
-        )}
-        {error && (
-          <p className="text-sm text-red-600">{error}</p>
-        )}
+        {/* Status messages - melhorado para mobile */}
+        <div className="space-y-2">
+          {!isUsingRealData && (
+            <p className="text-sm text-orange-600 flex items-start gap-2">
+              <TestTube className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span>Dados de demonstração - Clique em "Real" para dados dos tutores</span>
+            </p>
+          )}
+          {isUsingRealData && (
+            <p className="text-sm text-green-600 flex items-start gap-2">
+              <Database className="h-4 w-4 flex-shrink-0 mt-0.5" />
+              <span>Dados reais dos tutores cadastrados</span>
+            </p>
+          )}
+          {error && (
+            <p className="text-sm text-red-600">{error}</p>
+          )}
+        </div>
         
-        {/* Data info */}
+        {/* Data info badges - otimizado para responsividade */}
         {mapData && (
           <div className="flex flex-wrap gap-2 items-center">
-            <Badge variant="secondary" className="flex items-center gap-1">
+            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
               <BarChart3 className="h-3 w-3" />
               {mapData.stats.totalPoints} pontos
             </Badge>
-            <Badge variant="outline">
+            <Badge variant="outline" className="text-xs">
               {mapData.stats.uniqueLocations} localizações
             </Badge>
-            <Badge variant="outline">
-              Cobertura: {mapData.stats.coverage}
+            <Badge variant="outline" className="text-xs">
+              {mapData.stats.coverage}
             </Badge>
             {mapData.useMarkers && (
-              <Badge variant="secondary">
-                Modo marcadores
+              <Badge variant="secondary" className="text-xs">
+                Marcadores
               </Badge>
             )}
             {isUsingRealData && (
-              <Badge variant="default" className="bg-green-500">
+              <Badge variant="default" className="bg-green-500 text-xs">
                 Dados Reais
               </Badge>
             )}
@@ -320,58 +324,45 @@ export const HeatmapVisualization: React.FC = () => {
         )}
       </CardHeader>
       
-      <CardContent>
-        <div className="space-y-4">
-          {mapData && (
-            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <div>
-                  <strong>Fonte:</strong> {isUsingRealData ? 'Banco Supabase' : 'Demonstração'}
-                </div>
-                <div>
-                  <strong>Centro:</strong> {mapData.center.lat.toFixed(4)}, {mapData.center.lng.toFixed(4)}
-                </div>
-                <div>
-                  <strong>Zoom:</strong> {mapData.zoom}
-                </div>
-              </div>
-              {mapData.useMarkers ? (
-                <p className="text-xs mt-2 text-blue-600">
-                  💡 Ponto único detectado - usando marcador para melhor visualização
-                </p>
-              ) : (
-                <p className="text-xs mt-2 text-green-600">
-                  🔥 Mapa de calor ativo - mostrando concentração de clientes
-                </p>
-              )}
-            </div>
-          )}
-          
-          <div 
-            ref={mapRef} 
-            className="w-full h-96 rounded-lg border border-gray-200"
-            style={{ minHeight: '400px' }}
-          />
-          
-          {mapData && !mapData.useMarkers && (
-            <div className="text-xs text-gray-500 text-center">
-              <div className="flex items-center justify-center gap-4">
-                <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                  Baixa concentração
-                </span>
-                <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  Média concentração
-                </span>
-                <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  Alta concentração
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
+      <CardContent className="space-y-4">
+        {/* Mapa responsivo */}
+        <div 
+          ref={mapRef} 
+          className="w-full h-80 sm:h-96 lg:h-[500px] rounded-lg border border-gray-200"
+        />
+        
+        {/* Legenda do mapa de calor - só aparece quando não está usando marcadores */}
+        {mapData && !mapData.useMarkers && (
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+            <span className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500 flex-shrink-0"></div>
+              <span className="whitespace-nowrap">Baixa concentração</span>
+            </span>
+            <span className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-yellow-500 flex-shrink-0"></div>
+              <span className="whitespace-nowrap">Média concentração</span>
+            </span>
+            <span className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500 flex-shrink-0"></div>
+              <span className="whitespace-nowrap">Alta concentração</span>
+            </span>
+          </div>
+        )}
+        
+        {/* Dica sobre o tipo de visualização */}
+        {mapData && (
+          <div className="text-center">
+            {mapData.useMarkers ? (
+              <p className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                💡 Ponto único detectado - usando marcador para melhor visualização
+              </p>
+            ) : (
+              <p className="text-xs text-green-600 bg-green-50 p-2 rounded">
+                🔥 Mapa de calor ativo - mostrando concentração de clientes
+              </p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
