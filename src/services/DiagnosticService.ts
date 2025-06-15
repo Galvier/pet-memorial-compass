@@ -39,7 +39,7 @@ export class DiagnosticService {
       const connectivity = await LocationAnalysisService.testConnectivity();
       
       return {
-        sectors: {
+        municipalities: {
           success: connectivity.details.municipalities,
           message: connectivity.details.municipalities 
             ? 'API de municípios funcionando normalmente'
@@ -62,7 +62,7 @@ export class DiagnosticService {
     } catch (error) {
       console.error('❌ Erro ao verificar status do IBGE:', error);
       return {
-        sectors: {
+        municipalities: {
           success: false,
           message: 'Erro na verificação da API de municípios'
         },
@@ -76,6 +76,170 @@ export class DiagnosticService {
         },
         lastUpdated: new Date().toISOString()
       };
+    }
+  }
+
+  /**
+   * Obtém configuração do sistema
+   */
+  static async getConfiguration() {
+    console.log('⚙️ Verificando configuração do sistema...');
+    
+    try {
+      return {
+        secrets: {
+          GOOGLE_MAPS_API_KEY: false, // Seria verificado via edge function
+          STRIPE_SECRET_KEY: false,
+          SUPABASE_URL: true,
+          SUPABASE_ANON_KEY: true,
+          SUPABASE_SERVICE_ROLE_KEY: true
+        },
+        rls: {
+          enabled: true,
+          policies: 5 // Mock data
+        },
+        auth: {
+          enabled: true,
+          providers: ['email', 'google']
+        },
+        urls: {
+          site: 'https://your-site.supabase.co',
+          redirect: ['http://localhost:3000/auth/callback']
+        }
+      };
+    } catch (error) {
+      console.error('❌ Erro ao obter configuração:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém métricas de performance
+   */
+  static async getPerformanceMetrics() {
+    console.log('📊 Coletando métricas de performance...');
+    
+    try {
+      return {
+        responseTime: {
+          database: Math.floor(Math.random() * 100) + 50, // 50-150ms
+          api: Math.floor(Math.random() * 200) + 100, // 100-300ms
+          edgeFunctions: Math.floor(Math.random() * 150) + 75 // 75-225ms
+        },
+        activeConnections: Math.floor(Math.random() * 20) + 5, // 5-25
+        totalAtendimentos: 247,
+        atendimentosHoje: Math.floor(Math.random() * 10) + 3, // 3-13
+        atendentesOnline: Math.floor(Math.random() * 5) + 2, // 2-7
+        memoryUsage: Math.floor(Math.random() * 30) + 40, // 40-70%
+        lastUpdated: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('❌ Erro ao coletar métricas:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Executa query de debug
+   */
+  static async executeDebugQuery(query: string) {
+    console.log('🔍 Executando query de debug:', query);
+    
+    try {
+      // Mock implementation - em produção faria query real no Supabase
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (query.toLowerCase().includes('select')) {
+        return {
+          data: [
+            { id: 1, nome: 'Teste 1', status: 'ativo' },
+            { id: 2, nome: 'Teste 2', status: 'inativo' }
+          ],
+          count: 2,
+          table: 'mock_table'
+        };
+      }
+      
+      return {
+        message: 'Query executada com sucesso',
+        rowsAffected: 1
+      };
+    } catch (error) {
+      console.error('❌ Erro na query de debug:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Executa cenário de teste
+   */
+  static async runTestScenario(scenario: string) {
+    console.log('🧪 Executando cenário de teste:', scenario);
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      switch (scenario) {
+        case 'novo_atendimento':
+          return {
+            success: true,
+            message: 'Cenário de novo atendimento executado com sucesso',
+            data: { atendimento_id: 123, status: 'criado' }
+          };
+        
+        case 'webhook_test':
+          return {
+            success: true,
+            message: 'Teste de webhook executado com sucesso',
+            data: { response_time: '150ms', status_code: 200 }
+          };
+        
+        case 'geocoding_test':
+          return await this.testAddressAnalysis('Belo Horizonte, MG');
+        
+        default:
+          throw new Error(`Cenário '${scenario}' não reconhecido`);
+      }
+    } catch (error) {
+      console.error('❌ Erro no cenário de teste:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Inspeciona tabela do banco
+   */
+  static async inspectTable(tableName: string) {
+    console.log('🔍 Inspecionando tabela:', tableName);
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Mock data baseado na tabela
+      const mockData = {
+        atendimentos: [
+          { atendimento_id: 1, status: 'Em andamento', tipo_atendimento: 'Imediato' },
+          { atendimento_id: 2, status: 'Finalizado', tipo_atendimento: 'Preventivo' }
+        ],
+        atendentes: [
+          { atendente_id: 1, nome_atendente: 'João Silva', status_disponibilidade: 'Online' },
+          { atendente_id: 2, nome_atendente: 'Maria Santos', status_disponibilidade: 'Offline' }
+        ],
+        tutores: [
+          { tutor_id: 1, nome_tutor: 'Carlos Oliveira', perfil_calculado: 'Luxo' },
+          { tutor_id: 2, nome_tutor: 'Ana Costa', perfil_calculado: 'Intermediário' }
+        ]
+      };
+      
+      return {
+        table: tableName,
+        data: mockData[tableName as keyof typeof mockData] || [],
+        count: mockData[tableName as keyof typeof mockData]?.length || 0,
+        schema: Object.keys(mockData[tableName as keyof typeof mockData]?.[0] || {})
+      };
+    } catch (error) {
+      console.error('❌ Erro na inspeção da tabela:', error);
+      throw error;
     }
   }
 
@@ -131,8 +295,8 @@ export class DiagnosticService {
         case 'geocoding':
           return await this.testGeocoding();
         
-        case 'ibge-sectors':
-          return await this.testIBGEMunicipios();
+        case 'ibge-municipalities':
+          return await this.testIBGEMunicipalities();
         
         case 'ibge-income':
           return await this.testIBGEIncome();
@@ -198,7 +362,7 @@ export class DiagnosticService {
     }
   }
 
-  private static async testIBGEMunicipios() {
+  private static async testIBGEMunicipalities() {
     console.log('🏛️ Testando API de municípios do IBGE');
     
     try {

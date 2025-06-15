@@ -109,10 +109,9 @@ export interface StatusAtendimentoResponse {
 export interface LocationAnalysis {
   address: string;
   coordinates: { lat: number; lng: number } | null;
-  sectorData: {
+  municipioData: {
     id: string;
-    name: string;
-    municipio: string;
+    nome: string;
     uf: string;
   } | null;
   incomeData: {
@@ -124,6 +123,7 @@ export interface LocationAnalysis {
   scoreReason: string;
   analysisDate: string;
   success: boolean;
+  fallbackUsed: boolean;
 }
 
 export interface PerfilAnalysis {
