@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { History, Eye, User, Phone, MapPin, Briefcase, Calendar, Heart, Bot, UserCheck } from 'lucide-react';
-import { PetMemorialAPI } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 import { Atendimento } from '@/types';
 
 export const AtendimentosList: React.FC = () => {
@@ -15,10 +15,51 @@ export const AtendimentosList: React.FC = () => {
   useEffect(() => {
     const fetchAtendimentos = async () => {
       try {
-        const data = await PetMemorialAPI.getAtendimentos();
-        setAtendimentos(data);
+        console.log('🔄 Carregando atendimentos do Supabase...');
+        
+        // Buscar atendimentos com relacionamentos
+        const { data: atendimentosData, error: atendimentosError } = await supabase
+          .from('atendimentos')
+          .select('*')
+          .order('data_inicio', { ascending: false });
+
+        if (atendimentosError) throw atendimentosError;
+
+        // Buscar tutores
+        const { data: tutoresData, error: tutoresError } = await supabase
+          .from('tutores')
+          .select('*');
+
+        if (tutoresError) throw tutoresError;
+
+        // Buscar pets
+        const { data: petsData, error: petsError } = await supabase
+          .from('pets')
+          .select('*');
+
+        if (petsError) throw petsError;
+
+        // Buscar atendentes
+        const { data: atendentesData, error: atendentesError } = await supabase
+          .from('atendentes')
+          .select('*');
+
+        if (atendentesError) throw atendentesError;
+
+        // Combinar dados
+        const atendimentosCompletos = (atendimentosData || []).map(atendimento => ({
+          ...atendimento,
+          tutor: tutoresData?.find(t => t.tutor_id === atendimento.tutor_id),
+          pet: petsData?.find(p => p.pet_id === atendimento.pet_id),
+          atendente: atendimento.atendente_responsavel_id 
+            ? atendentesData?.find(a => a.atendente_id === atendimento.atendente_responsavel_id)
+            : undefined
+        }));
+
+        console.log('✅ Atendimentos carregados:', atendimentosCompletos.length);
+        setAtendimentos(atendimentosCompletos);
       } catch (error) {
-        console.error('Erro ao carregar atendimentos:', error);
+        console.error('❌ Erro ao carregar atendimentos:', error);
       } finally {
         setLoading(false);
       }
@@ -44,6 +85,7 @@ export const AtendimentosList: React.FC = () => {
   const getStatusAtendimentoIcon = (statusAtendimento: string) => {
     const config = {
       'BOT_ATIVO': { icon: Bot, color: 'text-blue-600', label: 'Bot Ativo' },
+      'ATRIBUIDO_HUMANO': { icon: UserCheck, color: 'text-orange-600', label: 'Atendente' },
       'HUMANO_ASSUMIU': { icon: UserCheck, color: 'text-orange-600', label: 'Atendente' },
       'FINALIZADO': { icon: UserCheck, color: 'text-green-600', label: 'Finalizado' }
     } as const;
@@ -102,7 +144,7 @@ export const AtendimentosList: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <User className="w-4 h-4 text-purple-primary/60 flex-shrink-0" />
                     <span className="font-semibold text-purple-primary text-sm lg:text-base">
-                      {atendimento.tutor?.nome_tutor}
+                      {atendimento.tutor?.nome_tutor || 'Nome não informado'}
                     </span>
                     {atendimento.pet?.nome_pet && (
                       <span className="text-gray-500 text-xs lg:text-sm">
@@ -111,7 +153,7 @@ export const AtendimentosList: React.FC = () => {
                     )}
                   </div>
                   <div className="flex items-center space-x-2">
-                    {getStatusBadge(atendimento.status)}
+                    {getStatusBadge(atendimento.status || 'Em andamento')}
                   </div>
                 </div>
                 
@@ -119,11 +161,11 @@ export const AtendimentosList: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:gap-3 text-xs lg:text-sm text-gray-600">
                   <div className="flex items-center space-x-2">
                     <Phone className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
-                    <span className="truncate">{atendimento.tutor?.id_whatsapp}</span>
+                    <span className="truncate">{atendimento.tutor?.id_whatsapp || 'WhatsApp não informado'}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Briefcase className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
-                    <span className="truncate">{atendimento.tutor?.profissao}</span>
+                    <span className="truncate">{atendimento.tutor?.profissao || 'Profissão não informada'}</span>
                   </div>
                 </div>
                 
@@ -141,17 +183,17 @@ export const AtendimentosList: React.FC = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs lg:text-sm">
                   <div className="flex items-center space-x-2 text-gray-600">
                     <Calendar className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" />
-                    <span>{formatDate(atendimento.data_inicio)}</span>
+                    <span>{formatDate(atendimento.data_inicio || new Date().toISOString())}</span>
                   </div>
                   <div className="flex items-center">
-                    {getStatusAtendimentoIcon(atendimento.status_atendimento)}
+                    {getStatusAtendimentoIcon(atendimento.status_atendimento || 'BOT_ATIVO')}
                   </div>
                 </div>
                 
                 {/* Address */}
                 <div className="flex items-start space-x-2 text-xs lg:text-sm text-gray-600">
                   <MapPin className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0 mt-0.5" />
-                  <span className="leading-relaxed">{atendimento.tutor?.endereco}</span>
+                  <span className="leading-relaxed">{atendimento.tutor?.endereco || 'Endereço não informado'}</span>
                 </div>
                 
                 {/* Action button */}

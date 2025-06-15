@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
-import { PetMemorialAPI } from '@/lib/api';
+import { supabase } from '@/integrations/supabase/client';
 import { Atendimento, Atendente } from '@/types';
 import { GerarPagamento } from '@/components/GerarPagamento';
 import { PetInfo } from '@/components/PetInfo';
@@ -24,15 +25,72 @@ export const AtendimentoDetail: React.FC = () => {
       if (!id) return;
       
       try {
-        const [atendimentoData, atendentesData] = await Promise.all([
-          PetMemorialAPI.getAtendimento(parseInt(id)),
-          PetMemorialAPI.getAtendentesOnline()
-        ]);
+        console.log('🔄 Carregando atendimento:', id);
         
-        setAtendimento(atendimentoData);
-        setAtendentesOnline(atendentesData);
+        // Buscar atendimento específico
+        const { data: atendimentoData, error: atendimentoError } = await supabase
+          .from('atendimentos')
+          .select('*')
+          .eq('atendimento_id', parseInt(id))
+          .single();
+
+        if (atendimentoError) throw atendimentoError;
+
+        // Buscar dados relacionados se o atendimento existir
+        let tutorData = null;
+        let petData = null;
+        let atendenteData = null;
+
+        if (atendimentoData) {
+          // Buscar tutor
+          if (atendimentoData.tutor_id) {
+            const { data: tutor } = await supabase
+              .from('tutores')
+              .select('*')
+              .eq('tutor_id', atendimentoData.tutor_id)
+              .single();
+            tutorData = tutor;
+          }
+
+          // Buscar pet
+          if (atendimentoData.pet_id) {
+            const { data: pet } = await supabase
+              .from('pets')
+              .select('*')
+              .eq('pet_id', atendimentoData.pet_id)
+              .single();
+            petData = pet;
+          }
+
+          // Buscar atendente responsável
+          if (atendimentoData.atendente_responsavel_id) {
+            const { data: atendente } = await supabase
+              .from('atendentes')
+              .select('*')
+              .eq('atendente_id', atendimentoData.atendente_responsavel_id)
+              .single();
+            atendenteData = atendente;
+          }
+        }
+
+        // Buscar atendentes online
+        const { data: atendentesData } = await supabase
+          .from('atendentes')
+          .select('*')
+          .eq('status_disponibilidade', 'Online');
+
+        const atendimentoCompleto = {
+          ...atendimentoData,
+          tutor: tutorData,
+          pet: petData,
+          atendente: atendenteData
+        };
+
+        console.log('✅ Atendimento carregado:', atendimentoCompleto);
+        setAtendimento(atendimentoCompleto);
+        setAtendentesOnline(atendentesData || []);
       } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        console.error('❌ Erro ao carregar dados:', error);
       } finally {
         setLoading(false);
       }
@@ -129,11 +187,11 @@ export const AtendimentoDetail: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
-          <PetInfo pet={atendimento.pet} />
+          {atendimento.pet && <PetInfo pet={atendimento.pet} />}
           <AtendimentoInfo atendimento={atendimento} />
         </div>
         <div className="space-y-6">
-          <TutorInfo tutor={atendimento.tutor} />
+          {atendimento.tutor && <TutorInfo tutor={atendimento.tutor} />}
         </div>
       </div>
 
@@ -146,8 +204,8 @@ export const AtendimentoDetail: React.FC = () => {
         />
       )}
 
-      <DadosColetados dadosColetados={atendimento.dados_coletados} />
-      <ProdutosSugeridos sugestoesGeradas={atendimento.sugestoes_geradas} />
+      {atendimento.dados_coletados && <DadosColetados dadosColetados={atendimento.dados_coletados} />}
+      {atendimento.sugestoes_geradas && <ProdutosSugeridos sugestoesGeradas={atendimento.sugestoes_geradas} />}
     </div>
   );
 };

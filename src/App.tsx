@@ -12,6 +12,7 @@ import Analytics from "./pages/Analytics";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DeveloperProtectedRoute } from "./components/DeveloperProtectedRoute";
 import FilaAtendimentos from "./pages/FilaAtendimentos";
+import AtendimentoDetailPage from "./pages/AtendimentoDetail";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,14 @@ const App = () => (
               }
             />
           ))}
+          <Route 
+            path="/atendimentos/:id" 
+            element={
+              <ProtectedRoute>
+                <AtendimentoDetailPage />
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="/fila-atendimentos" 
             element={
