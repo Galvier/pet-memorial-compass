@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,9 @@ import {
   TestTube,
   RefreshCw,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Calculator,
+  Info
 } from 'lucide-react';
 import { SettingsService } from '@/services/SettingsService';
 import { BairrosMontesService } from '@/services/BairrosMontesService';
@@ -219,6 +220,75 @@ export const MarketConfigPanel: React.FC = () => {
             <AlertDescription>
               Este valor serve como base para calcular os preços simulados de todos os bairros.
               Os multiplicadores individuais são aplicados sobre este valor.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+
+      {/* Como Funciona - Nova Seção */}
+      <Card className="border-blue-200 bg-blue-50/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <Calculator className="h-5 w-5" />
+            Como Funciona o Cálculo
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div className="flex items-start gap-2">
+                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 text-sm font-bold">1</div>
+                <div>
+                  <div className="font-medium text-blue-800">Preço Base</div>
+                  <div className="text-sm text-blue-600">Valor de referência do metro quadrado para toda a cidade</div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 text-sm font-bold">2</div>
+                <div>
+                  <div className="font-medium text-blue-800">Fator do Bairro</div>
+                  <div className="text-sm text-blue-600">Multiplicador específico baseado na valorização da região</div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 text-sm font-bold">3</div>
+                <div>
+                  <div className="font-medium text-blue-800">Preço Final</div>
+                  <div className="text-sm text-blue-600">Resultado da multiplicação: Base × Fator</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg border border-blue-200">
+              <div className="font-medium text-blue-800 mb-3">Exemplo de Cálculo:</div>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="text-gray-600">Preço Base:</span>
+                  <span className="font-mono ml-2">R$ {basePrice}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Fator Ibituruna:</span>
+                  <span className="font-mono ml-2">1.30x</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="font-medium">
+                  <span className="text-gray-600">Preço Final:</span>
+                  <span className="font-mono ml-2 text-green-600">
+                    R$ {(parseFloat(basePrice) * 1.30).toFixed(0)}/m²
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Fórmula:</strong> Preço Final = Preço Base × Fator do Bairro. 
+              Estes valores são utilizados pelo sistema de simulação inteligente para 
+              calcular scores de viabilidade comercial em diferentes localizações.
             </AlertDescription>
           </Alert>
         </CardContent>
