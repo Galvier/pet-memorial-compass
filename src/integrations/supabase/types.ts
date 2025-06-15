@@ -119,6 +119,51 @@ export type Database = {
           },
         ]
       }
+      bairros_montes_claros: {
+        Row: {
+          ativo: boolean | null
+          categoria: string
+          created_at: string
+          fator_atualizacao_calculado: number | null
+          fator_comercial: number | null
+          fator_imobiliario: number | null
+          id: string
+          nome_bairro: string
+          perfil_comercial: string | null
+          preco_medio_m2: number | null
+          ultima_atualizacao: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria: string
+          created_at?: string
+          fator_atualizacao_calculado?: number | null
+          fator_comercial?: number | null
+          fator_imobiliario?: number | null
+          id?: string
+          nome_bairro: string
+          perfil_comercial?: string | null
+          preco_medio_m2?: number | null
+          ultima_atualizacao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string
+          created_at?: string
+          fator_atualizacao_calculado?: number | null
+          fator_comercial?: number | null
+          fator_imobiliario?: number | null
+          id?: string
+          nome_bairro?: string
+          perfil_comercial?: string | null
+          preco_medio_m2?: number | null
+          ultima_atualizacao?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       city_estimates: {
         Row: {
           city_name: string
