@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,7 +58,7 @@ export const IntegrationsConfig: React.FC = () => {
       
       // Testar IBGE
       const ibgeStatus = await DiagnosticService.getIBGEStatus();
-      const ibgeHealthy = ibgeStatus.sectors.success && ibgeStatus.income.success;
+      const ibgeHealthy = ibgeStatus.municipalities.success && ibgeStatus.income.success;
       
       console.log('📊 Status dos secrets:', { googleMapsExists, stripeExists, n8nExists, ibgeHealthy });
       

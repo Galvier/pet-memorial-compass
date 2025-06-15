@@ -117,7 +117,7 @@ export const PerfilAnalysisCard: React.FC<PerfilAnalysisCardProps> = ({
         </div>
 
         {/* Detalhes da Localização IBGE */}
-        {perfilAnalysis.localizacaoAnalysis.success && perfilAnalysis.localizacaoAnalysis.sectorData && (
+        {perfilAnalysis.localizacaoAnalysis.success && perfilAnalysis.localizacaoAnalysis.municipioData && (
           <div className="bg-blue-50 p-4 rounded-lg space-y-2">
             <h4 className="font-medium text-blue-900 flex items-center space-x-2">
               <MapPin className="w-4 h-4" />
@@ -126,11 +126,11 @@ export const PerfilAnalysisCard: React.FC<PerfilAnalysisCardProps> = ({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-blue-700 font-medium">Município:</span>
-                <p className="text-blue-800">{perfilAnalysis.localizacaoAnalysis.sectorData.municipio}</p>
+                <p className="text-blue-800">{perfilAnalysis.localizacaoAnalysis.municipioData.nome}</p>
               </div>
               <div>
                 <span className="text-blue-700 font-medium">UF:</span>
-                <p className="text-blue-800">{perfilAnalysis.localizacaoAnalysis.sectorData.uf}</p>
+                <p className="text-blue-800">{perfilAnalysis.localizacaoAnalysis.municipioData.uf}</p>
               </div>
               {perfilAnalysis.localizacaoAnalysis.incomeData && (
                 <>

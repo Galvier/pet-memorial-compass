@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +14,7 @@ interface SystemHealth {
 }
 
 interface IBGEStatus {
-  sectors: { success: boolean; message: string };
+  municipalities: { success: boolean; message: string };
   income: { success: boolean; message: string };
   analysis: { success: boolean; message: string };
   lastUpdated: string;
@@ -167,12 +166,12 @@ export const SystemStatus: React.FC = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-blue-700">Setores Censitários</p>
+                <p className="text-sm font-medium text-blue-700">Municípios IBGE</p>
                 <div className="flex items-center space-x-2">
-                  {getStatusIcon(ibgeStatus.sectors.success)}
-                  {getStatusBadge(ibgeStatus.sectors.success)}
+                  {getStatusIcon(ibgeStatus.municipalities.success)}
+                  {getStatusBadge(ibgeStatus.municipalities.success)}
                 </div>
-                <p className="text-xs text-blue-600">{ibgeStatus.sectors.message}</p>
+                <p className="text-xs text-blue-600">{ibgeStatus.municipalities.message}</p>
               </div>
               
               <div className="space-y-2">
@@ -229,7 +228,7 @@ export const SystemStatus: React.FC = () => {
                   <ul className="text-sm space-y-1">
                     <li>📡 n8n Webhooks</li>
                     <li>🗺️ Google Maps Geocoding</li>
-                    <li>🏛️ IBGE APIs (Setores + SIDRA)</li>
+                    <li>🏛️ IBGE APIs (Municípios + SIDRA)</li>
                     <li>💳 Stripe Payments</li>
                     <li>📱 WhatsApp API</li>
                   </ul>
