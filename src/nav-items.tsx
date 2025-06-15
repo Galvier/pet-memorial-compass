@@ -1,5 +1,5 @@
 
-import { HomeIcon, Users, ClipboardList, Package, ShoppingCart, UserCheck, Users2, Clock } from "lucide-react";
+import { HomeIcon, Users, ClipboardList, Package, ShoppingCart, UserCheck, Users2, Clock, Activity } from "lucide-react";
 import Index from "./pages/Index";
 import Atendimentos from "./pages/Atendimentos";
 import MeusAtendimentos from "./pages/MeusAtendimentos";
@@ -7,6 +7,7 @@ import FilaAtendimentos from "./pages/FilaAtendimentos";
 import Atendentes from "./pages/Atendentes";
 import Planos from "./pages/Planos";
 import Itens from "./pages/Itens";
+import Diagnostico from "./pages/Diagnostico";
 
 export const navItems = [
   {
@@ -44,5 +45,11 @@ export const navItems = [
     to: "/itens",
     icon: <ShoppingCart className="h-4 w-4" />,
     page: <Itens />,
+  },
+  {
+    title: "Diagnóstico",
+    to: "/diagnostico",
+    icon: <Activity className="h-4 w-4" />,
+    page: <Diagnostico />,
   },
 ];

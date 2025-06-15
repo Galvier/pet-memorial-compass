@@ -21,10 +21,12 @@ export const SystemStatus: React.FC = () => {
   const checkSystemHealth = async () => {
     setLoading(true);
     try {
+      console.log('🔍 Iniciando verificação de saúde do sistema...');
       const healthStatus = await DiagnosticService.checkSystemHealth();
       setHealth(healthStatus);
+      console.log('✅ Verificação de saúde concluída:', healthStatus);
     } catch (error) {
-      console.error('Erro ao verificar saúde do sistema:', error);
+      console.error('❌ Erro ao verificar saúde do sistema:', error);
     } finally {
       setLoading(false);
     }
@@ -54,16 +56,22 @@ export const SystemStatus: React.FC = () => {
       error: 'destructive'
     } as const;
     
+    const labels = {
+      healthy: 'Saudável',
+      warning: 'Atenção', 
+      error: 'Erro'
+    };
+    
     return (
       <Badge variant={variants[status as keyof typeof variants] || 'outline'}>
-        {status === 'healthy' ? 'Saudável' : status === 'warning' ? 'Atenção' : 'Erro'}
+        {labels[status as keyof typeof labels] || 'Desconhecido'}
       </Badge>
     );
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-2xl font-bold">Status do Sistema</h2>
         <Button onClick={checkSystemHealth} disabled={loading} variant="outline">
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -71,7 +79,7 @@ export const SystemStatus: React.FC = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Banco de Dados</CardTitle>
@@ -133,7 +141,7 @@ export const SystemStatus: React.FC = () => {
           <CardContent>
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Última verificação: {health.lastUpdated}
+                Última verificação: {new Date(health.lastUpdated).toLocaleString('pt-BR')}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>

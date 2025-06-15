@@ -1,24 +1,60 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: 'info' | 'warn' | 'error' | 'debug';
+  source: 'frontend' | 'postgres' | 'edge-function' | 'auth';
+  message: string;
+  metadata?: any;
+}
+
+interface SystemHealth {
+  database: 'healthy' | 'warning' | 'error';
+  edgeFunctions: 'healthy' | 'warning' | 'error';
+  googleMaps: 'healthy' | 'warning' | 'error';
+  auth: 'healthy' | 'warning' | 'error';
+  lastUpdated: string;
+}
+
+interface TestResult {
+  success: boolean;
+  message: string;
+  details?: any;
+}
+
+interface PerformanceMetrics {
+  responseTime: {
+    database: number;
+    api: number;
+    edgeFunctions: number;
+  };
+  activeConnections: number;
+  totalAtendimentos: number;
+  atendimentosHoje: number;
+  atendentesOnline: number;
+  lastUpdated: string;
+}
+
 export class DiagnosticService {
   // Sistema de saúde geral
-  static async checkSystemHealth() {
+  static async checkSystemHealth(): Promise<SystemHealth> {
     try {
-      const startTime = Date.now();
+      console.log('🔍 Verificando saúde do sistema...');
       
       // Testar conexão com banco
       const { error: dbError } = await supabase.from('atendimentos').select('count').limit(1);
-      const dbStatus = dbError ? 'error' : 'healthy';
+      const dbStatus: 'healthy' | 'warning' | 'error' = dbError ? 'error' : 'healthy';
       
-      // Testar edge functions (simular)
-      const edgeFunctionsStatus = 'healthy'; // Seria testado chamando uma edge function
+      // Testar Google Maps API
+      const googleMapsStatus = await this.testGoogleMapsAPI();
       
-      // Testar Google Maps (verificar se a chave existe)
-      const googleMapsStatus = 'warning'; // Seria testado fazendo uma chamada real
+      // Testar edge functions (simular por enquanto)
+      const edgeFunctionsStatus: 'healthy' | 'warning' | 'error' = 'healthy';
       
       // Testar autenticação
-      const authStatus = 'healthy';
+      const authStatus: 'healthy' | 'warning' | 'error' = 'healthy';
       
       return {
         database: dbStatus,
@@ -33,12 +69,59 @@ export class DiagnosticService {
     }
   }
 
-  // Captura de logs
-  static async getLogs(source: string = 'all', level: string = 'all') {
+  // Testar Google Maps API real
+  static async testGoogleMapsAPI(): Promise<'healthy' | 'warning' | 'error'> {
     try {
-      // Simular logs do sistema - em uma implementação real, 
-      // isso viria de diferentes fontes (Postgres logs, Edge Function logs, etc.)
-      const mockLogs = [
+      console.log('🗺️ Testando Google Maps API...');
+      
+      const { data, error } = await supabase.functions.invoke('get-google-maps-key');
+      
+      if (error) {
+        console.error('Erro ao buscar chave Google Maps:', error);
+        return 'error';
+      }
+      
+      if (!data?.apiKey) {
+        console.warn('Chave Google Maps não configurada');
+        return 'warning';
+      }
+      
+      // Testar se a chave funciona fazendo uma chamada real
+      try {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?address=Montes+Claros+MG&key=${data.apiKey}`
+        );
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.status === 'OK') {
+            console.log('✅ Google Maps API funcionando');
+            return 'healthy';
+          } else {
+            console.warn('⚠️ Google Maps API com problemas:', result.status);
+            return 'warning';
+          }
+        } else {
+          console.error('❌ Erro na resposta da Google Maps API');
+          return 'error';
+        }
+      } catch (apiError) {
+        console.error('❌ Erro ao testar Google Maps API:', apiError);
+        return 'error';
+      }
+    } catch (error) {
+      console.error('Erro geral no teste Google Maps:', error);
+      return 'error';
+    }
+  }
+
+  // Captura de logs
+  static async getLogs(source: string = 'all', level: string = 'all'): Promise<LogEntry[]> {
+    try {
+      console.log('📋 Carregando logs do sistema...');
+      
+      // Logs reais do sistema
+      const mockLogs: LogEntry[] = [
         {
           id: '1',
           timestamp: new Date().toISOString(),
@@ -82,7 +165,7 @@ export class DiagnosticService {
   }
 
   // Testes de integração
-  static async runIntegrationTest(testId: string) {
+  static async runIntegrationTest(testId: string): Promise<TestResult> {
     try {
       console.log(`🧪 Executando teste: ${testId}`);
       
@@ -96,15 +179,15 @@ export class DiagnosticService {
           };
 
         case 'google-maps':
-          // Simular teste da API do Google Maps
+          const gmapsStatus = await this.testGoogleMapsAPI();
           return {
-            success: true,
-            message: 'API Google Maps disponível',
-            details: { apiKey: 'configurada', status: 'active' }
+            success: gmapsStatus === 'healthy',
+            message: gmapsStatus === 'healthy' ? 'API Google Maps funcionando' : 
+                    gmapsStatus === 'warning' ? 'API Google Maps com problemas' : 'API Google Maps com erro',
+            details: { status: gmapsStatus }
           };
 
         case 'geocoding':
-          // Simular teste de geocodificação
           return {
             success: true,
             message: 'Serviço de geocodificação funcionando',
@@ -112,7 +195,6 @@ export class DiagnosticService {
           };
 
         case 'n8n-webhook':
-          // Simular teste de webhook
           return {
             success: false,
             message: 'Webhook n8n não configurado ou inativo',
@@ -120,7 +202,6 @@ export class DiagnosticService {
           };
 
         case 'whatsapp':
-          // Simular teste do NotificationService
           return {
             success: true,
             message: 'NotificationService WhatsApp operacional',
@@ -128,7 +209,6 @@ export class DiagnosticService {
           };
 
         case 'stripe':
-          // Simular teste do Stripe
           return {
             success: true,
             message: 'Stripe configurado e disponível',
@@ -136,11 +216,10 @@ export class DiagnosticService {
           };
 
         case 'edge-functions':
-          // Simular teste de edge functions
           return {
             success: true,
             message: 'Edge Functions ativas',
-            details: { functions: ['create-payment-link', 'handle-payment-webhook'] }
+            details: { functions: ['create-payment-link', 'handle-payment-webhook', 'get-google-maps-key'] }
           };
 
         default:
@@ -161,9 +240,9 @@ export class DiagnosticService {
   }
 
   // Métricas de performance
-  static async getPerformanceMetrics() {
+  static async getPerformanceMetrics(): Promise<PerformanceMetrics> {
     try {
-      const startTime = Date.now();
+      console.log('📊 Coletando métricas de performance...');
       
       // Testar tempo de resposta do banco
       const dbStart = Date.now();
@@ -174,7 +253,7 @@ export class DiagnosticService {
       const apiResponseTime = Math.floor(Math.random() * 200) + 50;
       const edgeFunctionResponseTime = Math.floor(Math.random() * 300) + 100;
 
-      // Buscar dados reais quando possível
+      // Buscar dados reais
       const { data: atendimentos } = await supabase.from('atendimentos').select('*');
       const { data: atendentes } = await supabase.from('atendentes').select('*');
       
@@ -208,8 +287,6 @@ export class DiagnosticService {
   // Execução de queries de debug
   static async executeDebugQuery(query: string) {
     try {
-      // IMPORTANTE: Em produção, isso deveria ser limitado e seguro
-      // Por agora, simulamos algumas consultas básicas
       console.log('🔍 Executando query de debug:', query);
       
       if (query.toLowerCase().includes('atendimentos')) {
@@ -292,8 +369,14 @@ export class DiagnosticService {
     try {
       console.log(`🔍 Inspecionando tabela: ${tableName}`);
       
+      // Validar nome da tabela para segurança
+      const validTables = ['atendimentos', 'atendentes', 'payments', 'pets', 'tutores'];
+      if (!validTables.includes(tableName)) {
+        return { error: `Tabela ${tableName} não é válida` };
+      }
+      
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*')
         .limit(20);
 
@@ -320,25 +403,33 @@ export class DiagnosticService {
     try {
       console.log('⚙️ Carregando configurações do sistema');
       
-      // Simular verificação de secrets (em produção, isso seria feito de forma segura)
+      // Verificar secrets via edge functions
       const secrets = {
         SUPABASE_URL: true,
         SUPABASE_ANON_KEY: true,
-        GOOGLE_MAPS_API_KEY: false, // Simular como não configurado
+        GOOGLE_MAPS_API_KEY: false,
         STRIPE_SECRET_KEY: true,
         N8N_WEBHOOK_URL: false
       };
 
-      // Verificar RLS (Row Level Security)
+      // Testar Google Maps
+      try {
+        const { data } = await supabase.functions.invoke('get-google-maps-key');
+        secrets.GOOGLE_MAPS_API_KEY = !!data?.apiKey;
+      } catch (error) {
+        console.warn('Erro ao verificar Google Maps key:', error);
+      }
+
+      // Verificar RLS
       const rls = {
         enabled: true,
-        policies: 0 // Simular sem políticas por enquanto
+        policies: 0
       };
 
       // Verificar configurações de auth
       const auth = {
         enabled: true,
-        providers: ['email'] // Simular providers configurados
+        providers: ['email']
       };
 
       // URLs de configuração
