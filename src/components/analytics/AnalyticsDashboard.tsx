@@ -7,7 +7,8 @@ import { RealEstateFactorsChart } from './RealEstateFactorsChart';
 import { SystemPerformanceMetrics } from './SystemPerformanceMetrics';
 import { AnalyticsFilters } from './AnalyticsFilters';
 import { DataExport } from './DataExport';
-import { Activity, BarChart3, MapPin, TrendingUp } from 'lucide-react';
+import { MarketConfigPanel } from '@/components/diagnostic/MarketConfigPanel';
+import { Activity, BarChart3, MapPin, TrendingUp, Settings } from 'lucide-react';
 
 export interface AnalyticsData {
   totalAnalyses: number;
@@ -24,7 +25,11 @@ export interface AnalyticsData {
   };
 }
 
-export const AnalyticsDashboard: React.FC = () => {
+interface AnalyticsDashboardProps {
+  isAdmin?: boolean;
+}
+
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ isAdmin = false }) => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('7d');
@@ -193,11 +198,17 @@ export const AnalyticsDashboard: React.FC = () => {
 
       {/* Abas de Visualização */}
       <Tabs defaultValue="scores" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'}`}>
           <TabsTrigger value="scores">Scores por Localização</TabsTrigger>
           <TabsTrigger value="business">Perfis Comerciais</TabsTrigger>
           <TabsTrigger value="factors">Fatores Imobiliários</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="config" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Configurações
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="scores">
@@ -215,6 +226,12 @@ export const AnalyticsDashboard: React.FC = () => {
         <TabsContent value="performance">
           <SystemPerformanceMetrics data={analyticsData} />
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="config">
+            <MarketConfigPanel />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
