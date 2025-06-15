@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PlayCircle, Database, TestTube, Code } from 'lucide-react';
 import { DiagnosticService } from '@/services/DiagnosticService';
@@ -179,20 +180,21 @@ export const DebugTools: React.FC = () => {
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
             <Label htmlFor="table-select">Tabela:</Label>
-            <select
-              id="table-select"
-              value={inspectionTable}
-              onChange={(e) => setInspectionTable(e.target.value)}
-              className="border rounded px-2 py-1"
-            >
-              <option value="atendimentos">atendimentos</option>
-              <option value="atendentes">atendentes</option>
-              <option value="tutores">tutores</option>
-              <option value="pets">pets</option>
-              <option value="payments">payments</option>
-            </select>
+            <Select value={inspectionTable} onValueChange={setInspectionTable}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Selecione uma tabela" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="atendimentos">atendimentos</SelectItem>
+                <SelectItem value="atendentes">atendentes</SelectItem>
+                <SelectItem value="tutores">tutores</SelectItem>
+                <SelectItem value="pets">pets</SelectItem>
+                <SelectItem value="payments">payments</SelectItem>
+              </SelectContent>
+            </Select>
             
             <Button onClick={inspectTable} disabled={loading} size="sm">
+              <Database className="h-4 w-4 mr-2" />
               Inspecionar
             </Button>
           </div>
@@ -206,34 +208,44 @@ export const DebugTools: React.FC = () => {
           </CardHeader>
           <CardContent>
             {queryResult.error ? (
-              <div className="text-red-600 bg-red-50 p-4 rounded">
+              <div className="text-red-600 bg-red-50 p-4 rounded border">
                 <strong>Erro:</strong> {queryResult.error}
               </div>
             ) : queryResult.data ? (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {Object.keys(queryResult.data[0] || {}).map((key) => (
-                        <TableHead key={key}>{key}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {queryResult.data.map((row: any, index: number) => (
-                      <TableRow key={index}>
-                        {Object.values(row).map((value: any, cellIndex) => (
-                          <TableCell key={cellIndex}>
-                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                          </TableCell>
+              <div className="space-y-4">
+                {queryResult.table && (
+                  <div className="text-sm text-muted-foreground">
+                    Tabela: <strong>{queryResult.table}</strong> | 
+                    Registros: <strong>{queryResult.count}</strong>
+                  </div>
+                )}
+                <div className="overflow-x-auto border rounded">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {(queryResult.schema || Object.keys(queryResult.data[0] || {})).map((key: string) => (
+                          <TableHead key={key} className="font-semibold">{key}</TableHead>
                         ))}
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {queryResult.data.map((row: any, index: number) => (
+                        <TableRow key={index}>
+                          {Object.values(row).map((value: any, cellIndex) => (
+                            <TableCell key={cellIndex} className="max-w-xs">
+                              <div className="truncate" title={typeof value === 'object' ? JSON.stringify(value) : String(value)}>
+                                {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                              </div>
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             ) : (
-              <pre className="bg-gray-100 p-4 rounded overflow-x-auto">
+              <pre className="bg-gray-50 p-4 rounded overflow-x-auto text-sm">
                 {JSON.stringify(queryResult, null, 2)}
               </pre>
             )}
