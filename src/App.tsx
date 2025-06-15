@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import DevAuth from "./pages/DevAuth";
 import Diagnostico from "./pages/Diagnostico";
 import Analytics from "./pages/Analytics";
+import AnalyticsAdmin from "./pages/AnalyticsAdmin";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DeveloperProtectedRoute } from "./components/DeveloperProtectedRoute";
 import FilaAtendimentos from "./pages/FilaAtendimentos";
@@ -39,6 +40,14 @@ const App = () => (
               <DeveloperProtectedRoute>
                 <Analytics />
               </DeveloperProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/analytics-admin" 
+            element={
+              <ProtectedRoute>
+                <AnalyticsAdmin />
+              </ProtectedRoute>
             } 
           />
           {navItems.map(({ to, page }) => (

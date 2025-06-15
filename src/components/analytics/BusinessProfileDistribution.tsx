@@ -1,148 +1,98 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import type { AnalyticsData } from './AnalyticsDashboard';
+import { Badge } from '@/components/ui/badge';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { Users, TrendingUp } from 'lucide-react';
 
-interface BusinessProfileDistributionProps {
-  data: AnalyticsData;
-}
+const profileData = [
+  { name: 'Premium (60+)', value: 25, color: '#8b5cf6', count: 150 },
+  { name: 'Intermediário (40-59)', value: 45, color: '#3b82f6', count: 270 },
+  { name: 'Padrão (<40)', value: 30, color: '#10b981', count: 180 }
+];
 
-const COLORS = {
-  Premium: '#8884d8',
-  Misto: '#82ca9d',
-  Local: '#ffc658'
-};
+const COLORS = ['#8b5cf6', '#3b82f6', '#10b981'];
 
-export const BusinessProfileDistribution: React.FC<BusinessProfileDistributionProps> = ({ data }) => {
-  // Simular dados por bairro
-  const profilesByBairro = [
-    { bairro: 'Ibituruna', Premium: 45, Misto: 35, Local: 20 },
-    { bairro: 'Centro', Premium: 30, Misto: 50, Local: 20 },
-    { bairro: 'Morada do Sol', Premium: 40, Misto: 40, Local: 20 },
-    { bairro: 'Todos os Santos', Premium: 20, Misto: 45, Local: 35 },
-    { bairro: 'Major Prates', Premium: 10, Misto: 35, Local: 55 },
-    { bairro: 'Augusta Mota', Premium: 15, Misto: 40, Local: 45 }
-  ];
-
+export const BusinessProfileDistribution: React.FC = () => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Gráfico de Pizza - Distribuição Geral */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Distribuição Geral de Perfis Comerciais</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Users className="h-5 w-5" />
+          Distribuição de Perfis de Cliente
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* Gráfico de Pizza */}
+          <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
-                data={data.businessProfiles}
+                data={profileData}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={120}
-                paddingAngle={5}
-                dataKey="count"
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                label={({ name, value }) => `${value}%`}
               >
-                {data.businessProfiles.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`} 
-                    fill={COLORS[entry.category as keyof typeof COLORS]} 
-                  />
+                {profileData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip 
-                formatter={(value: number, name: string, props: any) => [
-                  `${value} análises (${props.payload.percentage}%)`,
-                  props.payload.category
-                ]}
-              />
+              <Tooltip />
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
-          
-          {/* Legenda */}
-          <div className="flex justify-center mt-4 space-x-4">
-            {data.businessProfiles.map((item) => (
-              <div key={item.category} className="flex items-center space-x-2">
-                <div 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: COLORS[item.category as keyof typeof COLORS] }}
-                />
-                <span className="text-sm">{item.category}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Gráfico de Barras - Perfis por Bairro */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Perfis Comerciais por Bairro (%)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={profilesByBairro}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="bairro" 
-                angle={-45}
-                textAnchor="end"
-                height={80}
-                fontSize={12}
-              />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="Premium" stackId="a" fill={COLORS.Premium} />
-              <Bar dataKey="Misto" stackId="a" fill={COLORS.Misto} />
-              <Bar dataKey="Local" stackId="a" fill={COLORS.Local} />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      {/* Análise Detalhada */}
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Análise Detalhada por Categoria</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {data.businessProfiles.map((profile) => (
-              <div key={profile.category} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium">{profile.category}</h4>
+          {/* Métricas Detalhadas */}
+          <div className="space-y-3">
+            {profileData.map((profile, index) => (
+              <div 
+                key={profile.name}
+                className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+              >
+                <div className="flex items-center gap-3">
                   <div 
                     className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: COLORS[profile.category as keyof typeof COLORS] }}
+                    style={{ backgroundColor: profile.color }}
                   />
+                  <div>
+                    <div className="font-medium text-sm">{profile.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {profile.count} clientes
+                    </div>
+                  </div>
                 </div>
-                <div className="text-2xl font-bold mb-1">{profile.count}</div>
-                <div className="text-sm text-muted-foreground">{profile.percentage}% do total</div>
-                
-                <div className="mt-3 space-y-1">
-                  <div className="text-xs font-medium">Características:</div>
-                  {profile.category === 'Premium' && (
-                    <div className="text-xs text-muted-foreground">
-                      Saúde, advocacia, consultoria especializada
-                    </div>
-                  )}
-                  {profile.category === 'Misto' && (
-                    <div className="text-xs text-muted-foreground">
-                      Comércio geral, serviços diversos
-                    </div>
-                  )}
-                  {profile.category === 'Local' && (
-                    <div className="text-xs text-muted-foreground">
-                      Serviços básicos, comércio local
-                    </div>
-                  )}
+                <div className="text-right">
+                  <Badge variant="outline">{profile.value}%</Badge>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {index === 0 && '+8% vs mês anterior'}
+                    {index === 1 && 'Estável'}
+                    {index === 2 && '-3% vs mês anterior'}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+
+          {/* Insight Estratégico */}
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-2">
+              <TrendingUp className="h-4 w-4 text-blue-600 mt-0.5" />
+              <div>
+                <div className="text-sm font-medium text-blue-800">
+                  Insight Estratégico
+                </div>
+                <div className="text-xs text-blue-700 mt-1">
+                  70% dos clientes têm perfil intermediário ou premium. 
+                  Oportunidade de upselling focada no segmento padrão.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

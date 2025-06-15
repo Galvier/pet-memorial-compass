@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -11,7 +10,8 @@ import {
   X,
   LogOut,
   User,
-  UserCheck
+  UserCheck,
+  BarChart3
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       });
     }
 
+    // Adicionar "Fila de Atendimentos" para admins e atendentes
+    if (isAdmin() || isAtendente()) {
+      baseNavigation.push({
+        name: 'Fila de Atendimentos',
+        href: '/fila-atendimentos',
+        icon: History,
+        roles: ['admin', 'atendente']
+      });
+    }
+
     // Adicionar "Meus Atendimentos" para atendentes
     if (isAtendente()) {
       baseNavigation.push({
@@ -55,10 +65,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     // Adicionar páginas administrativas apenas para admins
     if (isAdmin()) {
       baseNavigation.push(
-        { name: 'Planos', href: '/planos', icon: Shield, roles: ['admin'] },
-        { name: 'Itens de Venda', href: '/itens', icon: Package, roles: ['admin'] },
+        { name: 'Analytics Executivos', href: '/analytics-admin', icon: BarChart3, roles: ['admin'] },
         { name: 'Atendimentos', href: '/atendimentos', icon: History, roles: ['admin'] },
-        { name: 'Atendentes', href: '/atendentes', icon: Users, roles: ['admin'] }
+        { name: 'Atendentes', href: '/atendentes', icon: Users, roles: ['admin'] },
+        { name: 'Planos', href: '/planos', icon: Shield, roles: ['admin'] },
+        { name: 'Itens de Venda', href: '/itens', icon: Package, roles: ['admin'] }
       );
     }
 
