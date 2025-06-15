@@ -24,7 +24,7 @@ export const FilaAtendimentos: React.FC = () => {
   const [atendimentosFila, setAtendimentosFila] = useState<Atendimento[]>([]);
   const [loading, setLoading] = useState(true);
   const [claimingIds, setClaimingIds] = useState<Set<number>>(new Set());
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, isAdmin, isAtendente } = useAuth();
 
   const fetchFilaAtendimentos = async () => {
     try {
@@ -88,8 +88,8 @@ export const FilaAtendimentos: React.FC = () => {
       return;
     }
 
-    // Verificar se o usuário é atendente
-    if (userProfile.role !== 'atendente') {
+    // Verificar se o usuário é atendente ou admin
+    if (!isAtendente() && !isAdmin()) {
       toast.error('Apenas atendentes podem pegar atendimentos');
       return;
     }

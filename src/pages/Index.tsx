@@ -14,9 +14,9 @@ const Index = () => {
 
   useEffect(() => {
     if (!loading && user && userProfile) {
-      // Se o usuário é atendente, redirecionar para seus atendimentos
+      // Se o usuário é atendente, redirecionar para fila de atendimentos
       if (isAtendente()) {
-        navigate('/meus-atendimentos');
+        navigate('/fila-atendimentos');
         return;
       }
       

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Layout } from '@/components/Layout';
-import { AdminAnalyticsDashboard } from '@/components/analytics/AdminAnalyticsDashboard';
+import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 
 const AnalyticsAdmin = () => {
   return (
@@ -16,7 +16,7 @@ const AnalyticsAdmin = () => {
           </p>
         </div>
         
-        <AdminAnalyticsDashboard />
+        <AnalyticsDashboard />
       </div>
     </Layout>
   );
