@@ -1,5 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { SecretsService } from './SecretsService';
 
 interface LogEntry {
   id: string;
@@ -47,8 +47,8 @@ export class DiagnosticService {
       const { error: dbError } = await supabase.from('atendimentos').select('count').limit(1);
       const dbStatus: 'healthy' | 'warning' | 'error' = dbError ? 'error' : 'healthy';
       
-      // Testar Google Maps API
-      const googleMapsStatus = await this.testGoogleMapsAPI();
+      // Testar Google Maps API usando verificação real
+      const googleMapsStatus = await this.testGoogleMapsAPIReal();
       
       // Testar edge functions (simular por enquanto)
       const edgeFunctionsStatus: 'healthy' | 'warning' | 'error' = 'healthy';
@@ -69,48 +69,22 @@ export class DiagnosticService {
     }
   }
 
-  // Testar Google Maps API real
-  static async testGoogleMapsAPI(): Promise<'healthy' | 'warning' | 'error'> {
+  // Testar Google Maps API usando verificação real de secret
+  static async testGoogleMapsAPIReal(): Promise<'healthy' | 'warning' | 'error'> {
     try {
       console.log('🗺️ Testando Google Maps API...');
       
-      const { data, error } = await supabase.functions.invoke('get-google-maps-key');
+      const result = await SecretsService.testSecret('GOOGLE_MAPS_API_KEY', 'google-maps');
       
-      if (error) {
-        console.error('Erro ao buscar chave Google Maps:', error);
-        return 'error';
-      }
-      
-      if (!data?.apiKey) {
-        console.warn('Chave Google Maps não configurada');
+      if (result.success) {
+        console.log('✅ Google Maps API funcionando');
+        return 'healthy';
+      } else {
+        console.warn('⚠️ Google Maps API com problemas:', result.message);
         return 'warning';
       }
-      
-      // Testar se a chave funciona fazendo uma chamada real
-      try {
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/geocode/json?address=Montes+Claros+MG&key=${data.apiKey}`
-        );
-        
-        if (response.ok) {
-          const result = await response.json();
-          if (result.status === 'OK') {
-            console.log('✅ Google Maps API funcionando');
-            return 'healthy';
-          } else {
-            console.warn('⚠️ Google Maps API com problemas:', result.status);
-            return 'warning';
-          }
-        } else {
-          console.error('❌ Erro na resposta da Google Maps API');
-          return 'error';
-        }
-      } catch (apiError) {
-        console.error('❌ Erro ao testar Google Maps API:', apiError);
-        return 'error';
-      }
     } catch (error) {
-      console.error('Erro geral no teste Google Maps:', error);
+      console.error('❌ Erro ao testar Google Maps API:', error);
       return 'error';
     }
   }
@@ -164,7 +138,7 @@ export class DiagnosticService {
     }
   }
 
-  // Testes de integração
+  // Testes de integração atualizados
   static async runIntegrationTest(testId: string): Promise<TestResult> {
     try {
       console.log(`🧪 Executando teste: ${testId}`);
@@ -179,12 +153,19 @@ export class DiagnosticService {
           };
 
         case 'google-maps':
-          const gmapsStatus = await this.testGoogleMapsAPI();
+          const gmapsResult = await SecretsService.testSecret('GOOGLE_MAPS_API_KEY', 'google-maps');
           return {
-            success: gmapsStatus === 'healthy',
-            message: gmapsStatus === 'healthy' ? 'API Google Maps funcionando' : 
-                    gmapsStatus === 'warning' ? 'API Google Maps com problemas' : 'API Google Maps com erro',
-            details: { status: gmapsStatus }
+            success: gmapsResult.success,
+            message: gmapsResult.message,
+            details: { testType: 'google-maps' }
+          };
+
+        case 'stripe':
+          const stripeResult = await SecretsService.testSecret('STRIPE_SECRET_KEY', 'stripe');
+          return {
+            success: stripeResult.success,
+            message: stripeResult.message,
+            details: { testType: 'stripe' }
           };
 
         case 'geocoding':
@@ -208,18 +189,11 @@ export class DiagnosticService {
             details: { service: 'NotificationService', provider: 'WhatsApp' }
           };
 
-        case 'stripe':
-          return {
-            success: true,
-            message: 'Stripe configurado e disponível',
-            details: { provider: 'Stripe', status: 'live' }
-          };
-
         case 'edge-functions':
           return {
             success: true,
             message: 'Edge Functions ativas',
-            details: { functions: ['create-payment-link', 'handle-payment-webhook', 'get-google-maps-key'] }
+            details: { functions: ['check-secret', 'test-secret', 'create-payment-link', 'handle-payment-webhook', 'get-google-maps-key'] }
           };
 
         default:
