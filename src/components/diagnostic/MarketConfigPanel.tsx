@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,6 @@ import {
   Database,
   BarChart3,
   Clock,
-  Sync,
   AlertCircle,
   Target
 } from 'lucide-react';
@@ -451,7 +449,7 @@ export const MarketConfigPanel: React.FC = () => {
       <Card className="border-orange-200 bg-orange-50/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-orange-800">
-            <Sync className="h-5 w-5" />
+            <RefreshCw className="h-5 w-5" />
             Ferramentas de Sincronização
           </CardTitle>
         </CardHeader>
@@ -609,7 +607,7 @@ export const MarketConfigPanel: React.FC = () => {
                       <div className="font-medium flex items-center gap-2">
                         {bairro.nome_bairro}
                         {hasDiscrepancy && (
-                          <AlertTriangle className="h-4 w-4 text-orange-500" title="Discrepância detectada" />
+                          <AlertTriangle className="h-4 w-4 text-orange-500" />
                         )}
                       </div>
                       <div className="text-sm text-muted-foreground space-x-3">
