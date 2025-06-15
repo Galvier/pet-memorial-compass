@@ -43,7 +43,7 @@ export interface Atendimento {
 export interface UserProfile {
   id: string;
   email: string;
-  role: 'atendente' | 'admin' | 'cliente';
+  role: 'atendente' | 'admin' | 'cliente' | 'developer';
   nome: string;
 }
 

@@ -4,6 +4,8 @@
  * Integra com n8n para envio de mensagens WhatsApp
  */
 
+import { supabase } from '@/integrations/supabase/client';
+
 interface NotificationPayload {
   to: string;
   text: string;
@@ -19,19 +21,72 @@ interface NotificationResponse {
 }
 
 export class NotificationService {
-  private static n8nWebhookUrl: string | null = null;
+  private static webhookUrl: string | null = null;
 
   /**
-   * Configura a URL do webhook do n8n
-   * Em uma aplicação real, isso viria de variáveis de ambiente
+   * Carrega a URL do webhook dos secrets do Supabase
    */
-  static setWebhookUrl(url: string) {
-    this.n8nWebhookUrl = url;
-    console.log('🔗 URL do webhook n8n configurada');
+  static async loadWebhookFromSecrets(): Promise<string | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-secret', {
+        body: { secretName: 'N8N_WEBHOOK_URL' }
+      });
+      
+      if (error || !data?.exists) {
+        console.warn('⚠️ URL do webhook n8n não configurada nos secrets');
+        return null;
+      }
+      
+      // Note: Não podemos acessar o valor real do secret diretamente
+      // O secret está disponível apenas nas edge functions
+      this.webhookUrl = 'configured'; // Indica que está configurado
+      return 'configured';
+    } catch (error) {
+      console.error('❌ Erro ao verificar webhook URL:', error);
+      return null;
+    }
   }
 
   /**
-   * Envia notificação para atendente via n8n
+   * Verifica se o webhook está configurado
+   */
+  static async isWebhookConfigured(): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-secret', {
+        body: { secretName: 'N8N_WEBHOOK_URL' }
+      });
+      
+      return !error && data?.exists;
+    } catch (error) {
+      console.warn('Erro ao verificar configuração do webhook:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Testa a conectividade com o webhook n8n
+   */
+  static async testWebhookConnectivity(): Promise<NotificationResponse> {
+    try {
+      const { data, error } = await supabase.functions.invoke('test-secret', {
+        body: { secretName: 'N8N_WEBHOOK_URL', testType: 'n8n-webhook' }
+      });
+      
+      if (error) {
+        return { success: false, message: `Erro ao testar: ${error.message}` };
+      }
+      
+      return data || { success: false, message: 'Resposta inválida' };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: `Erro de conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}` 
+      };
+    }
+  }
+
+  /**
+   * Envia notificação para atendente via edge function
    */
   static async sendToAttendant(
     attendantWhatsapp: string, 
@@ -45,7 +100,9 @@ export class NotificationService {
     try {
       console.log('📲 Enviando notificação para atendente:', attendantWhatsapp);
 
-      if (!this.n8nWebhookUrl) {
+      const isConfigured = await this.isWebhookConfigured();
+      
+      if (!isConfigured) {
         console.warn('⚠️ URL do webhook n8n não configurada - simulando envio');
         
         // Simular o envio da notificação
@@ -54,31 +111,26 @@ export class NotificationService {
         
         return {
           success: true,
-          message: 'Notificação simulada com sucesso'
+          message: 'Notificação simulada com sucesso (webhook não configurado)'
         };
       }
 
-      const payload: NotificationPayload = {
-        to: attendantWhatsapp,
-        text: message,
-        ...metadata
-      };
-
-      const response = await fetch(this.n8nWebhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+      // Usar edge function para enviar via webhook configurado
+      const { data, error } = await supabase.functions.invoke('send-notification', {
+        body: {
+          to: attendantWhatsapp,
+          text: message,
+          ...metadata
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (error) {
+        throw new Error(error.message);
       }
 
       console.log('✅ Notificação enviada com sucesso para:', attendantWhatsapp);
       
-      return {
+      return data || {
         success: true,
         message: 'Notificação enviada com sucesso'
       };

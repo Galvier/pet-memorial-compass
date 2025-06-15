@@ -6,7 +6,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { navItems } from "./nav-items";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import DevAuth from "./pages/DevAuth";
+import Diagnostico from "./pages/Diagnostico";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { DeveloperProtectedRoute } from "./components/DeveloperProtectedRoute";
 import FilaAtendimentos from "./pages/FilaAtendimentos";
 
 const queryClient = new QueryClient();
@@ -19,6 +22,15 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/dev-auth" element={<DevAuth />} />
+          <Route 
+            path="/diagnostico" 
+            element={
+              <DeveloperProtectedRoute>
+                <Diagnostico />
+              </DeveloperProtectedRoute>
+            } 
+          />
           {navItems.map(({ to, page }) => (
             <Route
               key={to}
