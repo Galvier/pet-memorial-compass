@@ -10,12 +10,6 @@ import Itens from "./pages/Itens";
 
 export const navItems = [
   {
-    title: "Dashboard",
-    to: "/dashboard",
-    icon: <HomeIcon className="h-4 w-4" />,
-    page: <Index />,
-  },
-  {
     title: "Fila de Atendimentos",
     to: "/fila-atendimentos",
     icon: <Clock className="h-4 w-4" />,
