@@ -1,90 +1,44 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { navItems } from "./nav-items";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import Planos from "./pages/Planos";
-import Itens from "./pages/Itens";
-import Atendimentos from "./pages/Atendimentos";
-import AtendimentoDetailPage from "./pages/AtendimentoDetail";
-import Atendentes from "./pages/Atendentes";
-import MeusAtendimentos from "./pages/MeusAtendimentos";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentCancelled from "./pages/PaymentCancelled";
-import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import FilaAtendimentos from "./pages/FilaAtendimentos";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/payment-cancelled" element={<PaymentCancelled />} />
-            <Route 
-              path="/planos" 
-              element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Planos />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/itens" 
-              element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Itens />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/atendimentos" 
-              element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Atendimentos />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/atendimentos/:id" 
+    <TooltipProvider>
+      <Toaster />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          {navItems.map(({ to, page }) => (
+            <Route
+              key={to}
+              path={to}
               element={
                 <ProtectedRoute>
-                  <AtendimentoDetailPage />
+                  {page}
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="/atendentes" 
-              element={
-                <ProtectedRoute requireAdmin={true}>
-                  <Atendentes />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/meus-atendimentos" 
-              element={
-                <ProtectedRoute requireAtendente={true}>
-                  <MeusAtendimentos />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+          ))}
+          <Route 
+            path="/fila-atendimentos" 
+            element={
+              <ProtectedRoute>
+                <FilaAtendimentos />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 

@@ -31,7 +31,7 @@ export interface Atendimento {
   atendente_responsavel_id?: number;
   data_inicio: string;
   status: 'Em andamento' | 'Sugestão enviada' | 'Finalizado';
-  status_atendimento: 'BOT_ATIVO' | 'ATRIBUIDO_HUMANO' | 'FINALIZADO';
+  status_atendimento: 'BOT_ATIVO' | 'AGUARDANDO_NA_FILA' | 'ATRIBUIDO_HUMANO' | 'FINALIZADO';
   tipo_atendimento: 'Imediato' | 'Preventivo';
   dados_coletados?: any;
   sugestoes_geradas?: any;
@@ -102,6 +102,6 @@ export interface AtribuirAtendimentoRequest {
 }
 
 export interface StatusAtendimentoResponse {
-  status: 'BOT_ATIVO' | 'ATRIBUIDO_HUMANO' | 'FINALIZADO';
+  status: 'BOT_ATIVO' | 'AGUARDANDO_NA_FILA' | 'ATRIBUIDO_HUMANO' | 'FINALIZADO';
   atendente?: Atendente;
 }

@@ -166,6 +166,84 @@ export class PetMemorialAPI {
     return true;
   }
 
+  // NOVA FUNCIONALIDADE: Colocar atendimento na fila
+  static async colocarNaFila(atendimentoId: number): Promise<{message: string}> {
+    await delay(300);
+    
+    console.log('📋 Colocando atendimento na fila:', atendimentoId);
+    
+    const atendimento = mockAtendimentos.find(a => a.atendimento_id === atendimentoId);
+    if (!atendimento) {
+      throw new Error('Atendimento não encontrado');
+    }
+
+    // Atualizar status para aguardando na fila
+    atendimento.status_atendimento = 'AGUARDANDO_NA_FILA';
+    atendimento.atendente_responsavel_id = undefined;
+    
+    console.log('✅ Atendimento colocado na fila com sucesso');
+    
+    // Simular notificação para grupo de atendentes
+    console.log('🔔 Notificação enviada para grupo de atendentes: "Novo atendimento na fila! Acesse o painel para atender."');
+    
+    return {
+      message: 'Atendimento colocado na fila com sucesso'
+    };
+  }
+
+  // NOVA FUNCIONALIDADE: Reivindicar atendimento da fila
+  static async reivindicarAtendimento(atendimentoId: number): Promise<{message: string}> {
+    await delay(500);
+    
+    console.log('🎯 Reivindicando atendimento da fila:', atendimentoId);
+    
+    const atendimento = mockAtendimentos.find(a => a.atendimento_id === atendimentoId);
+    if (!atendimento) {
+      throw new Error('Atendimento não encontrado');
+    }
+
+    // Verificação de concorrência - simular conflito às vezes
+    if (atendimento.status_atendimento !== 'AGUARDANDO_NA_FILA') {
+      const error = new Error('Este atendimento já foi reivindicado por outro atendente');
+      error.message = '409: ' + error.message;
+      throw error;
+    }
+
+    // Simular atendente atual (na implementação real viria do JWT)
+    const atendenteAtual = mockAtendentes[0]; // Primeiro atendente como exemplo
+    
+    atendimento.status_atendimento = 'ATRIBUIDO_HUMANO';
+    atendimento.atendente_responsavel_id = atendenteAtual.atendente_id;
+    atendimento.atendente = atendenteAtual;
+    
+    console.log(`✅ Atendimento reivindicado por: ${atendenteAtual.nome_atendente}`);
+    
+    return {
+      message: `Atendimento reivindicado com sucesso por ${atendenteAtual.nome_atendente}`
+    };
+  }
+
+  // NOVA FUNCIONALIDADE: Finalizar atendimento
+  static async finalizarAtendimento(atendimentoId: number): Promise<{message: string}> {
+    await delay(300);
+    
+    console.log('🏁 Finalizando atendimento:', atendimentoId);
+    
+    const atendimento = mockAtendimentos.find(a => a.atendimento_id === atendimentoId);
+    if (!atendimento) {
+      throw new Error('Atendimento não encontrado');
+    }
+
+    atendimento.status_atendimento = 'FINALIZADO';
+    atendimento.status = 'Finalizado';
+    
+    console.log('✅ Atendimento finalizado com sucesso');
+    
+    return {
+      message: 'Atendimento finalizado com sucesso'
+    };
+  }
+
   // Nova função: Lógica de Round-Robin para atribuição automática COM NOTIFICAÇÃO
   static async solicitarAtendimentoHumano(atendimentoId: number): Promise<{message: string, atendente_atribuido: string}> {
     await delay(800);
@@ -182,10 +260,14 @@ export class PetMemorialAPI {
     const atendentesOnline = mockAtendentes.filter(a => a.status_disponibilidade === 'Online');
     
     if (atendentesOnline.length === 0) {
-      console.log('⏳ Nenhum atendente online - atendimento em fila de espera');
+      console.log('⏳ Nenhum atendente online - colocando na fila');
+      
+      // Se não há atendentes online, colocar na fila
+      atendimento.status_atendimento = 'AGUARDANDO_NA_FILA';
+      
       return {
-        message: 'Nenhum atendente online. Atendimento em fila de espera.',
-        atendente_atribuido: 'Nenhum disponível'
+        message: 'Nenhum atendente online. Atendimento colocado na fila.',
+        atendente_atribuido: 'Na fila'
       };
     }
 

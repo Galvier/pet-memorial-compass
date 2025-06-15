@@ -54,6 +54,66 @@ export async function solicitarAtendimentoHumano(atendimentoId: number) {
   }
 }
 
+// NOVO: Endpoint para colocar atendimento na fila
+export async function colocarNaFila(atendimentoId: number) {
+  try {
+    console.log('📋 Colocando atendimento na fila:', atendimentoId);
+    
+    const result = await PetMemorialAPI.colocarNaFila(atendimentoId);
+    
+    console.log('✅ Atendimento colocado na fila com sucesso');
+    
+    return { 
+      success: true, 
+      message: 'Atendimento colocado na fila com sucesso' 
+    };
+  } catch (error) {
+    console.error('❌ Erro ao colocar na fila:', error);
+    throw new Error('Erro interno do servidor');
+  }
+}
+
+// NOVO: Endpoint para reivindicar atendimento da fila
+export async function reivindicarAtendimento(atendimentoId: number) {
+  try {
+    console.log('🎯 Reivindicando atendimento da fila:', atendimentoId);
+    
+    const result = await PetMemorialAPI.reivindicarAtendimento(atendimentoId);
+    
+    console.log('✅ Atendimento reivindicado com sucesso');
+    
+    return { 
+      success: true, 
+      message: 'Atendimento reivindicado com sucesso' 
+    };
+  } catch (error) {
+    console.error('❌ Erro ao reivindicar atendimento:', error);
+    if (error.message.includes('409')) {
+      throw new Error('Este atendimento já foi reivindicado por outro atendente');
+    }
+    throw new Error('Erro interno do servidor');
+  }
+}
+
+// NOVO: Endpoint para finalizar atendimento
+export async function finalizarAtendimento(atendimentoId: number) {
+  try {
+    console.log('🏁 Finalizando atendimento:', atendimentoId);
+    
+    const result = await PetMemorialAPI.finalizarAtendimento(atendimentoId);
+    
+    console.log('✅ Atendimento finalizado com sucesso');
+    
+    return { 
+      success: true, 
+      message: 'Atendimento finalizado com sucesso' 
+    };
+  } catch (error) {
+    console.error('❌ Erro ao finalizar atendimento:', error);
+    throw new Error('Erro interno do servidor');
+  }
+}
+
 // Endpoint para verificar status do atendimento
 export async function verificarStatusAtendimento(idWhatsapp: string) {
   try {
@@ -75,5 +135,8 @@ export const simulateAtendimentoAPI = {
   assumir: assumirAtendimento,
   atribuir: atribuirAtendimento,
   solicitarHumano: solicitarAtendimentoHumano,
-  verificarStatus: verificarStatusAtendimento
+  verificarStatus: verificarStatusAtendimento,
+  colocarNaFila: colocarNaFila,
+  reivindicar: reivindicarAtendimento,
+  finalizar: finalizarAtendimento
 };
