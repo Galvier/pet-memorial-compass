@@ -26,27 +26,27 @@ export const DeveloperLayout: React.FC<DeveloperLayoutProps> = ({ children }) =>
   };
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Header específico para desenvolvedor */}
-      <div className="bg-gray-800 border-b border-gray-700 p-4">
+      <div className="bg-card border-b border-border p-4 shadow-sm">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center space-x-3">
-            <Code className="w-8 h-8 text-blue-400" />
+            <Code className="w-8 h-8 text-primary" />
             <div>
-              <h1 className="text-xl font-bold text-white">Sistema de Diagnóstico</h1>
-              <p className="text-sm text-gray-400">Pet Memorial - Modo Desenvolvedor</p>
+              <h1 className="text-xl font-bold text-foreground">Sistema de Diagnóstico</h1>
+              <p className="text-sm text-muted-foreground">Pet Memorial - Modo Desenvolvedor</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
             {user && userProfile && (
               <div className="flex items-center space-x-3">
-                <User className="w-6 h-6 text-blue-400" />
+                <User className="w-6 h-6 text-primary" />
                 <div className="text-right">
-                  <p className="font-semibold text-white text-sm">{userProfile.nome}</p>
-                  <p className="text-xs text-gray-400">{userProfile.email}</p>
+                  <p className="font-semibold text-foreground text-sm">{userProfile.nome}</p>
+                  <p className="text-xs text-muted-foreground">{userProfile.email}</p>
                 </div>
-                <Badge variant="outline" className="bg-blue-900 text-blue-300 border-blue-600">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                   Desenvolvedor
                 </Badge>
               </div>
@@ -56,7 +56,7 @@ export const DeveloperLayout: React.FC<DeveloperLayoutProps> = ({ children }) =>
               onClick={handleSignOut} 
               variant="outline" 
               size="sm"
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+              className="border-border text-foreground hover:bg-accent"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Sair
@@ -66,7 +66,7 @@ export const DeveloperLayout: React.FC<DeveloperLayoutProps> = ({ children }) =>
       </div>
 
       {/* Conteúdo principal */}
-      <div className="text-white">
+      <div className="text-foreground bg-background">
         {children}
       </div>
     </div>
