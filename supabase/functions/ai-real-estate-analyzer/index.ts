@@ -81,6 +81,29 @@ serve(async (req) => {
   }
 });
 
+function extractJsonFromResponse(text: string): any {
+  // Remove markdown code blocks if present
+  const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+  
+  // Try to find JSON object in the response
+  const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch (e) {
+      console.error('Failed to parse extracted JSON:', e);
+    }
+  }
+  
+  // If no JSON found, try parsing the entire clean text
+  try {
+    return JSON.parse(cleanText.trim());
+  } catch (e) {
+    console.error('Failed to parse clean text as JSON:', e);
+    throw new Error('Failed to parse AI response as JSON');
+  }
+}
+
 async function analyzeSingleNeighborhood(request: AnalysisRequest): Promise<AIAnalysisResult> {
   const prompt = `
 Você é um especialista em mercado imobiliário de Montes Claros, MG. Analise o bairro "${request.bairro}" e forneça uma análise detalhada para determinar o fator imobiliário.
@@ -100,16 +123,16 @@ INSTRUÇÕES:
 4. Classifique em uma categoria (alto/medio/padrao)
 5. Forneça justificativa detalhada
 
-RESPONDA EM FORMATO JSON:
+RESPONDA APENAS COM JSON VÁLIDO (sem texto adicional antes ou depois):
 {
   "fator_sugerido": 1.25,
   "confidence_score": 85,
   "categoria_sugerida": "alto",
   "reasoning": "Resumo executivo da análise",
-  "justificativa_detalhada": "Análise completa dos critérios",
-  "pontos_fortes": ["Ponto 1", "Ponto 2", "Ponto 3"],
-  "pontos_atencao": ["Aspecto 1", "Aspecto 2"],
-  "comparacao_mercado": "Como se compara com outros bairros"
+  "justificativa_detalhada": "Análise completa dos critérios considerando localização, infraestrutura e demanda do mercado",
+  "pontos_fortes": ["Ponto forte 1", "Ponto forte 2", "Ponto forte 3"],
+  "pontos_atencao": ["Aspecto que requer atenção 1", "Aspecto que requer atenção 2"],
+  "comparacao_mercado": "Como se compara com outros bairros de Montes Claros"
 }
 
 Seja preciso, objetivo e baseie-se em conhecimento real sobre Montes Claros.
@@ -126,7 +149,7 @@ Seja preciso, objetivo e baseie-se em conhecimento real sobre Montes Claros.
       messages: [
         {
           role: 'system',
-          content: 'Você é um especialista em avaliação imobiliária de Montes Claros, MG. Forneça análises precisas e baseadas em dados reais do mercado local.'
+          content: 'Você é um especialista em avaliação imobiliária de Montes Claros, MG. Responda SEMPRE em formato JSON válido, sem texto adicional.'
         },
         {
           role: 'user',
@@ -145,13 +168,17 @@ Seja preciso, objetivo e baseie-se em conhecimento real sobre Montes Claros.
   const data = await response.json();
   const aiResponse = data.choices[0].message.content;
   
+  console.log('Raw AI Response:', aiResponse);
+  
   try {
-    const analysisResult = JSON.parse(aiResponse);
+    const analysisResult = extractJsonFromResponse(aiResponse);
     return {
       bairro: request.bairro!,
       ...analysisResult
     };
   } catch (parseError) {
+    console.error('Parse error:', parseError);
+    console.error('AI Response that failed to parse:', aiResponse);
     throw new Error('Failed to parse AI response as JSON');
   }
 }
@@ -161,6 +188,8 @@ async function bulkAnalyzeNeighborhoods(request: AnalysisRequest): Promise<AIAna
   
   for (const bairro of request.bairros || []) {
     try {
+      console.log(`Analyzing ${bairro.nome_bairro}...`);
+      
       const singleRequest: AnalysisRequest = {
         type: 'single_neighborhood',
         bairro: bairro.nome_bairro,
@@ -176,7 +205,7 @@ async function bulkAnalyzeNeighborhoods(request: AnalysisRequest): Promise<AIAna
       results.push(result);
       
       // Pequeno delay para evitar rate limiting
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
     } catch (error) {
       console.error(`Error analyzing ${bairro.nome_bairro}:`, error);
       // Continuar com outros bairros mesmo se um falhar
@@ -215,7 +244,7 @@ INSTRUÇÕES:
 3. Classifique severidade: baixa (<20%), média (20-30%), alta (>30%)
 4. Forneça justificativas específicas
 
-RESPONDA EM FORMATO JSON:
+RESPONDA APENAS COM JSON VÁLIDO (sem texto adicional):
 {
   "discrepancias": [
     {
@@ -223,14 +252,14 @@ RESPONDA EM FORMATO JSON:
       "fator_atual": 1.20,
       "fator_sugerido": 1.35,
       "confidence_score": 90,
-      "justificativa": "Explicação da discrepância",
+      "justificativa": "Explicação da discrepância baseada em características do bairro",
       "severidade": "media"
     }
   ],
   "resumo": {
     "total_analisados": 25,
     "discrepancias_encontradas": 3,
-    "recomendacao_geral": "Análise geral do mercado"
+    "recomendacao_geral": "Análise geral do mercado e recomendações"
   }
 }
 `;
@@ -246,7 +275,7 @@ RESPONDA EM FORMATO JSON:
       messages: [
         {
           role: 'system',
-          content: 'Você é um auditor especialista em mercado imobiliário. Identifique discrepâncias e forneça análises precisas.'
+          content: 'Você é um auditor especialista em mercado imobiliário. Responda SEMPRE em formato JSON válido, sem texto adicional.'
         },
         {
           role: 'user',
@@ -265,9 +294,13 @@ RESPONDA EM FORMATO JSON:
   const data = await response.json();
   const aiResponse = data.choices[0].message.content;
   
+  console.log('Raw Validation Response:', aiResponse);
+  
   try {
-    return JSON.parse(aiResponse);
+    return extractJsonFromResponse(aiResponse);
   } catch (parseError) {
+    console.error('Validation parse error:', parseError);
+    console.error('Validation response that failed to parse:', aiResponse);
     throw new Error('Failed to parse AI validation response as JSON');
   }
 }
