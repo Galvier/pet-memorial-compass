@@ -1,4 +1,3 @@
-
 import { PetMemorialAPI } from '@/lib/api';
 import { GeocodingService } from '@/services/GeocodingService';
 
@@ -101,41 +100,37 @@ function calculateMapBounds(points: HeatmapDataPoint[]): { center: { lat: number
 }
 
 /**
- * API para dados do mapa de calor processados
+ * API para dados do mapa de calor processados - SEMPRE TENTA DADOS REAIS PRIMEIRO
  */
 export async function getProcessedHeatmapData(): Promise<ProcessedHeatmapData> {
   try {
-    console.log('🗺️ Carregando e processando dados do mapa de calor...');
+    console.log('🗺️ Carregando dados do mapa de calor do Supabase...');
     
-    // Buscar tutores com endereços
+    // SEMPRE tentar buscar dados reais do Supabase primeiro
     const tutores = await PetMemorialAPI.getTutores();
+    console.log(`📊 Tutores encontrados no Supabase: ${tutores.length}`);
     
     // Filtrar apenas tutores com endereços válidos
     const enderecosValidos = tutores
       .filter(tutor => tutor.endereco && tutor.endereco.trim() !== '')
       .map(tutor => tutor.endereco!);
 
-    console.log(`📍 Encontrados ${enderecosValidos.length} endereços para geocodificar`);
+    console.log(`📍 Endereços válidos encontrados: ${enderecosValidos.length}`, enderecosValidos);
 
     if (enderecosValidos.length === 0) {
-      console.warn('Nenhum endereço válido encontrado');
-      return {
-        points: [],
-        center: { lat: -16.7249, lng: -43.8609 },
-        zoom: 12,
-        useMarkers: true,
-        stats: {
-          totalPoints: 0,
-          uniqueLocations: 0,
-          coverage: 'Nenhum dado'
-        }
-      };
+      console.warn('⚠️ Nenhum endereço válido encontrado no Supabase - usando dados de demonstração');
+      return generateMockHeatmapData();
     }
 
-    // Geocodificar endereços
+    // Geocodificar endereços reais
     const coordinates = await GeocodingService.batchGeocode(enderecosValidos);
     
-    console.log(`✅ Geocodificados ${coordinates.length} endereços com sucesso`);
+    console.log(`✅ Geocodificados ${coordinates.length} endereços com sucesso:`, coordinates);
+
+    if (coordinates.length === 0) {
+      console.warn('⚠️ Falha na geocodificação - usando dados de demonstração');
+      return generateMockHeatmapData();
+    }
 
     // Processar e agrupar pontos
     const groupedPoints = groupNearbyPoints(coordinates);
@@ -145,7 +140,6 @@ export async function getProcessedHeatmapData(): Promise<ProcessedHeatmapData> {
     const useMarkers = groupedPoints.length < 4;
     
     // Calcular estatísticas
-    const totalIntensity = groupedPoints.reduce((sum, p) => sum + (p.intensity || 1), 0);
     let coverage = 'Local';
     if (groupedPoints.length > 10) coverage = 'Regional';
     else if (groupedPoints.length > 5) coverage = 'Área ampla';
@@ -156,7 +150,7 @@ export async function getProcessedHeatmapData(): Promise<ProcessedHeatmapData> {
       coverage
     };
 
-    console.log(`📊 Dados processados: ${groupedPoints.length} grupos, intensidade total: ${totalIntensity}`);
+    console.log(`📊 Dados REAIS processados: ${groupedPoints.length} grupos, ${coordinates.length} pontos originais`);
 
     return {
       points: groupedPoints,
@@ -167,8 +161,9 @@ export async function getProcessedHeatmapData(): Promise<ProcessedHeatmapData> {
     };
     
   } catch (error) {
-    console.error('❌ Erro ao processar dados do mapa de calor:', error);
-    throw new Error('Erro ao processar dados do mapa de calor');
+    console.error('❌ Erro ao processar dados reais do mapa de calor:', error);
+    console.log('🔄 Fallback para dados de demonstração');
+    return generateMockHeatmapData();
   }
 }
 

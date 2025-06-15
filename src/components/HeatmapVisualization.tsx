@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Loader2, RefreshCw, Target, BarChart3 } from 'lucide-react';
+import { MapPin, Loader2, RefreshCw, Target, BarChart3, Database, TestTube } from 'lucide-react';
 import { getProcessedHeatmapData, generateMockHeatmapData, ProcessedHeatmapData } from '@/api/heatmap';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -55,7 +55,7 @@ export const HeatmapVisualization: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mapData, setMapData] = useState<ProcessedHeatmapData | null>(null);
-  const [useMockData, setUseMockData] = useState(false);
+  const [isUsingRealData, setIsUsingRealData] = useState(false);
 
   // Initialize map
   useEffect(() => {
@@ -120,22 +120,27 @@ export const HeatmapVisualization: React.FC = () => {
       let data: ProcessedHeatmapData;
       
       if (forceMock) {
+        console.log('🧪 Carregando dados de demonstração por solicitação do usuário');
         data = generateMockHeatmapData();
-        setUseMockData(true);
+        setIsUsingRealData(false);
       } else {
-        try {
-          data = await getProcessedHeatmapData();
-          setUseMockData(false);
-          
-          if (data.points.length === 0) {
-            // If no real data, use demo data
-            data = generateMockHeatmapData();
-            setUseMockData(true);
-          }
-        } catch (apiError) {
-          console.warn('Erro ao carregar dados reais, usando dados de demonstração:', apiError);
-          data = generateMockHeatmapData();
-          setUseMockData(true);
+        console.log('🔄 Tentando carregar dados reais do Supabase...');
+        data = await getProcessedHeatmapData();
+        
+        // Verificar se realmente temos dados reais ou se foi fallback para mock
+        const hasRealPoints = data.points.length > 0 && 
+          data.points.some(point => 
+            // Verificar se os pontos não são das coordenadas mock padrão
+            Math.abs(point.lat - (-16.7249)) > 0.01 || 
+            Math.abs(point.lng - (-43.8609)) > 0.01
+          );
+        
+        setIsUsingRealData(hasRealPoints);
+        
+        if (!hasRealPoints) {
+          console.log('📊 Dados retornados são de demonstração (fallback)');
+        } else {
+          console.log('✅ Dados reais carregados do Supabase!');
         }
       }
 
@@ -178,15 +183,15 @@ export const HeatmapVisualization: React.FC = () => {
 
           if ((L as any).heatLayer) {
             heatLayerRef.current = (L as any).heatLayer(heatData, {
-              radius: Math.max(25, 40 - data.points.length), // Smaller radius for more points
+              radius: Math.max(25, 40 - data.points.length),
               blur: 20,
               maxZoom: 17,
               gradient: {
-                0.0: '#059669', // green
-                0.3: '#ca8a04', // yellow
-                0.5: '#ea580c', // orange
-                0.7: '#dc2626', // red
-                1.0: '#7c2d12'  // dark red
+                0.0: '#059669',
+                0.3: '#ca8a04',
+                0.5: '#ea580c',
+                0.7: '#dc2626',
+                1.0: '#7c2d12'
               }
             }).addTo(mapInstanceRef.current!);
 
@@ -204,11 +209,11 @@ export const HeatmapVisualization: React.FC = () => {
   };
 
   const refreshData = () => {
-    loadHeatmapData();
+    loadHeatmapData(false);
   };
 
-  const toggleMockData = () => {
-    loadHeatmapData(!useMockData);
+  const toggleDataSource = () => {
+    loadHeatmapData(!isUsingRealData);
   };
 
   const centerOnData = () => {
@@ -239,10 +244,21 @@ export const HeatmapVisualization: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={toggleMockData}
+              onClick={toggleDataSource}
               disabled={loading}
+              className={isUsingRealData ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}
             >
-              {useMockData ? 'Dados Reais' : 'Demo'}
+              {isUsingRealData ? (
+                <>
+                  <Database className="h-4 w-4 mr-1" />
+                  Real
+                </>
+              ) : (
+                <>
+                  <TestTube className="h-4 w-4 mr-1" />
+                  Demo
+                </>
+              )}
             </Button>
             <Button
               variant="outline"
@@ -260,9 +276,16 @@ export const HeatmapVisualization: React.FC = () => {
         </div>
         
         {/* Status and warnings */}
-        {useMockData && (
-          <p className="text-sm text-orange-600">
-            Exibindo dados de demonstração - Configure endereços reais nos tutores para dados precisos
+        {!isUsingRealData && (
+          <p className="text-sm text-orange-600 flex items-center gap-1">
+            <TestTube className="h-4 w-4" />
+            Exibindo dados de demonstração - Clique em "Real" para ver dados dos tutores cadastrados
+          </p>
+        )}
+        {isUsingRealData && (
+          <p className="text-sm text-green-600 flex items-center gap-1">
+            <Database className="h-4 w-4" />
+            Exibindo dados reais dos tutores cadastrados no sistema
           </p>
         )}
         {error && (
@@ -287,6 +310,11 @@ export const HeatmapVisualization: React.FC = () => {
                 Modo marcadores
               </Badge>
             )}
+            {isUsingRealData && (
+              <Badge variant="default" className="bg-green-500">
+                Dados Reais
+              </Badge>
+            )}
           </div>
         )}
       </CardHeader>
@@ -297,7 +325,7 @@ export const HeatmapVisualization: React.FC = () => {
             <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 <div>
-                  <strong>Visualização:</strong> {mapData.useMarkers ? 'Marcadores individuais' : 'Mapa de calor'}
+                  <strong>Fonte:</strong> {isUsingRealData ? 'Banco Supabase' : 'Demonstração'}
                 </div>
                 <div>
                   <strong>Centro:</strong> {mapData.center.lat.toFixed(4)}, {mapData.center.lng.toFixed(4)}
