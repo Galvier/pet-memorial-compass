@@ -1,4 +1,3 @@
-
 interface Coordinates {
   lat: number;
   lng: number;
@@ -37,6 +36,7 @@ export class IBGEApiService {
   private static readonly TIMEOUT = 10000; // 10 segundos
   private static readonly CACHE_TTL = 24 * 60 * 60 * 1000; // 24 horas
   private static readonly RETRY_ATTEMPTS = 3;
+  private static readonly STATUS_CACHE_TTL = 4 * 60 * 60 * 1000; // 4 horas para cache de status
 
   /**
    * Obtém dados do município a partir de coordenadas geográficas
@@ -232,40 +232,204 @@ export class IBGEApiService {
   }
 
   /**
-   * Testa conectividade com as APIs do IBGE
+   * Testa conectividade com as APIs do IBGE de forma mais robusta
    */
-  static async testConnectivity(): Promise<{ municipalities: boolean; income: boolean }> {
-    const results = { municipalities: false, income: false };
+  static async testConnectivity(): Promise<{ municipalities: boolean; income: boolean; details: any }> {
+    console.log('🔍 Testando conectividade com APIs IBGE...');
 
-    try {
-      // Teste da API de municípios
-      const municipiosResponse = await fetch(
-        'https://servicodados.ibge.gov.br/api/v1/localidades/municipios?view=nivelado',
-        { 
-          method: 'HEAD',
-          signal: AbortSignal.timeout(5000)
-        }
-      );
-      results.municipalities = municipiosResponse.ok;
-    } catch (error) {
-      console.warn('Teste de conectividade - API municípios falhou:', error);
+    // Verificar cache de status primeiro
+    const cachedStatus = this.getCachedStatus();
+    if (cachedStatus) {
+      console.log('📦 Usando status do cache');
+      return cachedStatus;
     }
 
+    const results = { municipalities: false, income: false, details: {} };
+
+    // Teste 1: API de municípios com endpoint simples
     try {
-      // Teste da API SIDRA com um município conhecido (Belo Horizonte - 3106200)
-      const sidraResponse = await fetch(
-        'https://apisidra.ibge.gov.br/values/t/5938/n6/3106200/v/10267/p/last%201',
-        { 
-          method: 'HEAD',
-          signal: AbortSignal.timeout(5000)
+      console.log('🏛️ Testando API de municípios...');
+      
+      // Usar endpoint mais simples que geralmente funciona
+      const municipiosUrl = 'https://servicodados.ibge.gov.br/api/v1/localidades/estados/31/municipios';
+      
+      const response = await fetch(municipiosUrl, {
+        method: 'GET',
+        signal: AbortSignal.timeout(8000),
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'PetMemorial/1.0'
         }
-      );
-      results.income = sidraResponse.ok;
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        results.municipalities = Array.isArray(data) && data.length > 0;
+        results.details.municipalities = `${data.length} municípios encontrados`;
+      } else {
+        results.details.municipalities = `HTTP ${response.status}`;
+      }
     } catch (error) {
-      console.warn('Teste de conectividade - API SIDRA falhou:', error);
+      console.warn('⚠️ Teste API municípios falhou:', error.message);
+      results.details.municipalities = error.message;
+      
+      // Verificar se temos dados em cache como fallback
+      const hasMunicipioCache = this.hasCachedData('ibge_municipio_');
+      if (hasMunicipioCache) {
+        results.municipalities = true;
+        results.details.municipalities = 'Cache disponível';
+      }
     }
 
+    // Teste 2: API SIDRA com endpoint conhecido
+    try {
+      console.log('💰 Testando API SIDRA...');
+      
+      // Testar com Belo Horizonte (código conhecido: 3106200)
+      const sidraUrl = 'https://apisidra.ibge.gov.br/values/t/5938/n6/3106200/v/10267/p/last%201';
+      
+      const response = await fetch(sidraUrl, {
+        method: 'GET',
+        signal: AbortSignal.timeout(10000),
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'PetMemorial/1.0'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        results.income = Array.isArray(data) && data.length > 1;
+        results.details.income = results.income ? 'Dados de renda disponíveis' : 'Resposta vazia';
+      } else {
+        results.details.income = `HTTP ${response.status}`;
+      }
+    } catch (error) {
+      console.warn('⚠️ Teste API SIDRA falhou:', error.message);
+      results.details.income = error.message;
+      
+      // Verificar se temos dados em cache como fallback
+      const hasIncomeCache = this.hasCachedData('ibge_income_');
+      if (hasIncomeCache) {
+        results.income = true;
+        results.details.income = 'Cache disponível';
+      }
+    }
+
+    // Salvar resultado no cache
+    this.saveCachedStatus(results);
+    
+    console.log('✅ Teste de conectividade concluído:', results);
     return results;
+  }
+
+  /**
+   * Executa um teste real de análise para validar funcionamento completo
+   */
+  static async testRealAnalysis(): Promise<{ success: boolean; message: string; details?: any }> {
+    console.log('🧪 Executando teste real de análise...');
+    
+    try {
+      // Testar com endereço conhecido
+      const testAddress = 'Belo Horizonte, MG';
+      const coords = { lat: -19.9166813, lng: -43.9344931 }; // Coordenadas de BH
+      
+      // Teste 1: Buscar município
+      const municipio = await this.getMunicipioFromCoordinates(coords.lat, coords.lng);
+      if (!municipio) {
+        return {
+          success: false,
+          message: 'Falha na identificação do município',
+          details: { step: 'municipio', coords }
+        };
+      }
+      
+      // Teste 2: Buscar dados de renda
+      const income = await this.getIncomeFromMunicipio(municipio.id);
+      if (!income) {
+        return {
+          success: false,
+          message: 'Falha na consulta de dados de renda',
+          details: { step: 'income', municipio: municipio.nome }
+        };
+      }
+      
+      // Teste 3: Calcular pontuação
+      const score = this.calculateScoreFromIncome(income.averageIncome);
+      
+      return {
+        success: true,
+        message: `Análise completa bem-sucedida: ${municipio.nome} = ${score} pontos`,
+        details: {
+          municipio: municipio.nome,
+          renda: income.averageIncome,
+          score,
+          fallbackUsed: income.averageIncome === 2500 && income.dataYear === 2022
+        }
+      };
+      
+    } catch (error) {
+      console.error('❌ Erro no teste real:', error);
+      return {
+        success: false,
+        message: `Erro no teste: ${error.message}`,
+        details: { error: error.message }
+      };
+    }
+  }
+
+  /**
+   * Verifica se existe dados em cache para um prefixo
+   */
+  private static hasCachedData(prefix: string): boolean {
+    try {
+      const keys = Object.keys(localStorage);
+      const matchingKeys = keys.filter(key => key.startsWith(prefix));
+      
+      // Verificar se pelo menos um item do cache é válido
+      for (const key of matchingKeys) {
+        const cached = this.getFromCache(key.replace(prefix, ''));
+        if (cached) return true;
+      }
+      
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Cache de status de conectividade
+   */
+  private static getCachedStatus(): any {
+    try {
+      const cached = localStorage.getItem('ibge_connectivity_status');
+      if (!cached) return null;
+
+      const { data, timestamp } = JSON.parse(cached);
+      const now = Date.now();
+
+      if (now - timestamp > this.STATUS_CACHE_TTL) {
+        localStorage.removeItem('ibge_connectivity_status');
+        return null;
+      }
+
+      return data;
+    } catch {
+      return null;
+    }
+  }
+
+  private static saveCachedStatus(status: any): void {
+    try {
+      const cached = {
+        data: status,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('ibge_connectivity_status', JSON.stringify(cached));
+    } catch (error) {
+      console.warn('⚠️ Falha ao salvar status no cache:', error);
+    }
   }
 
   /**

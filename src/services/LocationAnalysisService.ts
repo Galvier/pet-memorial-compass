@@ -1,4 +1,3 @@
-
 import { GeocodingService } from './GeocodingService';
 import { IBGEApiService } from './IBGEApiService';
 
@@ -185,23 +184,38 @@ export class LocationAnalysisService {
   }
 
   /**
-   * Teste de conectividade com as APIs
+   * Teste de conectividade melhorado com análise real
    */
   static async testConnectivity(): Promise<{ success: boolean; details: any }> {
     try {
-      console.log('🔍 Testando conectividade com APIs do IBGE...');
+      console.log('🔍 Testando conectividade com análise real...');
       
-      const connectivity = await IBGEApiService.testConnectivity();
-      const success = connectivity.municipalities && connectivity.income;
+      // Primeiro, teste básico de conectividade
+      const basicTest = await IBGEApiService.testConnectivity();
+      
+      // Se conectividade básica falhou, mas temos cache, ainda pode funcionar
+      if (!basicTest.municipalities && !basicTest.income) {
+        return {
+          success: false,
+          details: {
+            municipalities: false,
+            income: false,
+            message: 'APIs indisponíveis e sem cache válido'
+          }
+        };
+      }
+      
+      // Teste real de análise
+      const realTest = await IBGEApiService.testRealAnalysis();
       
       return {
-        success,
+        success: realTest.success,
         details: {
-          municipalities: connectivity.municipalities,
-          income: connectivity.income,
-          message: success 
-            ? 'Todas as APIs estão funcionando'
-            : 'Algumas APIs apresentam problemas'
+          municipalities: basicTest.municipalities,
+          income: basicTest.income,
+          realAnalysis: realTest.success,
+          message: realTest.message,
+          testDetails: realTest.details
         }
       };
     } catch (error) {

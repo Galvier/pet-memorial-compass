@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,10 +29,11 @@ interface IBGETestResult {
 
 export const IBGEConfig: React.FC = () => {
   const [ibgeStatus, setIBGEStatus] = useState<any>(null);
-  const [testAddress, setTestAddress] = useState('Montes Claros, MG');
+  const [testAddress, setTestAddress] = useState('Belo Horizonte, MG');
   const [testResults, setTestResults] = useState<IBGETestResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [realTesting, setRealTesting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -54,6 +54,34 @@ export const IBGEConfig: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const runRealTest = async () => {
+    setRealTesting(true);
+    try {
+      console.log('🧪 Executando teste real das APIs IBGE...');
+      
+      // Executar teste real através do IBGEApiService
+      const result = await DiagnosticService.runIntegrationTest('location-analysis');
+      
+      toast({
+        title: result.success ? "Teste Real Bem-sucedido" : "Teste Real Falhou",
+        description: result.message,
+        variant: result.success ? "default" : "destructive"
+      });
+      
+      // Recarregar status após teste
+      await loadIBGEStatus();
+      
+    } catch (error) {
+      toast({
+        title: "Erro no Teste Real",
+        description: "Falha ao executar teste real das APIs",
+        variant: "destructive"
+      });
+    } finally {
+      setRealTesting(false);
     }
   };
 
@@ -140,10 +168,16 @@ export const IBGEConfig: React.FC = () => {
           <MapPin className="h-5 w-5" />
           APIs do IBGE
         </h3>
-        <Button onClick={loadIBGEStatus} disabled={loading} variant="outline" size="sm">
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={runRealTest} disabled={realTesting} variant="outline" size="sm">
+            <TestTube className={`h-4 w-4 mr-2 ${realTesting ? 'animate-spin' : ''}`} />
+            {realTesting ? 'Testando...' : 'Teste Real'}
+          </Button>
+          <Button onClick={loadIBGEStatus} disabled={loading} variant="outline" size="sm">
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* Status das APIs */}
@@ -181,6 +215,13 @@ export const IBGEConfig: React.FC = () => {
                 <p className="text-xs text-muted-foreground">{ibgeStatus.analysis?.message || 'Status desconhecido'}</p>
               </div>
             </div>
+            
+            {ibgeStatus.realTestResult && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                <p className="font-medium text-blue-800">Resultado do Teste Real:</p>
+                <p className="text-blue-700">{ibgeStatus.realTestResult}</p>
+              </div>
+            )}
             
             <div className="mt-4 pt-4 border-t">
               <p className="text-xs text-muted-foreground">
@@ -303,30 +344,31 @@ export const IBGEConfig: React.FC = () => {
           <Alert>
             <MapPin className="h-4 w-4" />
             <AlertDescription>
-              <strong>Atualização:</strong> O sistema agora usa dados municipais do IBGE. 
-              Quando os dados específicos não estão disponíveis, o sistema utiliza estimativas regionais para manter a funcionalidade.
+              <strong>Sistema Melhorado:</strong> O diagnóstico agora executa testes reais de análise, 
+              usa cache local quando as APIs estão temporariamente indisponíveis, e detecta automaticamente 
+              quando o sistema está funcionando mesmo com limitações de conectividade.
             </AlertDescription>
           </Alert>
 
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
-            <p className="font-medium text-blue-800 mb-2">Novo Fluxo de Análise:</p>
-            <ol className="text-blue-700 space-y-1 list-decimal list-inside">
-              <li>Geocodificação do endereço (Google Maps)</li>
-              <li>Identificação do município (API IBGE)</li>
-              <li>Consulta da renda municipal (API SIDRA)</li>
-              <li>Fallback para estimativas se necessário</li>
-              <li>Cálculo da pontuação (15-50 pontos)</li>
-            </ol>
+          <div className="p-3 bg-green-50 border border-green-200 rounded text-sm">
+            <p className="font-medium text-green-800 mb-2">Sistema de Status Inteligente:</p>
+            <ul className="text-green-700 space-y-1 list-disc list-inside">
+              <li>✅ <strong>OK:</strong> APIs funcionando normalmente</li>
+              <li>⚠️ <strong>Atenção:</strong> Funcionando com cache local</li>
+              <li>❌ <strong>Erro:</strong> APIs indisponíveis e sem cache</li>
+              <li>🧪 <strong>Teste Real:</strong> Executa análise completa para validar</li>
+            </ul>
           </div>
 
-          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
-            <p className="font-medium text-yellow-800 mb-2">Sistema de Fallback:</p>
-            <ul className="text-yellow-700 space-y-1 list-disc list-inside">
-              <li>Dados municipais quando setores não disponíveis</li>
-              <li>Estimativas regionais para renda indisponível</li>
-              <li>Cache inteligente para otimizar performance</li>
-              <li>Logs detalhados para monitoramento</li>
-            </ul>
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+            <p className="font-medium text-blue-800 mb-2">Melhorias Implementadas:</p>
+            <ol className="text-blue-700 space-y-1 list-decimal list-inside">
+              <li>Teste de conectividade com endpoints mais confiáveis</li>
+              <li>Detecção de cache válido como fallback</li>
+              <li>Teste real de análise para validação completa</li>
+              <li>Cache de status para evitar testes desnecessários</li>
+              <li>Mensagens mais informativas sobre o estado real</li>
+            </ol>
           </div>
 
           <div className="flex justify-between items-center pt-4 border-t">

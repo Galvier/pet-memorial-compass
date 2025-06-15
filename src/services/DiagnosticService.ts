@@ -1,4 +1,3 @@
-
 import { LocationAnalysisService } from './LocationAnalysisService';
 import { IBGEApiService } from './IBGEApiService';
 import { GeocodingService } from './GeocodingService';
@@ -30,34 +29,58 @@ export class DiagnosticService {
   }
 
   /**
-   * Obtém status específico das APIs do IBGE
+   * Obtém status específico das APIs do IBGE com lógica melhorada
    */
   static async getIBGEStatus() {
     console.log('🔍 Verificando status das APIs do IBGE...');
     
     try {
+      // Executar teste de conectividade melhorado
       const connectivity = await LocationAnalysisService.testConnectivity();
+      
+      // Determinar status baseado nos resultados
+      const municipalitiesOk = connectivity.details.municipalities;
+      const incomeOk = connectivity.details.income;
+      const analysisOk = connectivity.success;
+      
+      let municipalitiesMessage = 'API de municípios indisponível';
+      let incomeMessage = 'API SIDRA (renda) indisponível';
+      let analysisMessage = 'Análise limitada - usando dados de fallback';
+      
+      if (municipalitiesOk) {
+        municipalitiesMessage = connectivity.details.municipalities === 'Cache disponível' 
+          ? 'Funcionando com cache local'
+          : 'API de municípios funcionando normalmente';
+      }
+      
+      if (incomeOk) {
+        incomeMessage = connectivity.details.income === 'Cache disponível'
+          ? 'Funcionando com cache local'
+          : 'API SIDRA (renda) funcionando normalmente';
+      }
+      
+      if (analysisOk) {
+        const fallbackUsed = connectivity.details.testDetails?.fallbackUsed;
+        analysisMessage = fallbackUsed 
+          ? 'Análise funcionando com estimativas'
+          : 'Análise completa disponível';
+      }
       
       return {
         municipalities: {
-          success: connectivity.details.municipalities,
-          message: connectivity.details.municipalities 
-            ? 'API de municípios funcionando normalmente'
-            : 'API de municípios indisponível'
+          success: municipalitiesOk,
+          message: municipalitiesMessage
         },
         income: {
-          success: connectivity.details.income,
-          message: connectivity.details.income
-            ? 'API SIDRA (renda) funcionando normalmente'
-            : 'API SIDRA (renda) indisponível'
+          success: incomeOk,
+          message: incomeMessage
         },
         analysis: {
-          success: connectivity.success,
-          message: connectivity.success
-            ? 'Análise completa disponível'
-            : 'Análise limitada - usando dados de fallback'
+          success: analysisOk,
+          message: analysisMessage
         },
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        realTestResult: connectivity.details.message
       };
     } catch (error) {
       console.error('❌ Erro ao verificar status do IBGE:', error);
@@ -74,7 +97,8 @@ export class DiagnosticService {
           success: false,
           message: 'Análise indisponível devido a erros'
         },
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        realTestResult: `Erro: ${error.message}`
       };
     }
   }
