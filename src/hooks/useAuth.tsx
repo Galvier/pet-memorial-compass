@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,10 +9,11 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, nomeAtendente: string, role?: 'atendente' | 'admin') => Promise<{ error: any }>;
+  signUp: (email: string, password: string, nomeAtendente: string, role?: 'atendente' | 'admin' | 'developer') => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAtendente: () => boolean;
   isAdmin: () => boolean;
+  isDeveloper: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,18 +40,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserProfile({
           id: userId,
           email: atendenteData.email,
-          role: userRole as 'atendente' | 'admin',
+          role: userRole as 'atendente' | 'admin' | 'developer',
           nome: atendenteData.nome_atendente
         });
       } else {
-        // Se não é atendente, verificar se é admin nos metadados
+        // Se não é atendente, verificar se é admin ou developer nos metadados
         const { data: userData } = await supabase.auth.getUser();
         if (userData.user) {
           const userRole = userData.user.user_metadata?.role || 'cliente';
           setUserProfile({
             id: userId,
             email: userData.user.email || '',
-            role: userRole as 'atendente' | 'admin' | 'cliente',
+            role: userRole as 'atendente' | 'admin' | 'cliente' | 'developer',
             nome: userData.user.user_metadata?.nome_atendente || userData.user.user_metadata?.nome || 'Usuário'
           });
         }
@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, nomeAtendente: string, role: 'atendente' | 'admin' = 'atendente') => {
+  const signUp = async (email: string, password: string, nomeAtendente: string, role: 'atendente' | 'admin' | 'developer' = 'atendente') => {
     const redirectUrl = `${window.location.origin}/`;
     
     console.log('Cadastrando usuário com role:', role);
@@ -134,6 +134,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return userProfile?.role === 'admin';
   };
 
+  const isDeveloper = () => {
+    return userProfile?.role === 'developer';
+  };
+
   const value = {
     user,
     session,
@@ -144,6 +148,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signOut,
     isAtendente,
     isAdmin,
+    isDeveloper,
   };
 
   return (

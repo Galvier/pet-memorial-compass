@@ -1,136 +1,104 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Settings, Webhook, MessageCircle, CheckCircle, AlertTriangle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Send } from 'lucide-react';
 import { NotificationService } from '@/services/NotificationService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const NotificationConfig: React.FC = () => {
   const [webhookUrl, setWebhookUrl] = useState('');
+  const [testNumber, setTestNumber] = useState('');
   const [isConfigured, setIsConfigured] = useState(false);
-  const [isTestMode, setIsTestMode] = useState(true);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
-  const handleSaveWebhook = () => {
-    if (webhookUrl.trim()) {
-      NotificationService.setWebhookUrl(webhookUrl);
-      setIsConfigured(true);
-      setIsTestMode(false);
-      toast({
-        title: "Configuração Salva",
-        description: "URL do webhook n8n configurada com sucesso!",
-      });
-    } else {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira uma URL válida",
-        variant: "destructive",
-      });
-    }
+  useEffect(() => {
+    checkConfiguration();
+  }, []);
+
+  const checkConfiguration = async () => {
+    const configured = await NotificationService.isWebhookConfigured();
+    setIsConfigured(configured);
   };
 
-  const handleTestNotification = async () => {
+  const handleTest = async () => {
+    if (!testNumber) {
+      toast.error('Informe um número para teste');
+      return;
+    }
+
+    setLoading(true);
     try {
       const result = await NotificationService.sendToAttendant(
-        '5511999999999',
-        '🧪 Teste de notificação do sistema Pet Memorial. Se você recebeu esta mensagem, a integração está funcionando!',
-        {
-          attendant_name: 'Teste',
-          client_name: 'Sistema',
-          attendance_id: 999
-        }
+        testNumber,
+        '🧪 Teste de notificação do Pet Memorial - Sistema funcionando!'
       );
 
       if (result.success) {
-        toast({
-          title: "Teste Enviado",
-          description: "Notificação de teste processada com sucesso!",
-        });
+        toast.success('Mensagem de teste enviada com sucesso!');
       } else {
-        toast({
-          title: "Erro no Teste",
-          description: result.error || "Falha ao enviar notificação",
-          variant: "destructive",
-        });
+        toast.error(`Erro no teste: ${result.message}`);
       }
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao executar teste de notificação",
-        variant: "destructive",
-      });
+      toast.error('Erro ao enviar mensagem de teste');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Card className="bg-white">
+    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Settings className="h-5 w-5 text-purple-primary" />
+          <Send className="h-5 w-5" />
           Configuração de Notificações
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <Badge variant={isConfigured ? "default" : "secondary"} className="flex items-center gap-1">
-            {isConfigured ? <CheckCircle className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
-            {isConfigured ? 'Configurado' : 'Não Configurado'}
-          </Badge>
-          {isTestMode && (
-            <Badge variant="outline" className="flex items-center gap-1">
-              <MessageCircle className="h-3 w-3" />
-              Modo Simulação
+        <div className="flex items-center gap-2">
+          <span>Status:</span>
+          {isConfigured ? (
+            <Badge variant="outline" className="bg-green-100 text-green-800">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Configurado
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+              <AlertCircle className="h-3 w-3 mr-1" />
+              Não configurado
             </Badge>
           )}
         </div>
 
-        <Alert>
-          <Webhook className="h-4 w-4" />
-          <AlertDescription>
-            Configure o URL do webhook do n8n para ativar as notificações automáticas via WhatsApp.
-            Quando não configurado, o sistema funcionará em modo simulação.
-          </AlertDescription>
-        </Alert>
-
         <div className="space-y-2">
-          <Label htmlFor="webhook-url">URL do Webhook n8n</Label>
-          <div className="flex gap-2">
-            <Input
-              id="webhook-url"
-              placeholder="https://n8n.exemplo.com/webhook/whatsapp-notification"
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-              className="flex-1"
-            />
-            <Button onClick={handleSaveWebhook} variant="outline">
-              Salvar
-            </Button>
+          <Label htmlFor="test-number">Número para teste (formato: 5511999999999)</Label>
+          <Input
+            id="test-number"
+            type="text"
+            placeholder="5511999999999"
+            value={testNumber}
+            onChange={(e) => setTestNumber(e.target.value)}
+          />
+        </div>
+
+        <Button 
+          onClick={handleTest} 
+          disabled={loading || !testNumber}
+          className="w-full"
+        >
+          {loading ? 'Enviando...' : 'Enviar Mensagem de Teste'}
+        </Button>
+
+        {!isConfigured && (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-sm text-yellow-800">
+              Configure o webhook do n8n na aba "Integrações" para ativar as notificações automáticas.
+            </p>
           </div>
-        </div>
-
-        <div className="flex gap-2">
-          <Button onClick={handleTestNotification} variant="outline" className="flex items-center gap-2">
-            <MessageCircle className="h-4 w-4" />
-            Testar Notificação
-          </Button>
-        </div>
-
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h4 className="font-medium mb-2">Como Configurar no n8n:</h4>
-          <ol className="text-sm space-y-1 text-gray-600">
-            <li>1. Crie um novo workflow no n8n</li>
-            <li>2. Adicione um nó "Webhook" como trigger</li>
-            <li>3. Copie a URL do webhook e cole acima</li>
-            <li>4. Adicione um nó "WhatsApp" após o webhook</li>
-            <li>5. Configure: To = {`{{$json.body.to}}`}, Text = {`{{$json.body.text}}`}</li>
-            <li>6. Ative o workflow</li>
-          </ol>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
