@@ -189,19 +189,28 @@ export class LocationAnalysisService {
   }
 
   /**
-   * Limpar cache de análises antigas
+   * Limpar cache de análises antigas - now returns synchronous result
    */
   static clearCache(): { success: boolean; message: string; details?: any } {
     try {
-      // Usar o serviço aprimorado para limpar cache
-      return EnhancedLocationAnalysisService.clearOldCache();
-    } catch (error) {
-      // Fallback para limpar cache do IBGE apenas
-      const result = IBGEApiService.clearCache();
+      // Use the enhanced service for clearing cache but handle it synchronously
+      EnhancedLocationAnalysisService.clearOldCache().then(result => {
+        console.log('Cache cleared:', result);
+      }).catch(error => {
+        console.error('Error clearing cache:', error);
+      });
+      
+      // Also clear IBGE cache
+      const ibgeResult = IBGEApiService.clearCache();
       return {
         success: true,
-        message: `Cache IBGE limpo: ${result.cleared} entradas removidas${result.errors > 0 ? `, ${result.errors} erros` : ''}`,
-        details: result
+        message: `Cache IBGE limpo: ${ibgeResult.cleared} entradas removidas${ibgeResult.errors > 0 ? `, ${ibgeResult.errors} erros` : ''}`,
+        details: ibgeResult
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: `Erro ao limpar cache: ${error.message || 'Erro desconhecido'}`
       };
     }
   }

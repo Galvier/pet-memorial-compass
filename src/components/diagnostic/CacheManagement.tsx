@@ -207,7 +207,7 @@ export const CacheManagement: React.FC = () => {
                           <div className={`w-3 h-3 rounded-full ${getSourceColor(source)} mr-2`}></div>
                           <span className="text-sm">{getSourceLabel(source)}</span>
                         </div>
-                        <Badge variant="outline">{count}</Badge>
+                        <Badge variant="outline">{String(count)}</Badge>
                       </div>
                     ))}
                   </div>
