@@ -119,6 +119,84 @@ export type Database = {
           },
         ]
       }
+      city_estimates: {
+        Row: {
+          city_name: string
+          created_at: string
+          estimated_income: number
+          id: string
+          population_range: string | null
+          region: string | null
+          score: number
+          state_code: string
+          updated_at: string
+        }
+        Insert: {
+          city_name: string
+          created_at?: string
+          estimated_income: number
+          id?: string
+          population_range?: string | null
+          region?: string | null
+          score: number
+          state_code: string
+          updated_at?: string
+        }
+        Update: {
+          city_name?: string
+          created_at?: string
+          estimated_income?: number
+          id?: string
+          population_range?: string | null
+          region?: string | null
+          score?: number
+          state_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      geocache: {
+        Row: {
+          created_at: string
+          id: string
+          last_checked: string
+          location_key: string
+          municipio_id: string | null
+          municipio_nome: string | null
+          renda_media: number | null
+          score: number
+          source: string
+          uf: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_checked?: string
+          location_key: string
+          municipio_id?: string | null
+          municipio_nome?: string | null
+          renda_media?: number | null
+          score: number
+          source: string
+          uf?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_checked?: string
+          location_key?: string
+          municipio_id?: string | null
+          municipio_nome?: string | null
+          renda_media?: number | null
+          score?: number
+          source?: string
+          uf?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number

@@ -8,7 +8,8 @@ import { PerformanceMonitor } from './PerformanceMonitor';
 import { ConfigurationPanel } from './ConfigurationPanel';
 import { IntegrationsConfig } from './IntegrationsConfig';
 import { DebugTools } from './DebugTools';
-import { Activity, Database, Settings, TestTube, Zap, Bug, Puzzle } from 'lucide-react';
+import { CacheManagement } from './CacheManagement';
+import { Activity, Database, Settings, TestTube, Zap, Bug, Puzzle, HardDrive } from 'lucide-react';
 
 export const DiagnosticDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -17,10 +18,14 @@ export const DiagnosticDashboard: React.FC = () => {
     <div className="w-full max-w-7xl mx-auto p-4 space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="overflow-x-auto">
-          <TabsList className="grid w-full grid-cols-7 min-w-[700px] h-auto">
+          <TabsList className="grid w-full grid-cols-8 min-w-[800px] h-auto">
             <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3">
               <Activity className="h-4 w-4" />
               <span className="text-xs sm:text-sm">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="cache" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3">
+              <HardDrive className="h-4 w-4" />
+              <span className="text-xs sm:text-sm">Cache</span>
             </TabsTrigger>
             <TabsTrigger value="integrations" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 p-2 sm:p-3">
               <Puzzle className="h-4 w-4" />
@@ -52,6 +57,10 @@ export const DiagnosticDashboard: React.FC = () => {
         <div className="mt-6">
           <TabsContent value="overview" className="space-y-4">
             <SystemStatus />
+          </TabsContent>
+
+          <TabsContent value="cache" className="space-y-4">
+            <CacheManagement />
           </TabsContent>
 
           <TabsContent value="integrations" className="space-y-4">

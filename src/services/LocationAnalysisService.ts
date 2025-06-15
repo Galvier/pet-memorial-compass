@@ -1,5 +1,7 @@
+
 import { GeocodingService } from './GeocodingService';
 import { IBGEApiService } from './IBGEApiService';
+import { EnhancedLocationAnalysisService } from './EnhancedLocationAnalysisService';
 
 export interface LocationAnalysis {
   address: string;
@@ -23,7 +25,7 @@ export interface LocationAnalysis {
 
 /**
  * Serviço principal para análise de localização com dados do IBGE
- * Atualizado para usar dados municipais ao invés de setores censitários
+ * Atualizado para usar o sistema aprimorado com cache e fallback
  */
 export class LocationAnalysisService {
   private static readonly DEFAULT_SCORE = 25;
@@ -31,10 +33,28 @@ export class LocationAnalysisService {
 
   /**
    * Função principal: analisa um endereço e retorna pontuação baseada em dados do IBGE
+   * Agora usa o serviço aprimorado com cache e fallback
    */
   static async getScoreFromAddress(address: string): Promise<LocationAnalysis> {
+    console.log(`🔍 Análise de localização para: "${address}" (usando sistema aprimorado)`);
+    
+    try {
+      // Usar o serviço aprimorado que tem cache e fallback robusto
+      return await EnhancedLocationAnalysisService.getScoreFromAddress(address);
+    } catch (error) {
+      console.error('❌ Falha no serviço aprimorado, usando fallback básico:', error);
+      
+      // Fallback para a implementação básica original
+      return await this.basicAnalysis(address);
+    }
+  }
+
+  /**
+   * Análise básica original como último recurso
+   */
+  private static async basicAnalysis(address: string): Promise<LocationAnalysis> {
     const startTime = Date.now();
-    console.log(`🔍 Iniciando análise de localização para: "${address}"`);
+    console.log(`🔙 Usando análise básica para: "${address}"`);
 
     const analysis: LocationAnalysis = {
       address,
@@ -45,7 +65,7 @@ export class LocationAnalysisService {
       scoreReason: this.DEFAULT_REASON,
       analysisDate: new Date().toISOString(),
       success: false,
-      fallbackUsed: false
+      fallbackUsed: true
     };
 
     try {
@@ -55,7 +75,6 @@ export class LocationAnalysisService {
       
       if (!coordinates) {
         analysis.scoreReason = 'Endereço não encontrado - usando pontuação padrão';
-        analysis.fallbackUsed = true;
         console.log('❌ Endereço não geocodificado, usando pontuação padrão');
         return analysis;
       }
@@ -72,7 +91,6 @@ export class LocationAnalysisService {
 
       if (!municipioData) {
         analysis.scoreReason = 'Município não encontrado - usando pontuação padrão';
-        analysis.fallbackUsed = true;
         console.log('❌ Município não encontrado, usando pontuação padrão');
         return analysis;
       }
@@ -90,7 +108,6 @@ export class LocationAnalysisService {
 
       if (!incomeData) {
         analysis.scoreReason = 'Dados de renda não disponíveis - usando pontuação padrão';
-        analysis.fallbackUsed = true;
         console.log('❌ Dados de renda não encontrados, usando pontuação padrão');
         return analysis;
       }
@@ -115,14 +132,14 @@ export class LocationAnalysisService {
       analysis.success = true;
 
       const elapsedTime = Date.now() - startTime;
-      console.log(`✅ Análise concluída ${analysis.fallbackUsed ? 'com fallback' : 'com sucesso'} em ${elapsedTime}ms`);
+      console.log(`✅ Análise básica concluída ${analysis.fallbackUsed ? 'com fallback' : 'com sucesso'} em ${elapsedTime}ms`);
       console.log(`📊 Resultado: ${score} pontos (${analysis.scoreReason})`);
 
       return analysis;
 
     } catch (error) {
       const elapsedTime = Date.now() - startTime;
-      console.error(`❌ Erro na análise de localização após ${elapsedTime}ms:`, error);
+      console.error(`❌ Erro na análise básica após ${elapsedTime}ms:`, error);
       
       analysis.scoreReason = `Erro na análise: ${error.message || 'Erro desconhecido'} - usando pontuação padrão`;
       analysis.fallbackUsed = true;
@@ -134,32 +151,41 @@ export class LocationAnalysisService {
    * Análise em lote de múltiplos endereços
    */
   static async batchAnalyzeAddresses(addresses: string[]): Promise<LocationAnalysis[]> {
-    console.log(`📊 Iniciando análise em lote de ${addresses.length} endereços`);
+    console.log(`📊 Iniciando análise em lote de ${addresses.length} endereços (sistema aprimorado)`);
     
-    const results: LocationAnalysis[] = [];
-    const batchSize = 3; // Processar em lotes pequenos para não sobrecarregar as APIs
-    
-    for (let i = 0; i < addresses.length; i += batchSize) {
-      const batch = addresses.slice(i, i + batchSize);
-      console.log(`🔄 Processando lote ${Math.floor(i / batchSize) + 1} de ${Math.ceil(addresses.length / batchSize)}`);
+    try {
+      return await EnhancedLocationAnalysisService.batchAnalyzeAddresses(addresses);
+    } catch (error) {
+      console.error('❌ Falha na análise em lote aprimorada, usando básica:', error);
       
-      const batchPromises = batch.map(address => this.getScoreFromAddress(address));
-      const batchResults = await Promise.all(batchPromises);
+      // Fallback para análise sequencial básica
+      const results: LocationAnalysis[] = [];
       
-      results.push(...batchResults);
-      
-      // Pausa entre lotes para respeitar rate limits
-      if (i + batchSize < addresses.length) {
-        console.log('⏸️ Pausa entre lotes...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      for (const address of addresses) {
+        try {
+          const result = await this.getScoreFromAddress(address);
+          results.push(result);
+          
+          // Pausa pequena entre análises
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+          console.error(`❌ Erro na análise de "${address}":`, error);
+          results.push({
+            address,
+            coordinates: null,
+            municipioData: null,
+            incomeData: null,
+            score: this.DEFAULT_SCORE,
+            scoreReason: 'Erro na análise',
+            analysisDate: new Date().toISOString(),
+            success: false,
+            fallbackUsed: true
+          });
+        }
       }
+      
+      return results;
     }
-    
-    const successCount = results.filter(r => r.success).length;
-    const fallbackCount = results.filter(r => r.fallbackUsed).length;
-    console.log(`✅ Análise em lote concluída: ${successCount}/${addresses.length} sucessos, ${fallbackCount} fallbacks`);
-    
-    return results;
   }
 
   /**
@@ -167,18 +193,15 @@ export class LocationAnalysisService {
    */
   static clearCache(): { success: boolean; message: string; details?: any } {
     try {
+      // Usar o serviço aprimorado para limpar cache
+      return EnhancedLocationAnalysisService.clearOldCache();
+    } catch (error) {
+      // Fallback para limpar cache do IBGE apenas
       const result = IBGEApiService.clearCache();
-      
       return {
         success: true,
-        message: `Cache limpo com sucesso: ${result.cleared} entradas removidas${result.errors > 0 ? `, ${result.errors} erros` : ''}`,
+        message: `Cache IBGE limpo: ${result.cleared} entradas removidas${result.errors > 0 ? `, ${result.errors} erros` : ''}`,
         details: result
-      };
-    } catch (error) {
-      console.warn('⚠️ Erro ao limpar cache:', error);
-      return {
-        success: false,
-        message: `Erro ao limpar cache: ${error.message || 'Erro desconhecido'}`
       };
     }
   }
@@ -188,25 +211,14 @@ export class LocationAnalysisService {
    */
   static async testConnectivity(): Promise<{ success: boolean; details: any }> {
     try {
-      console.log('🔍 Testando conectividade com análise real...');
+      console.log('🔍 Testando conectividade com análise real (sistema aprimorado)...');
       
       // Primeiro, teste básico de conectividade
       const basicTest = await IBGEApiService.testConnectivity();
       
-      // Se conectividade básica falhou, mas temos cache, ainda pode funcionar
-      if (!basicTest.municipalities && !basicTest.income) {
-        return {
-          success: false,
-          details: {
-            municipalities: false,
-            income: false,
-            message: 'APIs indisponíveis e sem cache válido'
-          }
-        };
-      }
-      
-      // Teste real de análise
-      const realTest = await IBGEApiService.testRealAnalysis();
+      // Teste real de análise usando sistema aprimorado
+      const testAddress = 'Centro, Montes Claros, MG';
+      const realTest = await EnhancedLocationAnalysisService.getScoreFromAddress(testAddress);
       
       return {
         success: realTest.success,
@@ -214,8 +226,14 @@ export class LocationAnalysisService {
           municipalities: basicTest.municipalities,
           income: basicTest.income,
           realAnalysis: realTest.success,
-          message: realTest.message,
-          testDetails: realTest.details
+          enhancedSystem: true,
+          cacheUsed: realTest.fallbackUsed,
+          message: `Análise ${realTest.success ? 'bem-sucedida' : 'falhou'}: ${realTest.scoreReason}`,
+          testResult: {
+            score: realTest.score,
+            source: realTest.fallbackUsed ? 'Cache/Estimativa' : 'IBGE',
+            address: testAddress
+          }
         }
       };
     } catch (error) {
@@ -224,6 +242,7 @@ export class LocationAnalysisService {
         details: {
           municipalities: false,
           income: false,
+          enhancedSystem: false,
           message: `Erro no teste: ${error.message || 'Erro desconhecido'}`
         }
       };
