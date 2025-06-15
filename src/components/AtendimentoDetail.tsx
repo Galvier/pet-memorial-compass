@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, AlertCircle } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Atendimento, Atendente } from '@/types';
 import { GerarPagamento } from '@/components/GerarPagamento';
@@ -12,12 +13,14 @@ import { AtendimentoInfo } from '@/components/AtendimentoInfo';
 import { AtendimentoAssignment } from '@/components/AtendimentoAssignment';
 import { DadosColetados } from '@/components/DadosColetados';
 import { ProdutosSugeridos } from '@/components/ProdutosSugeridos';
+import { mockAtendimentos, mockAtendentes } from '@/lib/mockData';
 
 export const AtendimentoDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [atendimento, setAtendimento] = useState<Atendimento | null>(null);
   const [atendentesOnline, setAtendentesOnline] = useState<Atendente[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usingMockData, setUsingMockData] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,7 +36,18 @@ export const AtendimentoDetail: React.FC = () => {
           .eq('atendimento_id', parseInt(id))
           .single();
 
-        if (atendimentoError) throw atendimentoError;
+        if (atendimentoError) {
+          console.log('📋 Atendimento não encontrado no Supabase, usando dados mockados...');
+          // Buscar nos dados mockados
+          const mockAtendimento = mockAtendimentos.find(a => a.atendimento_id === parseInt(id));
+          if (mockAtendimento) {
+            setAtendimento(mockAtendimento);
+            setAtendentesOnline(mockAtendentes.filter(a => a.status_disponibilidade === 'Online'));
+            setUsingMockData(true);
+            return;
+          }
+          throw atendimentoError;
+        }
 
         // Buscar dados relacionados se o atendimento existir
         let tutorData = null;
@@ -102,8 +116,16 @@ export const AtendimentoDetail: React.FC = () => {
         console.log('✅ Atendimento carregado:', atendimentoCompleto);
         setAtendimento(atendimentoCompleto);
         setAtendentesOnline(atendentesOnlineTyped);
+        setUsingMockData(false);
       } catch (error) {
-        console.error('❌ Erro ao carregar dados:', error);
+        console.error('❌ Erro ao carregar dados, tentando dados mockados:', error);
+        // Tentar buscar nos dados mockados como fallback final
+        const mockAtendimento = mockAtendimentos.find(a => a.atendimento_id === parseInt(id));
+        if (mockAtendimento) {
+          setAtendimento(mockAtendimento);
+          setAtendentesOnline(mockAtendentes.filter(a => a.status_disponibilidade === 'Online'));
+          setUsingMockData(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -170,6 +192,23 @@ export const AtendimentoDetail: React.FC = () => {
         </div>
       </div>
 
+      {/* Alerta quando estiver usando dados mockados */}
+      {usingMockData && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2 text-blue-800">
+              <Info className="w-5 h-5" />
+              <div>
+                <p className="font-semibold">Dados de Demonstração</p>
+                <p className="text-sm">
+                  Este atendimento é um exemplo para demonstração da interface. Os dados reais aparecerão quando conectados ao sistema.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Alerta de controle do atendimento */}
       {foiAtribuido && (
         <Card className="border-orange-200 bg-orange-50">
@@ -189,8 +228,8 @@ export const AtendimentoDetail: React.FC = () => {
         </Card>
       )}
 
-      {/* Seção de atribuir atendimento */}
-      {podeAtribuirAtendimento && (
+      {/* Seção de atribuir atendimento - desabilitada para dados mockados */}
+      {podeAtribuirAtendimento && !usingMockData && (
         <AtendimentoAssignment
           atendimentoId={atendimento.atendimento_id}
           atendentesOnline={atendentesOnline}
@@ -208,8 +247,8 @@ export const AtendimentoDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Seção de Pagamento */}
-      {foiAtribuido && atendimento.tutor?.id_whatsapp && (
+      {/* Seção de Pagamento - desabilitada para dados mockados */}
+      {foiAtribuido && atendimento.tutor?.id_whatsapp && !usingMockData && (
         <GerarPagamento
           atendimentoId={atendimento.atendimento_id}
           tutorWhatsapp={atendimento.tutor.id_whatsapp}

@@ -3,13 +3,15 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { History, Eye, User, Phone, MapPin, Briefcase, Calendar, Heart, Bot, UserCheck } from 'lucide-react';
+import { History, Eye, User, Phone, MapPin, Briefcase, Calendar, Heart, Bot, UserCheck, Info } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Atendimento } from '@/types';
+import { mockAtendimentos } from '@/lib/mockData';
 
 export const AtendimentosList: React.FC = () => {
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
   const [loading, setLoading] = useState(true);
+  const [usingMockData, setUsingMockData] = useState(false);
 
   useEffect(() => {
     const fetchAtendimentos = async () => {
@@ -23,6 +25,14 @@ export const AtendimentosList: React.FC = () => {
           .order('data_inicio', { ascending: false });
 
         if (atendimentosError) throw atendimentosError;
+
+        // Se não há dados no Supabase, usar dados mockados
+        if (!atendimentosData || atendimentosData.length === 0) {
+          console.log('📋 Nenhum dado encontrado no Supabase, usando dados mockados...');
+          setAtendimentos(mockAtendimentos);
+          setUsingMockData(true);
+          return;
+        }
 
         // Buscar tutores
         const { data: tutoresData, error: tutoresError } = await supabase
@@ -64,8 +74,11 @@ export const AtendimentosList: React.FC = () => {
 
         console.log('✅ Atendimentos carregados:', atendimentosCompletos.length);
         setAtendimentos(atendimentosCompletos);
+        setUsingMockData(false);
       } catch (error) {
-        console.error('❌ Erro ao carregar atendimentos:', error);
+        console.error('❌ Erro ao carregar atendimentos, usando dados mockados:', error);
+        setAtendimentos(mockAtendimentos);
+        setUsingMockData(true);
       } finally {
         setLoading(false);
       }
@@ -139,6 +152,23 @@ export const AtendimentosList: React.FC = () => {
         <h1 className="text-2xl lg:text-3xl font-bold text-purple-primary mb-1 lg:mb-2">Atendimentos</h1>
         <p className="text-sm lg:text-base text-gray-600">Histórico completo de atendimentos realizados</p>
       </div>
+
+      {/* Alerta quando estiver usando dados mockados */}
+      {usingMockData && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-2 text-blue-800">
+              <Info className="w-5 h-5" />
+              <div>
+                <p className="font-semibold">Dados de Demonstração</p>
+                <p className="text-sm">
+                  Exibindo dados mockados para visualização. Os dados reais aparecerão aqui quando houver atendimentos no sistema.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-3 lg:space-y-4">
         {atendimentos.map((atendimento) => (
