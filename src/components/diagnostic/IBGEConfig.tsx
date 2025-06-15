@@ -157,34 +157,34 @@ export const IBGEConfig: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Municípios IBGE</span>
-                  {getStatusIcon(ibgeStatus.sectors.success)}
+                  {getStatusIcon(ibgeStatus.municipalities?.success || false)}
                 </div>
-                {getStatusBadge(ibgeStatus.sectors.success)}
-                <p className="text-xs text-muted-foreground">{ibgeStatus.sectors.message}</p>
+                {getStatusBadge(ibgeStatus.municipalities?.success || false)}
+                <p className="text-xs text-muted-foreground">{ibgeStatus.municipalities?.message || 'Status desconhecido'}</p>
               </div>
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">API SIDRA (Renda)</span>
-                  {getStatusIcon(ibgeStatus.income.success)}
+                  {getStatusIcon(ibgeStatus.income?.success || false)}
                 </div>
-                {getStatusBadge(ibgeStatus.income.success)}
-                <p className="text-xs text-muted-foreground">{ibgeStatus.income.message}</p>
+                {getStatusBadge(ibgeStatus.income?.success || false)}
+                <p className="text-xs text-muted-foreground">{ibgeStatus.income?.message || 'Status desconhecido'}</p>
               </div>
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Análise Completa</span>
-                  {getStatusIcon(ibgeStatus.analysis.success)}
+                  {getStatusIcon(ibgeStatus.analysis?.success || false)}
                 </div>
-                {getStatusBadge(ibgeStatus.analysis.success)}
-                <p className="text-xs text-muted-foreground">{ibgeStatus.analysis.message}</p>
+                {getStatusBadge(ibgeStatus.analysis?.success || false)}
+                <p className="text-xs text-muted-foreground">{ibgeStatus.analysis?.message || 'Status desconhecido'}</p>
               </div>
             </div>
             
             <div className="mt-4 pt-4 border-t">
               <p className="text-xs text-muted-foreground">
-                Última verificação: {new Date(ibgeStatus.lastUpdated).toLocaleString('pt-BR')}
+                Última verificação: {ibgeStatus.lastUpdated ? new Date(ibgeStatus.lastUpdated).toLocaleString('pt-BR') : 'Nunca'}
               </p>
             </div>
           </CardContent>
