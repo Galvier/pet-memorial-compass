@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   MapPin, 
   CheckCircle, 
@@ -14,9 +15,12 @@ import {
   TestTube,
   Clock,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Database,
+  DollarSign
 } from 'lucide-react';
 import { DiagnosticService } from '@/services/DiagnosticService';
+import { IBGEApiService } from '@/services/IBGEApiService';
 import { useToast } from '@/hooks/use-toast';
 
 interface IBGETestResult {
@@ -27,13 +31,38 @@ interface IBGETestResult {
   timestamp: string;
 }
 
+interface SidraTestResult {
+  municipioId: string;
+  result?: any;
+  error?: string;
+  duration?: number;
+  timestamp: string;
+}
+
+// Códigos de município conhecidos para teste
+const KNOWN_MUNICIPALITY_CODES = [
+  { code: '3143302', name: 'Montes Claros - MG' },
+  { code: '3106200', name: 'Belo Horizonte - MG' },
+  { code: '3550308', name: 'São Paulo - SP' },
+  { code: '3304557', name: 'Rio de Janeiro - RJ' },
+  { code: '2304400', name: 'Fortaleza - CE' },
+  { code: '2927408', name: 'Salvador - BA' },
+  { code: '5300108', name: 'Brasília - DF' },
+  { code: '4106902', name: 'Curitiba - PR' },
+  { code: '4314902', name: 'Porto Alegre - RS' },
+  { code: '1302603', name: 'Manaus - AM' }
+];
+
 export const IBGEConfig: React.FC = () => {
   const [ibgeStatus, setIBGEStatus] = useState<any>(null);
   const [testAddress, setTestAddress] = useState('Belo Horizonte, MG');
   const [testResults, setTestResults] = useState<IBGETestResult[]>([]);
+  const [sidraTestCode, setSidraTestCode] = useState('3143302');
+  const [sidraTestResults, setSidraTestResults] = useState<SidraTestResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
   const [realTesting, setRealTesting] = useState(false);
+  const [sidraLoading, setSidraLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -54,6 +83,83 @@ export const IBGEConfig: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const testSidraApi = async () => {
+    if (!sidraTestCode.trim()) {
+      toast({
+        title: "Código necessário",
+        description: "Digite um código de município para testar",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validar formato do código (7 dígitos)
+    if (!/^\d{7}$/.test(sidraTestCode.trim())) {
+      toast({
+        title: "Código inválido",
+        description: "O código do município deve ter exatamente 7 dígitos",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSidraLoading(true);
+    const startTime = Date.now();
+
+    try {
+      console.log(`🧪 Testando API SIDRA para município: ${sidraTestCode}`);
+      
+      // Testar diretamente a API SIDRA
+      const result = await IBGEApiService.getIncomeFromMunicipio(sidraTestCode);
+      const duration = Date.now() - startTime;
+      
+      const testResult: SidraTestResult = {
+        municipioId: sidraTestCode,
+        result,
+        duration,
+        timestamp: new Date().toISOString()
+      };
+
+      if (!result) {
+        testResult.error = 'Dados de renda não encontrados para este município';
+      }
+
+      setSidraTestResults(prev => [testResult, ...prev.slice(0, 9)]); // Manter apenas os 10 últimos
+      
+      if (testResult.error) {
+        toast({
+          title: "Teste SIDRA falhou",
+          description: testResult.error,
+          variant: "destructive"
+        });
+      } else {
+        const municipioName = KNOWN_MUNICIPALITY_CODES.find(m => m.code === sidraTestCode)?.name || sidraTestCode;
+        toast({
+          title: "Teste SIDRA concluído",
+          description: `Dados obtidos para ${municipioName} em ${duration}ms`,
+        });
+      }
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      const testResult: SidraTestResult = {
+        municipioId: sidraTestCode,
+        error: error.message || 'Erro desconhecido',
+        duration,
+        timestamp: new Date().toISOString()
+      };
+
+      setSidraTestResults(prev => [testResult, ...prev.slice(0, 9)]);
+      
+      toast({
+        title: "Erro no teste SIDRA",
+        description: `Falha ao testar API: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setSidraLoading(false);
     }
   };
 
@@ -232,6 +338,128 @@ export const IBGEConfig: React.FC = () => {
         </Card>
       )}
 
+      {/* Teste Específico da API SIDRA */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Teste Específico da API SIDRA
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="sidra-code">Código do Município IBGE</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="sidra-code"
+                  placeholder="Ex: 3143302"
+                  value={sidraTestCode}
+                  onChange={(e) => setSidraTestCode(e.target.value)}
+                  maxLength={7}
+                  className="font-mono"
+                />
+                <Button 
+                  onClick={testSidraApi} 
+                  disabled={sidraLoading || !sidraTestCode.trim()}
+                  size="sm"
+                >
+                  {sidraLoading ? (
+                    <>
+                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                      Testando...
+                    </>
+                  ) : (
+                    <>
+                      <Database className="h-4 w-4 mr-2" />
+                      Testar SIDRA
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Digite o código de 7 dígitos do município IBGE
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="municipality-select">Municípios Conhecidos</Label>
+              <Select 
+                value={sidraTestCode} 
+                onValueChange={setSidraTestCode}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um município" />
+                </SelectTrigger>
+                <SelectContent>
+                  {KNOWN_MUNICIPALITY_CODES.map((municipality) => (
+                    <SelectItem key={municipality.code} value={municipality.code}>
+                      {municipality.name} ({municipality.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {sidraTestResults.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="font-medium">Resultados dos Testes SIDRA</h4>
+              <div className="max-h-60 overflow-y-auto space-y-2">
+                {sidraTestResults.map((result, index) => (
+                  <div key={index} className="p-3 border rounded text-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium font-mono">{result.municipioId}</span>
+                      <div className="flex items-center gap-2">
+                        {result.duration && (
+                          <Badge variant="outline" className="text-xs">
+                            {result.duration}ms
+                          </Badge>
+                        )}
+                        {result.error ? (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        )}
+                      </div>
+                    </div>
+                    
+                    {result.error ? (
+                      <p className="text-red-600">{result.error}</p>
+                    ) : result.result && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="h-3 w-3" />
+                          <span>Renda média: R$ {result.result.averageIncome?.toFixed(2) || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-3 w-3" />
+                          <span>População: {result.result.populationCount?.toLocaleString('pt-BR') || 'N/A'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-3 w-3" />
+                          <span>Ano dos dados: {result.result.dataYear || 'N/A'}</span>
+                        </div>
+                        {result.result.dataYear === 2022 && result.result.averageIncome === 2500 && (
+                          <div className="flex items-center gap-2 text-orange-600">
+                            <AlertTriangle className="h-3 w-3" />
+                            <span className="text-xs">Dados de fallback utilizados</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {new Date(result.timestamp).toLocaleString('pt-BR')}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Teste de Endereço */}
       <Card>
         <CardHeader>
@@ -368,7 +596,19 @@ export const IBGEConfig: React.FC = () => {
               <li>Teste real de análise para validação completa</li>
               <li>Cache de status para evitar testes desnecessários</li>
               <li>Mensagens mais informativas sobre o estado real</li>
+              <li><strong>Novo:</strong> Teste específico da API SIDRA por código de município</li>
             </ol>
+          </div>
+
+          <div className="p-3 bg-orange-50 border border-orange-200 rounded text-sm">
+            <p className="font-medium text-orange-800 mb-2">Teste SIDRA Específico:</p>
+            <ul className="text-orange-700 space-y-1 list-disc list-inside">
+              <li>Digite códigos IBGE de 7 dígitos ou use a lista de municípios conhecidos</li>
+              <li>Teste direto da API SIDRA sem geocodificação</li>
+              <li>Exibe renda média, população e ano dos dados</li>
+              <li>Identifica quando dados de fallback são utilizados</li>
+              <li>Histórico dos últimos 10 testes realizados</li>
+            </ul>
           </div>
 
           <div className="flex justify-between items-center pt-4 border-t">
