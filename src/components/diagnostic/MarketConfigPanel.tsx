@@ -28,6 +28,13 @@ import { SettingsService } from '@/services/SettingsService';
 import { BairrosMontesService } from '@/services/BairrosMontesService';
 import { IntelligentRealEstateService } from '@/services/IntelligentRealEstateService';
 import { useToast } from '@/hooks/use-toast';
+import { InfoTooltip } from './InfoTooltip';
+import { 
+  CalculatedPriceExplanation, 
+  FactorExplanation, 
+  DiscrepancyExplanation, 
+  CategoryExplanation 
+} from './MarketExplanations';
 
 interface BairroMultiplier {
   id: string;
@@ -414,6 +421,17 @@ export const MarketConfigPanel: React.FC = () => {
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
             Índice Base do Metro Quadrado
+            <InfoTooltip
+              tooltipText="Clique para entender como o preço base é usado nos cálculos"
+              dialogTitle="Preço Base do Metro Quadrado"
+              dialogContent={
+                <CalculatedPriceExplanation 
+                  basePrice={parseFloat(basePrice)} 
+                  fator={1.3} 
+                  bairro="Ibituruna (exemplo)"
+                />
+              }
+            />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -511,12 +529,23 @@ export const MarketConfigPanel: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Como Funciona - Seção Existente */}
+      {/* Como Funciona - Seção com Explicações Melhoradas */}
       <Card className="border-blue-200 bg-blue-50/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-blue-800">
             <Calculator className="h-5 w-5" />
             Como Funciona o Cálculo
+            <InfoTooltip
+              tooltipText="Explicação detalhada de todo o sistema de cálculo"
+              dialogTitle="Sistema Completo de Cálculo de Preços"
+              dialogContent={
+                <CalculatedPriceExplanation 
+                  basePrice={parseFloat(basePrice)} 
+                  fator={1.25} 
+                  bairro="Sistema Geral"
+                />
+              }
+            />
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -533,7 +562,15 @@ export const MarketConfigPanel: React.FC = () => {
               <div className="flex items-start gap-2">
                 <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 text-sm font-bold">2</div>
                 <div>
-                  <div className="font-medium text-blue-800">Fator do Bairro</div>
+                  <div className="font-medium text-blue-800 flex items-center gap-1">
+                    Fator do Bairro
+                    <InfoTooltip
+                      tooltipText="De onde vem o fator e como ele é determinado"
+                      dialogTitle="Origem do Fator Imobiliário"
+                      dialogContent={<FactorExplanation fator={1.3} categoria="alto" bairro="Exemplo" />}
+                      size="sm"
+                    />
+                  </div>
                   <div className="text-sm text-blue-600">Multiplicador específico baseado na valorização da região</div>
                 </div>
               </div>
@@ -548,7 +585,21 @@ export const MarketConfigPanel: React.FC = () => {
             </div>
             
             <div className="bg-white p-4 rounded-lg border border-blue-200">
-              <div className="font-medium text-blue-800 mb-3">Exemplo de Cálculo:</div>
+              <div className="font-medium text-blue-800 mb-3 flex items-center gap-1">
+                Exemplo de Cálculo:
+                <InfoTooltip
+                  tooltipText="Veja o cálculo passo a passo com números reais"
+                  dialogTitle="Exemplo Prático de Cálculo"
+                  dialogContent={
+                    <CalculatedPriceExplanation 
+                      basePrice={parseFloat(basePrice)} 
+                      fator={1.30} 
+                      bairro="Ibituruna"
+                    />
+                  }
+                  size="sm"
+                />
+              </div>
               <div className="space-y-2 text-sm">
                 <div>
                   <span className="text-gray-600">Preço Base:</span>
@@ -591,6 +642,11 @@ export const MarketConfigPanel: React.FC = () => {
                 {marketStats.discrepancias} Discrepância(s)
               </Badge>
             )}
+            <InfoTooltip
+              tooltipText="Entenda o sistema de categorização e fatores"
+              dialogTitle="Sistema de Categorização de Bairros"
+              dialogContent={<CategoryExplanation categoria="alto" />}
+            />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -607,17 +663,64 @@ export const MarketConfigPanel: React.FC = () => {
                       <div className="font-medium flex items-center gap-2">
                         {bairro.nome_bairro}
                         {hasDiscrepancy && (
-                          <AlertTriangle className="h-4 w-4 text-orange-500" />
+                          <InfoTooltip
+                            tooltipText="Discrepância detectada - clique para entender"
+                            dialogTitle={`Discrepância em ${bairro.nome_bairro}`}
+                            dialogContent={
+                              <DiscrepancyExplanation 
+                                precoCalculado={precoCalculado}
+                                precoManual={precoManual}
+                                bairro={bairro.nome_bairro}
+                              />
+                            }
+                            size="sm"
+                          />
                         )}
                       </div>
-                      <div className="text-sm text-muted-foreground space-x-3">
-                        <span>Fator: {bairro.fator_imobiliario}x</span>
-                        <span>Calculado: R$ {precoCalculado.toFixed(0)}</span>
+                      <div className="text-sm text-muted-foreground space-x-3 flex items-center gap-3">
+                        <span className="flex items-center gap-1">
+                          Fator: {bairro.fator_imobiliario}x
+                          <InfoTooltip
+                            tooltipText="Por que este fator específico?"
+                            dialogTitle={`Fator ${bairro.fator_imobiliario}x para ${bairro.nome_bairro}`}
+                            dialogContent={
+                              <FactorExplanation 
+                                fator={bairro.fator_imobiliario}
+                                categoria={bairro.categoria}
+                                bairro={bairro.nome_bairro}
+                              />
+                            }
+                            size="sm"
+                          />
+                        </span>
+                        <span className="flex items-center gap-1">
+                          Calculado: R$ {precoCalculado.toFixed(0)}
+                          <InfoTooltip
+                            tooltipText="Como chegamos neste valor calculado"
+                            dialogTitle={`Cálculo para ${bairro.nome_bairro}`}
+                            dialogContent={
+                              <CalculatedPriceExplanation 
+                                basePrice={parseFloat(basePrice)}
+                                fator={bairro.fator_imobiliario}
+                                bairro={bairro.nome_bairro}
+                              />
+                            }
+                            size="sm"
+                          />
+                        </span>
                       </div>
                     </div>
-                    <Badge variant={getCategoryColor(bairro.categoria)}>
-                      {getCategoryLabel(bairro.categoria)}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      <Badge variant={getCategoryColor(bairro.categoria)}>
+                        {getCategoryLabel(bairro.categoria)}
+                      </Badge>
+                      <InfoTooltip
+                        tooltipText="O que significa esta categoria"
+                        dialogTitle="Sistema de Categorização"
+                        dialogContent={<CategoryExplanation categoria={bairro.categoria} />}
+                        size="sm"
+                      />
+                    </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
