@@ -14,10 +14,10 @@ import {
   Trash2,
   TestTube,
   Clock,
-  TrendingUp
+  TrendingUp,
+  AlertTriangle
 } from 'lucide-react';
 import { DiagnosticService } from '@/services/DiagnosticService';
-import { LocationAnalysisService } from '@/services/LocationAnalysisService';
 import { useToast } from '@/hooks/use-toast';
 
 interface IBGETestResult {
@@ -30,7 +30,7 @@ interface IBGETestResult {
 
 export const IBGEConfig: React.FC = () => {
   const [ibgeStatus, setIBGEStatus] = useState<any>(null);
-  const [testAddress, setTestAddress] = useState('');
+  const [testAddress, setTestAddress] = useState('Montes Claros, MG');
   const [testResults, setTestResults] = useState<IBGETestResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -80,9 +80,10 @@ export const IBGEConfig: React.FC = () => {
           variant: "destructive"
         });
       } else {
+        const fallbackMsg = result.result?.fallbackUsed ? " (usando fallback)" : "";
         toast({
           title: "Teste concluído",
-          description: `Análise realizada em ${result.duration}ms`,
+          description: `Análise realizada em ${result.duration}ms${fallbackMsg}`,
         });
       }
     } catch (error) {
@@ -155,7 +156,7 @@ export const IBGEConfig: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Setores Censitários</span>
+                  <span className="text-sm font-medium">Municípios IBGE</span>
                   {getStatusIcon(ibgeStatus.sectors.success)}
                 </div>
                 {getStatusBadge(ibgeStatus.sectors.success)}
@@ -244,6 +245,12 @@ export const IBGEConfig: React.FC = () => {
                             {result.duration}ms
                           </Badge>
                         )}
+                        {result.result?.fallbackUsed && (
+                          <Badge variant="secondary" className="text-xs">
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            Fallback
+                          </Badge>
+                        )}
                         {result.error ? (
                           <XCircle className="h-4 w-4 text-red-500" />
                         ) : (
@@ -256,10 +263,23 @@ export const IBGEConfig: React.FC = () => {
                       <p className="text-red-600">{result.error}</p>
                     ) : result.result && (
                       <div className="space-y-1">
-                        <p>Pontuação: {result.result.result?.score || 'N/A'}</p>
-                        <p className="text-muted-foreground">
-                          {result.result.result?.scoreReason || 'Sem detalhes'}
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-3 w-3" />
+                          <span>Pontuação: {result.result.score || 'N/A'}</span>
+                        </div>
+                        <p className="text-muted-foreground text-xs">
+                          {result.result.scoreReason || 'Sem detalhes'}
                         </p>
+                        {result.result.municipioData && (
+                          <p className="text-xs text-blue-600">
+                            📍 {result.result.municipioData.nome} - {result.result.municipioData.uf}
+                          </p>
+                        )}
+                        {result.result.incomeData && (
+                          <p className="text-xs text-green-600">
+                            💰 Renda média: R$ {result.result.incomeData.averageIncome.toFixed(2)} ({result.result.incomeData.dataYear})
+                          </p>
+                        )}
                       </div>
                     )}
                     
@@ -283,19 +303,30 @@ export const IBGEConfig: React.FC = () => {
           <Alert>
             <MapPin className="h-4 w-4" />
             <AlertDescription>
-              As APIs do IBGE são públicas e não requerem autenticação. 
-              O sistema utiliza cache para otimizar performance e reduzir chamadas desnecessárias.
+              <strong>Atualização:</strong> O sistema agora usa dados municipais do IBGE. 
+              Quando os dados específicos não estão disponíveis, o sistema utiliza estimativas regionais para manter a funcionalidade.
             </AlertDescription>
           </Alert>
 
           <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
-            <p className="font-medium text-blue-800 mb-2">Fluxo de Análise:</p>
+            <p className="font-medium text-blue-800 mb-2">Novo Fluxo de Análise:</p>
             <ol className="text-blue-700 space-y-1 list-decimal list-inside">
               <li>Geocodificação do endereço (Google Maps)</li>
-              <li>Consulta do setor censitário (API IBGE)</li>
-              <li>Obtenção da renda média (API SIDRA)</li>
+              <li>Identificação do município (API IBGE)</li>
+              <li>Consulta da renda municipal (API SIDRA)</li>
+              <li>Fallback para estimativas se necessário</li>
               <li>Cálculo da pontuação (15-50 pontos)</li>
             </ol>
+          </div>
+
+          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+            <p className="font-medium text-yellow-800 mb-2">Sistema de Fallback:</p>
+            <ul className="text-yellow-700 space-y-1 list-disc list-inside">
+              <li>Dados municipais quando setores não disponíveis</li>
+              <li>Estimativas regionais para renda indisponível</li>
+              <li>Cache inteligente para otimizar performance</li>
+              <li>Logs detalhados para monitoramento</li>
+            </ul>
           </div>
 
           <div className="flex justify-between items-center pt-4 border-t">

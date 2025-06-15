@@ -5,10 +5,9 @@ import { IBGEApiService } from './IBGEApiService';
 export interface LocationAnalysis {
   address: string;
   coordinates: { lat: number; lng: number } | null;
-  sectorData: {
+  municipioData: {
     id: string;
-    name: string;
-    municipio: string;
+    nome: string;
     uf: string;
   } | null;
   incomeData: {
@@ -20,14 +19,16 @@ export interface LocationAnalysis {
   scoreReason: string;
   analysisDate: string;
   success: boolean;
+  fallbackUsed: boolean;
 }
 
 /**
  * Serviço principal para análise de localização com dados do IBGE
+ * Atualizado para usar dados municipais ao invés de setores censitários
  */
 export class LocationAnalysisService {
   private static readonly DEFAULT_SCORE = 25;
-  private static readonly DEFAULT_REASON = 'Pontuação padrão aplicada';
+  private static readonly DEFAULT_REASON = 'Pontuação padrão aplicada - dados indisponíveis';
 
   /**
    * Função principal: analisa um endereço e retorna pontuação baseada em dados do IBGE
@@ -39,12 +40,13 @@ export class LocationAnalysisService {
     const analysis: LocationAnalysis = {
       address,
       coordinates: null,
-      sectorData: null,
+      municipioData: null,
       incomeData: null,
       score: this.DEFAULT_SCORE,
       scoreReason: this.DEFAULT_REASON,
       analysisDate: new Date().toISOString(),
-      success: false
+      success: false,
+      fallbackUsed: false
     };
 
     try {
@@ -54,6 +56,7 @@ export class LocationAnalysisService {
       
       if (!coordinates) {
         analysis.scoreReason = 'Endereço não encontrado - usando pontuação padrão';
+        analysis.fallbackUsed = true;
         console.log('❌ Endereço não geocodificado, usando pontuação padrão');
         return analysis;
       }
@@ -61,33 +64,34 @@ export class LocationAnalysisService {
       analysis.coordinates = coordinates;
       console.log(`✅ Coordenadas obtidas: ${coordinates.lat}, ${coordinates.lng}`);
 
-      // Passo 2: Obter setor censitário
-      console.log('🗺️ Passo 2: Consulta do setor censitário IBGE');
-      const sectorData = await IBGEApiService.getSectorFromCoordinates(
+      // Passo 2: Obter dados do município
+      console.log('🏛️ Passo 2: Consulta do município IBGE');
+      const municipioData = await IBGEApiService.getMunicipioFromCoordinates(
         coordinates.lat, 
         coordinates.lng
       );
 
-      if (!sectorData) {
-        analysis.scoreReason = 'Setor censitário não encontrado - usando pontuação padrão';
-        console.log('❌ Setor censitário não encontrado, usando pontuação padrão');
+      if (!municipioData) {
+        analysis.scoreReason = 'Município não encontrado - usando pontuação padrão';
+        analysis.fallbackUsed = true;
+        console.log('❌ Município não encontrado, usando pontuação padrão');
         return analysis;
       }
 
-      analysis.sectorData = {
-        id: sectorData.id,
-        name: sectorData.name,
-        municipio: sectorData.municipio,
-        uf: sectorData.uf
+      analysis.municipioData = {
+        id: municipioData.id,
+        nome: municipioData.nome,
+        uf: municipioData.microrregiao?.mesorregiao?.UF?.sigla || 'N/A'
       };
-      console.log(`✅ Setor censitário: ${sectorData.id} em ${sectorData.municipio}/${sectorData.uf}`);
+      console.log(`✅ Município: ${municipioData.nome} (${municipioData.id}) - ${analysis.municipioData.uf}`);
 
       // Passo 3: Obter dados de renda
       console.log('💰 Passo 3: Consulta de dados de renda IBGE');
-      const incomeData = await IBGEApiService.getIncomeFromSector(sectorData.id);
+      const incomeData = await IBGEApiService.getIncomeFromMunicipio(municipioData.id);
 
       if (!incomeData) {
         analysis.scoreReason = 'Dados de renda não disponíveis - usando pontuação padrão';
+        analysis.fallbackUsed = true;
         console.log('❌ Dados de renda não encontrados, usando pontuação padrão');
         return analysis;
       }
@@ -98,16 +102,21 @@ export class LocationAnalysisService {
         dataYear: incomeData.dataYear
       };
 
+      // Verificar se foi usado fallback
+      analysis.fallbackUsed = incomeData.dataYear === 2022 && incomeData.averageIncome === 2500;
+
       // Passo 4: Calcular pontuação final
       console.log('🧮 Passo 4: Cálculo da pontuação final');
       const score = IBGEApiService.calculateScoreFromIncome(incomeData.averageIncome);
       
       analysis.score = score;
-      analysis.scoreReason = `Renda média R$ ${incomeData.averageIncome.toFixed(2)} (${incomeData.dataYear}) = ${score} pontos`;
+      analysis.scoreReason = analysis.fallbackUsed 
+        ? `Dados estimados - Renda média R$ ${incomeData.averageIncome.toFixed(2)} = ${score} pontos`
+        : `Renda média R$ ${incomeData.averageIncome.toFixed(2)} (${incomeData.dataYear}) = ${score} pontos`;
       analysis.success = true;
 
       const elapsedTime = Date.now() - startTime;
-      console.log(`✅ Análise concluída com sucesso em ${elapsedTime}ms`);
+      console.log(`✅ Análise concluída ${analysis.fallbackUsed ? 'com fallback' : 'com sucesso'} em ${elapsedTime}ms`);
       console.log(`📊 Resultado: ${score} pontos (${analysis.scoreReason})`);
 
       return analysis;
@@ -117,6 +126,7 @@ export class LocationAnalysisService {
       console.error(`❌ Erro na análise de localização após ${elapsedTime}ms:`, error);
       
       analysis.scoreReason = `Erro na análise: ${error.message || 'Erro desconhecido'} - usando pontuação padrão`;
+      analysis.fallbackUsed = true;
       return analysis;
     }
   }
@@ -147,7 +157,8 @@ export class LocationAnalysisService {
     }
     
     const successCount = results.filter(r => r.success).length;
-    console.log(`✅ Análise em lote concluída: ${successCount}/${addresses.length} sucessos`);
+    const fallbackCount = results.filter(r => r.fallbackUsed).length;
+    console.log(`✅ Análise em lote concluída: ${successCount}/${addresses.length} sucessos, ${fallbackCount} fallbacks`);
     
     return results;
   }
@@ -155,16 +166,53 @@ export class LocationAnalysisService {
   /**
    * Limpar cache de análises antigas
    */
-  static clearCache(): void {
+  static clearCache(): { success: boolean; message: string; details?: any } {
     try {
-      const keys = Object.keys(localStorage);
-      const ibgeKeys = keys.filter(key => key.startsWith('ibge_'));
+      const result = IBGEApiService.clearCache();
       
-      ibgeKeys.forEach(key => localStorage.removeItem(key));
-      
-      console.log(`🧹 Cache limpo: ${ibgeKeys.length} entradas removidas`);
+      return {
+        success: true,
+        message: `Cache limpo com sucesso: ${result.cleared} entradas removidas${result.errors > 0 ? `, ${result.errors} erros` : ''}`,
+        details: result
+      };
     } catch (error) {
       console.warn('⚠️ Erro ao limpar cache:', error);
+      return {
+        success: false,
+        message: `Erro ao limpar cache: ${error.message || 'Erro desconhecido'}`
+      };
+    }
+  }
+
+  /**
+   * Teste de conectividade com as APIs
+   */
+  static async testConnectivity(): Promise<{ success: boolean; details: any }> {
+    try {
+      console.log('🔍 Testando conectividade com APIs do IBGE...');
+      
+      const connectivity = await IBGEApiService.testConnectivity();
+      const success = connectivity.municipalities && connectivity.income;
+      
+      return {
+        success,
+        details: {
+          municipalities: connectivity.municipalities,
+          income: connectivity.income,
+          message: success 
+            ? 'Todas as APIs estão funcionando'
+            : 'Algumas APIs apresentam problemas'
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        details: {
+          municipalities: false,
+          income: false,
+          message: `Erro no teste: ${error.message || 'Erro desconhecido'}`
+        }
+      };
     }
   }
 }
