@@ -1,3 +1,4 @@
+import { IntelligentRealEstateService } from './IntelligentRealEstateService';
 
 export interface RealEstateData {
   bairro: string;
@@ -5,6 +6,7 @@ export interface RealEstateData {
   sampleSize: number;
   lastUpdated: string;
   multiplier: number;
+  source: 'intelligent_simulation' | 'cached_simulation';
 }
 
 export interface PropertyListing {
@@ -16,7 +18,7 @@ export interface PropertyListing {
 
 /**
  * Serviço para análise do mercado imobiliário de Montes Claros
- * Simula web scraping com dados realistas baseados no mercado local
+ * Agora usa o sistema de simulação inteligente em vez de web scraping
  */
 export class RealEstateService {
   private static readonly CACHE_KEY_PREFIX = 'realestate_';
@@ -24,9 +26,10 @@ export class RealEstateService {
 
   /**
    * Obtém dados do mercado imobiliário para um bairro específico
+   * Usa simulação inteligente baseada em configurações administráveis
    */
   static async getRealEstateData(bairro: string, cidade: string = 'Montes Claros'): Promise<RealEstateData> {
-    console.log(`🏠 Analisando mercado imobiliário: ${bairro}, ${cidade}`);
+    console.log(`🏠 Analisando mercado imobiliário (simulação inteligente): ${bairro}, ${cidade}`);
 
     if (cidade.toLowerCase() !== 'montes claros') {
       throw new Error('Análise imobiliária disponível apenas para Montes Claros');
@@ -36,27 +39,52 @@ export class RealEstateService {
     const cachedData = this.getCachedData(bairro);
     if (cachedData) {
       console.log(`📦 Dados de ${bairro} obtidos do cache`);
-      return cachedData;
+      return { ...cachedData, source: 'cached_simulation' };
     }
 
-    // Simular busca de dados (em produção seria web scraping real)
-    const listings = await this.simulatePropertySearch(bairro);
-    const avgPriceSqm = this.calculateAveragePrice(listings);
-    const multiplier = this.calculateMultiplier(avgPriceSqm);
+    try {
+      // Usar novo sistema de simulação inteligente
+      const calculation = await IntelligentRealEstateService.getDetailedCalculation(bairro);
+      
+      const realEstateData: RealEstateData = {
+        bairro,
+        avgPriceSqm: calculation.simulatedPrice,
+        sampleSize: 1, // Simulação baseada em dados configurados
+        lastUpdated: new Date().toISOString(),
+        multiplier: calculation.scoreFactor,
+        source: 'intelligent_simulation'
+      };
 
-    const realEstateData: RealEstateData = {
-      bairro,
-      avgPriceSqm,
-      sampleSize: listings.length,
-      lastUpdated: new Date().toISOString(),
-      multiplier
-    };
+      // Salvar no cache
+      this.setCachedData(bairro, realEstateData);
+      
+      console.log(`✅ Análise inteligente concluída para ${bairro}: R$ ${realEstateData.avgPriceSqm.toFixed(2)}/m² (multiplicador: ${realEstateData.multiplier}x)`);
+      return realEstateData;
+    } catch (error) {
+      console.error(`❌ Erro na análise inteligente para ${bairro}:`, error);
+      
+      // Fallback para dados padrão
+      return {
+        bairro,
+        avgPriceSqm: 3500,
+        sampleSize: 0,
+        lastUpdated: new Date().toISOString(),
+        multiplier: 1.0,
+        source: 'intelligent_simulation'
+      };
+    }
+  }
 
-    // Salvar no cache
-    this.setCachedData(bairro, realEstateData);
-    
-    console.log(`✅ Análise imobiliária concluída para ${bairro}: R$ ${avgPriceSqm.toFixed(2)}/m² (multiplicador: ${multiplier}x)`);
-    return realEstateData;
+  /**
+   * Obtém apenas o score/multiplicador para um bairro
+   */
+  static async getRealEstateScore(bairro: string): Promise<number> {
+    try {
+      return await IntelligentRealEstateService.getRealEstateScore(bairro);
+    } catch (error) {
+      console.error(`❌ Erro ao obter score para ${bairro}:`, error);
+      return 1.0;
+    }
   }
 
   /**

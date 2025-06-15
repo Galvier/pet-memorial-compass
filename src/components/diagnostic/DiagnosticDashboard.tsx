@@ -8,6 +8,7 @@ import { DebugTools } from './DebugTools';
 import { LogsViewer } from './LogsViewer';
 import { CacheManagement } from './CacheManagement';
 import { MontesClarosAnalysis } from './MontesClarosAnalysis';
+import { MarketConfigPanel } from './MarketConfigPanel';
 
 export const DiagnosticDashboard: React.FC = () => {
   return (
@@ -20,11 +21,12 @@ export const DiagnosticDashboard: React.FC = () => {
       </div>
 
       <Tabs defaultValue="status" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="status">Status</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="integrations">Integrações</TabsTrigger>
           <TabsTrigger value="montes-claros">Análise Local</TabsTrigger>
+          <TabsTrigger value="market-config">Mercado</TabsTrigger>
           <TabsTrigger value="debug">Debug</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
           <TabsTrigger value="cache">Cache</TabsTrigger>
@@ -44,6 +46,10 @@ export const DiagnosticDashboard: React.FC = () => {
 
         <TabsContent value="montes-claros">
           <MontesClarosAnalysis />
+        </TabsContent>
+
+        <TabsContent value="market-config">
+          <MarketConfigPanel />
         </TabsContent>
 
         <TabsContent value="debug">

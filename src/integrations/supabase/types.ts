@@ -122,12 +122,15 @@ export type Database = {
       bairros_montes_claros: {
         Row: {
           ativo: boolean | null
+          base_price_override: number | null
           categoria: string
           created_at: string
           fator_atualizacao_calculado: number | null
           fator_comercial: number | null
           fator_imobiliario: number | null
           id: string
+          last_market_update: string | null
+          market_analysis_enabled: boolean | null
           nome_bairro: string
           perfil_comercial: string | null
           preco_medio_m2: number | null
@@ -136,12 +139,15 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean | null
+          base_price_override?: number | null
           categoria: string
           created_at?: string
           fator_atualizacao_calculado?: number | null
           fator_comercial?: number | null
           fator_imobiliario?: number | null
           id?: string
+          last_market_update?: string | null
+          market_analysis_enabled?: boolean | null
           nome_bairro: string
           perfil_comercial?: string | null
           preco_medio_m2?: number | null
@@ -150,12 +156,15 @@ export type Database = {
         }
         Update: {
           ativo?: boolean | null
+          base_price_override?: number | null
           categoria?: string
           created_at?: string
           fator_atualizacao_calculado?: number | null
           fator_comercial?: number | null
           fator_imobiliario?: number | null
           id?: string
+          last_market_update?: string | null
+          market_analysis_enabled?: boolean | null
           nome_bairro?: string
           perfil_comercial?: string | null
           preco_medio_m2?: number | null
@@ -329,6 +338,36 @@ export type Database = {
             referencedColumns: ["tutor_id"]
           },
         ]
+      }
+      settings: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
       }
       tutores: {
         Row: {
