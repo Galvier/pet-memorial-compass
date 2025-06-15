@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,8 @@ import {
   Eye,
   Loader2,
   Zap,
-  BarChart3
+  BarChart3,
+  DollarSign
 } from 'lucide-react';
 import { AIRealEstateService, AIAnalysisResult, AIValidationResult } from '@/services/AIRealEstateService';
 import { useToast } from '@/hooks/use-toast';
@@ -81,9 +83,10 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
       
       toast({
         title: "🤖 Análise de IA Concluída",
-        description: `${results.length} bairros analisados com sucesso`,
+        description: `${results.length} bairros analisados com sugestões para fatores e preços`,
       });
     } catch (error) {
+      console.error('Erro na análise:', error);
       toast({
         title: "❌ Erro na Análise",
         description: "Falha ao analisar bairros com IA. Verifique os logs para mais detalhes.",
@@ -118,6 +121,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
         variant: results.resumo.discrepancias_encontradas > 0 ? "destructive" : "default"
       });
     } catch (error) {
+      console.error('Erro na validação:', error);
       toast({
         title: "❌ Erro na Validação",
         description: "Falha ao validar fatores com IA",
@@ -162,8 +166,10 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
             <Bot className="h-5 w-5" />
             Assistente de IA
             <Sparkles className="h-4 w-4 text-purple-600" />
-            <Badge variant="outline" className="ml-auto text-xs">GPT-4o-mini</Badge>
           </CardTitle>
+          <p className="text-sm text-purple-600 mt-1">
+            Análise inteligente para otimização de fatores e preços do mercado imobiliário
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Loading state */}
@@ -194,7 +200,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
               <div className="text-center">
                 <div className="font-medium">Análise Completa</div>
                 <div className="text-xs text-purple-100 mt-1">
-                  Sugestões de IA para todos os bairros ({bairros.length})
+                  Sugestões de fatores e preços para {bairros.length} bairros
                 </div>
               </div>
             </Button>
@@ -211,9 +217,9 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
                 <Eye className="h-6 w-6 mb-2 text-purple-600" />
               )}
               <div className="text-center">
-                <div className="font-medium">Validar Fatores</div>
+                <div className="font-medium">Validar Dados</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Identifica discrepâncias nos dados atuais
+                  Identifica inconsistências nos fatores atuais
                 </div>
               </div>
             </Button>
@@ -253,17 +259,30 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
                         <div>
                           <div className="font-medium text-sm">{result.bairro}</div>
                           <div className="text-xs text-muted-foreground">
-                            Sugestão baseada em análise de mercado
+                            Sugestões baseadas em análise de mercado com IA
                           </div>
                         </div>
                         {getConfidenceBadge(result.confidence_score)}
                       </div>
                       
                       <div className="space-y-3">
-                        <div className="flex items-center gap-4 text-sm">
-                          <span>Fator Sugerido: <strong className="text-purple-700">{result.fator_sugerido}x</strong></span>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-purple-600" />
+                            <span>Fator: <strong className="text-purple-700">{result.fator_sugerido}x</strong></span>
+                          </div>
+                          {result.preco_manual_sugerido && (
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="h-4 w-4 text-green-600" />
+                              <span>Preço: <strong className="text-green-700">R$ {result.preco_manual_sugerido}</strong></span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-xs">
-                            {result.categoria_sugerida}
+                            {result.categoria_sugerida === 'alto' ? 'Alto Padrão' : 
+                             result.categoria_sugerida === 'medio' ? 'Médio Padrão' : 'Padrão'}
                           </Badge>
                         </div>
                         
@@ -278,7 +297,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
                             className="text-xs h-7"
                           >
                             <CheckCircle className="h-3 w-3 mr-1" />
-                            Aplicar
+                            Aplicar Fator
                           </Button>
                           <Button
                             size="sm"
@@ -319,11 +338,20 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
                             </Badge>
                           </div>
                           
-                          <div className="text-xs space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span>Atual: <strong>{disc.fator_atual}x</strong></span>
-                              <span>→</span>
-                              <span>Sugerido: <strong className="text-green-600">{disc.fator_sugerido}x</strong></span>
+                          <div className="text-xs space-y-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="flex items-center gap-2">
+                                <TrendingUp className="h-3 w-3 text-blue-500" />
+                                <span>Atual: <strong>{disc.fator_atual}x</strong></span>
+                                <span>→</span>
+                                <span>Sugerido: <strong className="text-green-600">{disc.fator_sugerido}x</strong></span>
+                              </div>
+                              {disc.preco_manual_sugerido && (
+                                <div className="flex items-center gap-2">
+                                  <DollarSign className="h-3 w-3 text-green-500" />
+                                  <span>Preço sugerido: <strong className="text-green-600">R$ {disc.preco_manual_sugerido}</strong></span>
+                                </div>
+                              )}
                             </div>
                             <p className="text-muted-foreground bg-gray-50 p-2 rounded">{disc.justificativa}</p>
                           </div>
@@ -347,7 +375,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
             <Alert>
               <Bot className="h-4 w-4" />
               <AlertDescription>
-                Use a <strong>Análise Completa</strong> para obter sugestões inteligentes da IA ou <strong>Validar Fatores</strong> para identificar inconsistências nos dados atuais.
+                Use a <strong>Análise Completa</strong> para obter sugestões inteligentes de fatores e preços ou <strong>Validar Dados</strong> para identificar inconsistências.
               </AlertDescription>
             </Alert>
           )}

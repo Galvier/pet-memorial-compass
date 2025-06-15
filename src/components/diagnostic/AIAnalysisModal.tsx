@@ -18,7 +18,8 @@ import {
   Target,
   Info,
   ThumbsUp,
-  Eye
+  Eye,
+  DollarSign
 } from 'lucide-react';
 import { AIAnalysisResult } from '@/services/AIRealEstateService';
 
@@ -70,7 +71,7 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Building2 className="h-6 w-6 text-purple-600" />
@@ -80,13 +81,22 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({
 
         <div className="space-y-6">
           {/* Resumo Principal */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
               <div className="text-2xl font-bold text-purple-700 mb-1">
                 {result.fator_sugerido}x
               </div>
               <div className="text-sm text-purple-600">Fator Sugerido</div>
             </div>
+            
+            {result.preco_manual_sugerido && (
+              <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+                <div className="text-lg font-bold text-green-700 mb-1">
+                  R$ {result.preco_manual_sugerido}
+                </div>
+                <div className="text-sm text-green-600">Preço Sugerido/m²</div>
+              </div>
+            )}
             
             <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
               <Badge className={`text-sm px-3 py-1 ${getCategoryColor(result.categoria_sugerida)}`}>
@@ -95,11 +105,11 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({
               <div className="text-sm text-blue-600 mt-1">Categoria</div>
             </div>
             
-            <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
               <Badge className={`text-sm px-3 py-1 ${getConfidenceColor(result.confidence_score)}`}>
                 {result.confidence_score}%
               </Badge>
-              <div className="text-sm text-green-600 mt-1">Confiança</div>
+              <div className="text-sm text-orange-600 mt-1">Confiança</div>
             </div>
           </div>
 
@@ -184,13 +194,26 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({
               className="flex-1"
             >
               <CheckCircle className="h-4 w-4 mr-2" />
-              Aplicar Sugestão ({result.fator_sugerido}x)
+              Aplicar Fator ({result.fator_sugerido}x)
             </Button>
+            
+            {result.preco_manual_sugerido && (
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  // Aqui você pode implementar aplicação do preço manual se necessário
+                  console.log('Aplicar preço manual:', result.preco_manual_sugerido);
+                }}
+              >
+                <DollarSign className="h-4 w-4 mr-2" />
+                Aplicar Preço (R$ {result.preco_manual_sugerido})
+              </Button>
+            )}
             
             <Button
               variant="outline"
               onClick={onClose}
-              className="flex-1"
             >
               <Eye className="h-4 w-4 mr-2" />
               Fechar

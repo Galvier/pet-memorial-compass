@@ -11,6 +11,7 @@ export interface AIAnalysisResult {
   pontos_fortes: string[];
   pontos_atencao: string[];
   comparacao_mercado: string;
+  preco_manual_sugerido?: number;
 }
 
 export interface AIValidationResult {
@@ -21,6 +22,7 @@ export interface AIValidationResult {
     confidence_score: number;
     justificativa: string;
     severidade: 'baixa' | 'media' | 'alta';
+    preco_manual_sugerido?: number;
   }>;
   resumo: {
     total_analisados: number;
