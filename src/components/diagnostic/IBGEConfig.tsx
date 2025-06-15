@@ -253,16 +253,44 @@ export const IBGEConfig: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (success: boolean) => {
-    return success ? 
-      <CheckCircle className="h-4 w-4 text-green-500" /> : 
-      <XCircle className="h-4 w-4 text-red-500" />;
+  const getStatusIcon = (status: string | boolean) => {
+    const normalizedStatus = typeof status === 'boolean' ? (status ? 'healthy' : 'error') : status;
+    
+    switch (normalizedStatus) {
+      case 'healthy':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'warning':
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <XCircle className="h-4 w-4 text-red-500" />;
+    }
   };
 
-  const getStatusBadge = (success: boolean) => {
+  const getStatusBadge = (status: string | boolean) => {
+    let normalizedStatus: string;
+    if (typeof status === 'boolean') {
+      normalizedStatus = status ? 'healthy' : 'error';
+    } else {
+      normalizedStatus = status;
+    }
+
+    const variants = {
+      healthy: 'default',
+      warning: 'secondary',
+      error: 'destructive'
+    } as const;
+    
+    const labels = {
+      healthy: 'Operacional',
+      warning: 'Atenção', 
+      error: 'Erro'
+    };
+    
     return (
-      <Badge variant={success ? "default" : "destructive"}>
-        {success ? "Operacional" : "Erro"}
+      <Badge variant={variants[normalizedStatus as keyof typeof variants] || 'destructive'}>
+        {labels[normalizedStatus as keyof typeof labels] || 'Erro'}
       </Badge>
     );
   };
@@ -297,27 +325,27 @@ export const IBGEConfig: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Municípios IBGE</span>
-                  {getStatusIcon(ibgeStatus.municipalities?.success || false)}
+                  {getStatusIcon(ibgeStatus.municipalities?.status || 'error')}
                 </div>
-                {getStatusBadge(ibgeStatus.municipalities?.success || false)}
+                {getStatusBadge(ibgeStatus.municipalities?.status || 'error')}
                 <p className="text-xs text-muted-foreground">{ibgeStatus.municipalities?.message || 'Status desconhecido'}</p>
               </div>
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">API SIDRA (Renda)</span>
-                  {getStatusIcon(ibgeStatus.income?.success || false)}
+                  {getStatusIcon(ibgeStatus.income?.status || 'error')}
                 </div>
-                {getStatusBadge(ibgeStatus.income?.success || false)}
+                {getStatusBadge(ibgeStatus.income?.status || 'error')}
                 <p className="text-xs text-muted-foreground">{ibgeStatus.income?.message || 'Status desconhecido'}</p>
               </div>
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Análise Completa</span>
-                  {getStatusIcon(ibgeStatus.analysis?.success || false)}
+                  {getStatusIcon(ibgeStatus.analysis?.status || 'error')}
                 </div>
-                {getStatusBadge(ibgeStatus.analysis?.success || false)}
+                {getStatusBadge(ibgeStatus.analysis?.status || 'error')}
                 <p className="text-xs text-muted-foreground">{ibgeStatus.analysis?.message || 'Status desconhecido'}</p>
               </div>
             </div>

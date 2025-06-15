@@ -14,9 +14,9 @@ interface SystemHealth {
 }
 
 interface IBGEStatus {
-  municipalities: { success: boolean; message: string };
-  income: { success: boolean; message: string };
-  analysis: { success: boolean; message: string };
+  municipalities: { success: boolean; status: string; message: string };
+  income: { success: boolean; status: string; message: string };
+  analysis: { success: boolean; status: string; message: string };
   lastUpdated: string;
 }
 
@@ -49,7 +49,12 @@ export const SystemStatus: React.FC = () => {
   }, []);
 
   const getStatusIcon = (status: string | boolean) => {
-    const normalizedStatus = typeof status === 'boolean' ? (status ? 'healthy' : 'error') : status;
+    let normalizedStatus: string;
+    if (typeof status === 'boolean') {
+      normalizedStatus = status ? 'healthy' : 'error';
+    } else {
+      normalizedStatus = status;
+    }
     
     switch (normalizedStatus) {
       case 'healthy':
@@ -154,7 +159,7 @@ export const SystemStatus: React.FC = () => {
         </Card>
       </div>
 
-      {/* Card específico para IBGE */}
+      {/* Card específico para IBGE com status melhorado */}
       {ibgeStatus && (
         <Card className="bg-blue-50 border-blue-200">
           <CardHeader>
@@ -168,8 +173,8 @@ export const SystemStatus: React.FC = () => {
               <div className="space-y-2">
                 <p className="text-sm font-medium text-blue-700">Municípios IBGE</p>
                 <div className="flex items-center space-x-2">
-                  {getStatusIcon(ibgeStatus.municipalities.success)}
-                  {getStatusBadge(ibgeStatus.municipalities.success)}
+                  {getStatusIcon(ibgeStatus.municipalities.status)}
+                  {getStatusBadge(ibgeStatus.municipalities.status)}
                 </div>
                 <p className="text-xs text-blue-600">{ibgeStatus.municipalities.message}</p>
               </div>
@@ -177,8 +182,8 @@ export const SystemStatus: React.FC = () => {
               <div className="space-y-2">
                 <p className="text-sm font-medium text-blue-700">API SIDRA (Renda)</p>
                 <div className="flex items-center space-x-2">
-                  {getStatusIcon(ibgeStatus.income.success)}
-                  {getStatusBadge(ibgeStatus.income.success)}
+                  {getStatusIcon(ibgeStatus.income.status)}
+                  {getStatusBadge(ibgeStatus.income.status)}
                 </div>
                 <p className="text-xs text-blue-600">{ibgeStatus.income.message}</p>
               </div>
@@ -186,8 +191,8 @@ export const SystemStatus: React.FC = () => {
               <div className="space-y-2">
                 <p className="text-sm font-medium text-blue-700">Análise Completa</p>
                 <div className="flex items-center space-x-2">
-                  {getStatusIcon(ibgeStatus.analysis.success)}
-                  {getStatusBadge(ibgeStatus.analysis.success)}
+                  {getStatusIcon(ibgeStatus.analysis.status)}
+                  {getStatusBadge(ibgeStatus.analysis.status)}
                 </div>
                 <p className="text-xs text-blue-600">{ibgeStatus.analysis.message}</p>
               </div>
