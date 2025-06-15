@@ -16,7 +16,6 @@ import {
 import { getDashboardAnalytics } from '@/api/analytics';
 import { HeatmapVisualization } from '@/components/HeatmapVisualization';
 import { BusinessProfileDistribution } from './BusinessProfileDistribution';
-import { LocationScoreChart } from './LocationScoreChart';
 
 export const AdminAnalyticsDashboard: React.FC = () => {
   const [analytics, setAnalytics] = useState<any>(null);
@@ -124,11 +123,8 @@ export const AdminAnalyticsDashboard: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Análises de Perfil e Localização */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <BusinessProfileDistribution />
-        <LocationScoreChart />
-      </div>
+      {/* Análise de Perfil de Cliente */}
+      <BusinessProfileDistribution />
 
       {/* Insights Estratégicos */}
       <Card>
