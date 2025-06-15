@@ -1,6 +1,7 @@
 import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento, Pet, Atendente, AtribuirAtendimentoRequest, StatusAtendimentoResponse } from '@/types';
 import { mockItensDeVenda, mockPlanos, mockTutores, mockAtendimentos, mockPets, mockAtendentes } from './mockData';
 import { NotificationService } from '@/services/NotificationService';
+import { supabase } from '@/services/supabase';
 
 // Simula delay de API
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -594,4 +595,31 @@ export class PetMemorialAPI {
       clicksVenda: 47 // Mantendo compatibilidade com o dashboard existente
     };
   }
+
+  /**
+   * Buscar todos os tutores
+   */
+  static async getTutores(): Promise<Tutor[]> {
+    try {
+      console.log('👥 Buscando tutores...');
+      
+      const { data, error } = await supabase
+        .from('tutores')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Erro ao buscar tutores:', error);
+        throw error;
+      }
+
+      console.log(`✅ ${data?.length || 0} tutores encontrados`);
+      return data || [];
+    } catch (error) {
+      console.error('❌ Erro na busca de tutores:', error);
+      throw error;
+    }
+  }
 }
+
+export default PetMemorialAPI;

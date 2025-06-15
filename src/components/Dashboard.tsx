@@ -7,6 +7,7 @@ import { CalendarDays, Users, MousePointer, TrendingUp, DollarSign, Target, Cloc
 import { getDashboardAnalytics } from '@/api/analytics';
 import { AdvancedMetrics } from './AdvancedMetrics';
 import { InsightsPanel } from './InsightsPanel';
+import { HeatmapVisualization } from './HeatmapVisualization';
 
 const COLORS = ['#550c74', '#7c2d9e', '#a855f7', '#c084fc', '#ddd6fe'];
 
@@ -149,6 +150,9 @@ export const Dashboard: React.FC = () => {
 
       {/* Métricas Avançadas */}
       <AdvancedMetrics analytics={{ summary, insights }} />
+
+      {/* Mapa de Calor - Nova seção */}
+      <HeatmapVisualization />
 
       {/* Gráficos Principais */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
