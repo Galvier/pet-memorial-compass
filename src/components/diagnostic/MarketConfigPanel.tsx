@@ -35,6 +35,7 @@ import {
   DiscrepancyExplanation, 
   CategoryExplanation 
 } from './MarketExplanations';
+import { AIAssistantCard } from './AIAssistantCard';
 
 interface BairroMultiplier {
   id: string;
@@ -206,6 +207,40 @@ export const MarketConfigPanel: React.FC = () => {
     }
   };
 
+  const updateBairroFactor = async (bairroId: string, nomeBairro: string, newFactor: number) => {
+    try {
+      const success = await BairrosMontesService.updateBairroData(nomeBairro, {
+        fator_imobiliario: newFactor
+      });
+
+      if (success) {
+        const updatedBairros = bairros.map(b => 
+          b.id === bairroId ? { ...b, fator_imobiliario: newFactor } : b
+        );
+        setBairros(updatedBairros);
+        calculateMarketStats(updatedBairros, parseFloat(basePrice));
+        
+        toast({
+          title: "Fator Atualizado",
+          description: `Fator de ${nomeBairro} atualizado para ${newFactor}x`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar fator do bairro",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAISuggestionApplied = (bairroNome: string, newFactor: number) => {
+    const bairro = bairros.find(b => b.nome_bairro === bairroNome);
+    if (bairro) {
+      updateBairroFactor(bairro.id, bairroNome, newFactor);
+    }
+  };
+
   const runSimulationTest = async () => {
     setLoading(true);
     try {
@@ -286,7 +321,7 @@ export const MarketConfigPanel: React.FC = () => {
             Configurações de Mercado
           </h2>
           <p className="text-muted-foreground mt-1">
-            Sistema de simulação inteligente para análise imobiliária
+            Sistema de simulação inteligente para análise imobiliária com IA
           </p>
         </div>
         <div className="flex gap-2">
@@ -300,6 +335,13 @@ export const MarketConfigPanel: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Assistente de IA - Nova seção */}
+      <AIAssistantCard
+        bairros={bairros}
+        basePrice={parseFloat(basePrice)}
+        onSuggestionApplied={handleAISuggestionApplied}
+      />
 
       {/* Origem dos Dados */}
       <Card className="border-green-200 bg-green-50/30">
@@ -723,7 +765,25 @@ export const MarketConfigPanel: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <Label htmlFor={`factor-${bairro.id}`} className="text-sm">Fator/Multiplicador</Label>
+                      <Input
+                        id={`factor-${bairro.id}`}
+                        type="number"
+                        value={bairro.fator_imobiliario}
+                        onChange={(e) => {
+                          const newFactor = parseFloat(e.target.value);
+                          if (!isNaN(newFactor) && newFactor > 0) {
+                            updateBairroFactor(bairro.id, bairro.nome_bairro, newFactor);
+                          }
+                        }}
+                        className="w-24"
+                        min="0.5"
+                        max="2.0"
+                        step="0.05"
+                      />
+                    </div>
                     <div className="text-right">
                       <Label htmlFor={`price-${bairro.id}`} className="text-sm">Preço Manual/m²</Label>
                       <Input
