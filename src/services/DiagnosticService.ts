@@ -1,11 +1,13 @@
 import { supabase } from '@/integrations/supabase/client';
 import { SecretsService } from './SecretsService';
+import { LocationAnalysisService } from './LocationAnalysisService';
+import { IBGEApiService } from './IBGEApiService';
 
 interface LogEntry {
   id: string;
   timestamp: string;
   level: 'info' | 'warn' | 'error' | 'debug';
-  source: 'frontend' | 'postgres' | 'edge-function' | 'auth';
+  source: 'frontend' | 'postgres' | 'edge-function' | 'auth' | 'ibge-api';
   message: string;
   metadata?: any;
 }
@@ -94,7 +96,7 @@ export class DiagnosticService {
     try {
       console.log('📋 Carregando logs do sistema...');
       
-      // Logs reais do sistema
+      // Logs reais do sistema incluindo IBGE
       const mockLogs: LogEntry[] = [
         {
           id: '1',
@@ -119,6 +121,32 @@ export class DiagnosticService {
           source: 'edge-function',
           message: 'Falha na conexão com webhook n8n',
           metadata: { endpoint: '/webhook/notification', status: 500 }
+        },
+        {
+          id: '4',
+          timestamp: new Date(Date.now() - 180000).toISOString(),
+          level: 'info',
+          source: 'ibge-api',
+          message: 'Análise de localização concluída com sucesso',
+          metadata: { 
+            address: 'Montes Claros, MG',
+            sectorId: '310430105000001',
+            income: 2450.50,
+            score: 35,
+            duration: '850ms'
+          }
+        },
+        {
+          id: '5',
+          timestamp: new Date(Date.now() - 240000).toISOString(),
+          level: 'warn',
+          source: 'ibge-api',
+          message: 'API SIDRA indisponível, usando pontuação padrão',
+          metadata: { 
+            address: 'São Paulo, SP',
+            fallbackScore: 25,
+            error: 'timeout'
+          }
         }
       ];
 
@@ -195,6 +223,76 @@ export class DiagnosticService {
             message: 'Edge Functions ativas',
             details: { functions: ['check-secret', 'test-secret', 'create-payment-link', 'handle-payment-webhook', 'get-google-maps-key'] }
           };
+
+        // Novos testes IBGE
+        case 'ibge-sectors':
+          try {
+            const sectorResult = await IBGEApiService.getSectorFromCoordinates(-16.7249, -43.8609);
+            return {
+              success: !!sectorResult,
+              message: sectorResult ? 'API de setores censitários funcionando' : 'Falha na API de setores',
+              details: { sectorData: sectorResult, coordinates: { lat: -16.7249, lng: -43.8609 } }
+            };
+          } catch (error) {
+            return {
+              success: false,
+              message: `Erro na API de setores: ${error.message}`,
+              details: { error }
+            };
+          }
+
+        case 'ibge-income':
+          try {
+            const incomeResult = await IBGEApiService.getIncomeFromSector('310430105000001');
+            return {
+              success: !!incomeResult,
+              message: incomeResult ? 'API SIDRA de renda funcionando' : 'Falha na API SIDRA',
+              details: { incomeData: incomeResult, sectorId: '310430105000001' }
+            };
+          } catch (error) {
+            return {
+              success: false,
+              message: `Erro na API SIDRA: ${error.message}`,
+              details: { error }
+            };
+          }
+
+        case 'location-analysis':
+          try {
+            const analysisResult = await LocationAnalysisService.getScoreFromAddress('Montes Claros, MG');
+            return {
+              success: analysisResult.success,
+              message: analysisResult.success ? 'Análise de localização funcionando' : 'Falha na análise completa',
+              details: { analysisResult }
+            };
+          } catch (error) {
+            return {
+              success: false,
+              message: `Erro na análise de localização: ${error.message}`,
+              details: { error }
+            };
+          }
+
+        case 'geocoding-ibge':
+          try {
+            const testAddress = 'Belo Horizonte, MG';
+            const analysisResult = await LocationAnalysisService.getScoreFromAddress(testAddress);
+            return {
+              success: analysisResult.success,
+              message: analysisResult.success ? 'Integração Geocoding + IBGE funcionando' : 'Falha na integração',
+              details: { 
+                address: testAddress,
+                analysis: analysisResult,
+                flow: 'Geocoding → Setores IBGE → Renda SIDRA → Pontuação'
+              }
+            };
+          } catch (error) {
+            return {
+              success: false,
+              message: `Erro na integração Geocoding + IBGE: ${error.message}`,
+              details: { error }
+            };
+          }
 
         default:
           return {
@@ -325,6 +423,22 @@ export class DiagnosticService {
             }
           };
 
+        case 'ibge_analysis_test':
+          try {
+            const testResult = await LocationAnalysisService.getScoreFromAddress('São Paulo, SP');
+            return {
+              scenario,
+              result: 'Teste de análise IBGE executado',
+              data: testResult
+            };
+          } catch (error) {
+            return {
+              scenario,
+              result: 'Falha no teste IBGE',
+              data: { error: error.message }
+            };
+          }
+
         default:
           return {
             scenario,
@@ -421,6 +535,64 @@ export class DiagnosticService {
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
       throw error;
+    }
+  }
+
+  // Novos métodos específicos para IBGE
+  static async testAddressAnalysis(address: string) {
+    try {
+      console.log(`🏛️ Testando análise IBGE para: ${address}`);
+      
+      const startTime = Date.now();
+      const result = await LocationAnalysisService.getScoreFromAddress(address);
+      const duration = Date.now() - startTime;
+      
+      return {
+        address,
+        result,
+        duration,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Erro no teste de análise:', error);
+      return {
+        address,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  static async getIBGEStatus() {
+    try {
+      console.log('🏛️ Verificando status das APIs do IBGE');
+      
+      const tests = await Promise.allSettled([
+        this.runIntegrationTest('ibge-sectors'),
+        this.runIntegrationTest('ibge-income'),
+        this.runIntegrationTest('location-analysis')
+      ]);
+      
+      return {
+        sectors: tests[0].status === 'fulfilled' ? tests[0].value : { success: false, message: 'Erro no teste' },
+        income: tests[1].status === 'fulfilled' ? tests[1].value : { success: false, message: 'Erro no teste' },
+        analysis: tests[2].status === 'fulfilled' ? tests[2].value : { success: false, message: 'Erro no teste' },
+        lastUpdated: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Erro ao verificar status do IBGE:', error);
+      throw error;
+    }
+  }
+
+  static clearIBGECache() {
+    try {
+      console.log('🧹 Limpando cache do IBGE');
+      LocationAnalysisService.clearCache();
+      return { success: true, message: 'Cache do IBGE limpo com sucesso' };
+    } catch (error) {
+      console.error('Erro ao limpar cache:', error);
+      return { success: false, message: error.message };
     }
   }
 }

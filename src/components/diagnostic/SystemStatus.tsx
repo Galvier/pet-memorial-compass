@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Database, Server, Globe, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { RefreshCw, Database, Server, Globe, CheckCircle, XCircle, AlertCircle, MapPin } from 'lucide-react';
 import { DiagnosticService } from '@/services/DiagnosticService';
 
 interface SystemHealth {
@@ -14,17 +14,30 @@ interface SystemHealth {
   lastUpdated: string;
 }
 
+interface IBGEStatus {
+  sectors: { success: boolean; message: string };
+  income: { success: boolean; message: string };
+  analysis: { success: boolean; message: string };
+  lastUpdated: string;
+}
+
 export const SystemStatus: React.FC = () => {
   const [health, setHealth] = useState<SystemHealth | null>(null);
+  const [ibgeStatus, setIBGEStatus] = useState<IBGEStatus | null>(null);
   const [loading, setLoading] = useState(false);
 
   const checkSystemHealth = async () => {
     setLoading(true);
     try {
       console.log('🔍 Iniciando verificação de saúde do sistema...');
-      const healthStatus = await DiagnosticService.checkSystemHealth();
+      const [healthStatus, ibgeStatusData] = await Promise.all([
+        DiagnosticService.checkSystemHealth(),
+        DiagnosticService.getIBGEStatus()
+      ]);
+      
       setHealth(healthStatus);
-      console.log('✅ Verificação de saúde concluída:', healthStatus);
+      setIBGEStatus(ibgeStatusData);
+      console.log('✅ Verificação de saúde concluída:', { healthStatus, ibgeStatusData });
     } catch (error) {
       console.error('❌ Erro ao verificar saúde do sistema:', error);
     } finally {
@@ -39,17 +52,26 @@ export const SystemStatus: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'healthy':
+      case true:
         return <CheckCircle className="h-5 w-5 text-green-500" />;
       case 'warning':
         return <AlertCircle className="h-5 w-5 text-yellow-500" />;
       case 'error':
+      case false:
         return <XCircle className="h-5 w-5 text-red-500" />;
       default:
         return <AlertCircle className="h-5 w-5 text-gray-500" />;
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | boolean) => {
+    let normalizedStatus: string;
+    if (typeof status === 'boolean') {
+      normalizedStatus = status ? 'healthy' : 'error';
+    } else {
+      normalizedStatus = status;
+    }
+
     const variants = {
       healthy: 'default',
       warning: 'secondary',
@@ -63,8 +85,8 @@ export const SystemStatus: React.FC = () => {
     };
     
     return (
-      <Badge variant={variants[status as keyof typeof variants] || 'outline'}>
-        {labels[status as keyof typeof labels] || 'Desconhecido'}
+      <Badge variant={variants[normalizedStatus as keyof typeof variants] || 'outline'}>
+        {labels[normalizedStatus as keyof typeof labels] || 'Desconhecido'}
       </Badge>
     );
   };
@@ -133,6 +155,54 @@ export const SystemStatus: React.FC = () => {
         </Card>
       </div>
 
+      {/* Card específico para IBGE */}
+      {ibgeStatus && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-800">
+              <MapPin className="h-5 w-5" />
+              Status das APIs do IBGE
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-blue-700">Setores Censitários</p>
+                <div className="flex items-center space-x-2">
+                  {getStatusIcon(ibgeStatus.sectors.success)}
+                  {getStatusBadge(ibgeStatus.sectors.success)}
+                </div>
+                <p className="text-xs text-blue-600">{ibgeStatus.sectors.message}</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-blue-700">API SIDRA (Renda)</p>
+                <div className="flex items-center space-x-2">
+                  {getStatusIcon(ibgeStatus.income.success)}
+                  {getStatusBadge(ibgeStatus.income.success)}
+                </div>
+                <p className="text-xs text-blue-600">{ibgeStatus.income.message}</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-blue-700">Análise Completa</p>
+                <div className="flex items-center space-x-2">
+                  {getStatusIcon(ibgeStatus.analysis.success)}
+                  {getStatusBadge(ibgeStatus.analysis.success)}
+                </div>
+                <p className="text-xs text-blue-600">{ibgeStatus.analysis.message}</p>
+              </div>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-blue-200">
+              <p className="text-xs text-blue-600">
+                Última verificação: {new Date(ibgeStatus.lastUpdated).toLocaleString('pt-BR')}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {health && (
         <Card>
           <CardHeader>
@@ -151,6 +221,7 @@ export const SystemStatus: React.FC = () => {
                     <li>✅ Mapa de calor de clientes</li>
                     <li>✅ Sistema de pagamentos</li>
                     <li>✅ Notificações WhatsApp</li>
+                    <li>✅ Análise IBGE automática</li>
                   </ul>
                 </div>
                 <div>
@@ -158,6 +229,7 @@ export const SystemStatus: React.FC = () => {
                   <ul className="text-sm space-y-1">
                     <li>📡 n8n Webhooks</li>
                     <li>🗺️ Google Maps Geocoding</li>
+                    <li>🏛️ IBGE APIs (Setores + SIDRA)</li>
                     <li>💳 Stripe Payments</li>
                     <li>📱 WhatsApp API</li>
                   </ul>

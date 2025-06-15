@@ -20,6 +20,10 @@ export const IntegrationTests: React.FC = () => {
     { id: 'supabase', name: 'Conexão Supabase', status: 'pending' },
     { id: 'google-maps', name: 'Google Maps API', status: 'pending' },
     { id: 'geocoding', name: 'Serviço de Geocodificação', status: 'pending' },
+    { id: 'ibge-sectors', name: 'IBGE - Setores Censitários', status: 'pending' },
+    { id: 'ibge-income', name: 'IBGE - API SIDRA (Renda)', status: 'pending' },
+    { id: 'location-analysis', name: 'Análise Completa de Localização', status: 'pending' },
+    { id: 'geocoding-ibge', name: 'Integração Geocoding + IBGE', status: 'pending' },
     { id: 'n8n-webhook', name: 'Webhook n8n', status: 'pending' },
     { id: 'whatsapp', name: 'NotificationService WhatsApp', status: 'pending' },
     { id: 'stripe', name: 'Pagamentos Stripe', status: 'pending' },
@@ -64,6 +68,17 @@ export const IntegrationTests: React.FC = () => {
     }
   };
 
+  const runIBGETests = async () => {
+    const ibgeTests = tests.filter(test => 
+      test.id.includes('ibge') || test.id === 'location-analysis' || test.id === 'geocoding-ibge'
+    );
+    
+    for (const test of ibgeTests) {
+      await runTest(test.id);
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'success':
@@ -99,75 +114,109 @@ export const IntegrationTests: React.FC = () => {
     );
   };
 
+  const getTestCategory = (testId: string) => {
+    if (testId.includes('ibge') || testId === 'location-analysis' || testId === 'geocoding-ibge') {
+      return 'IBGE';
+    }
+    if (testId === 'supabase') return 'Database';
+    if (testId.includes('google') || testId === 'geocoding') return 'Maps';
+    if (testId === 'stripe') return 'Payments';
+    if (testId.includes('n8n') || testId === 'whatsapp') return 'Notifications';
+    return 'System';
+  };
+
+  // Agrupar testes por categoria
+  const testsByCategory = tests.reduce((acc, test) => {
+    const category = getTestCategory(test.id);
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(test);
+    return acc;
+  }, {} as Record<string, TestResult[]>);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Testes de Integração</h2>
-        <Button onClick={runAllTests} className="flex items-center gap-2">
-          <PlayCircle className="h-4 w-4" />
-          Executar Todos os Testes
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={runIBGETests} variant="outline" className="flex items-center gap-2">
+            <PlayCircle className="h-4 w-4" />
+            Testar IBGE
+          </Button>
+          <Button onClick={runAllTests} className="flex items-center gap-2">
+            <PlayCircle className="h-4 w-4" />
+            Executar Todos
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {tests.map((test) => (
-          <Card key={test.id}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-base">{test.name}</CardTitle>
-              {getStatusIcon(test.status)}
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  {getStatusBadge(test.status)}
-                  {test.duration && (
-                    <span className="text-sm text-muted-foreground">
-                      {test.duration}ms
-                    </span>
-                  )}
-                </div>
+      {Object.entries(testsByCategory).map(([category, categoryTests]) => (
+        <Card key={category}>
+          <CardHeader>
+            <CardTitle className="text-lg">{category}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {categoryTests.map((test) => (
+                <Card key={test.id} className="border-2">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-base">{test.name}</CardTitle>
+                    {getStatusIcon(test.status)}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        {getStatusBadge(test.status)}
+                        {test.duration && (
+                          <span className="text-sm text-muted-foreground">
+                            {test.duration}ms
+                          </span>
+                        )}
+                      </div>
 
-                {test.message && (
-                  <p className={`text-sm ${test.status === 'error' ? 'text-red-600' : 'text-green-600'}`}>
-                    {test.message}
-                  </p>
-                )}
+                      {test.message && (
+                        <p className={`text-sm ${test.status === 'error' ? 'text-red-600' : 'text-green-600'}`}>
+                          {test.message}
+                        </p>
+                      )}
 
-                {test.details && (
-                  <details className="text-xs">
-                    <summary className="cursor-pointer text-muted-foreground">
-                      Detalhes do teste
-                    </summary>
-                    <pre className="mt-2 bg-gray-100 p-2 rounded overflow-x-auto">
-                      {JSON.stringify(test.details, null, 2)}
-                    </pre>
-                  </details>
-                )}
+                      {test.details && (
+                        <details className="text-xs">
+                          <summary className="cursor-pointer text-muted-foreground">
+                            Detalhes do teste
+                          </summary>
+                          <pre className="mt-2 bg-gray-100 p-2 rounded overflow-x-auto max-h-32">
+                            {JSON.stringify(test.details, null, 2)}
+                          </pre>
+                        </details>
+                      )}
 
-                <Button 
-                  onClick={() => runTest(test.id)} 
-                  disabled={test.status === 'running'}
-                  variant="outline" 
-                  size="sm"
-                  className="w-full"
-                >
-                  {test.status === 'running' ? (
-                    <>
-                      <Clock className="h-4 w-4 mr-2 animate-spin" />
-                      Executando...
-                    </>
-                  ) : (
-                    <>
-                      <PlayCircle className="h-4 w-4 mr-2" />
-                      Executar Teste
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                      <Button 
+                        onClick={() => runTest(test.id)} 
+                        disabled={test.status === 'running'}
+                        variant="outline" 
+                        size="sm"
+                        className="w-full"
+                      >
+                        {test.status === 'running' ? (
+                          <>
+                            <Clock className="h-4 w-4 mr-2 animate-spin" />
+                            Executando...
+                          </>
+                        ) : (
+                          <>
+                            <PlayCircle className="h-4 w-4 mr-2" />
+                            Executar Teste
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };

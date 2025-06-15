@@ -11,11 +11,13 @@ import {
   CreditCard, 
   Database,
   CheckCircle,
-  RefreshCw
+  RefreshCw,
+  MapPin
 } from 'lucide-react';
 import { IntegrationCard } from './IntegrationCard';
 import { SecretKeyForm } from './SecretKeyForm';
 import { N8nConfig } from './N8nConfig';
+import { IBGEConfig } from './IBGEConfig';
 import { SecretsService } from '@/services/SecretsService';
 import { DiagnosticService } from '@/services/DiagnosticService';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +35,7 @@ export const IntegrationsConfig: React.FC = () => {
     { id: 'google-maps', name: 'Google Maps API', status: 'disconnected', configured: false },
     { id: 'stripe', name: 'Stripe Payments', status: 'disconnected', configured: false },
     { id: 'n8n-webhook', name: 'n8n WhatsApp Webhook', status: 'disconnected', configured: false },
+    { id: 'ibge-apis', name: 'IBGE APIs', status: 'connected', configured: true },
     { id: 'supabase', name: 'Supabase Database', status: 'connected', configured: true }
   ]);
 
@@ -54,7 +57,11 @@ export const IntegrationsConfig: React.FC = () => {
       const stripeExists = await SecretsService.checkSecretExists('STRIPE_SECRET_KEY');
       const n8nExists = await SecretsService.checkSecretExists('N8N_WEBHOOK_URL');
       
-      console.log('📊 Status dos secrets:', { googleMapsExists, stripeExists, n8nExists });
+      // Testar IBGE
+      const ibgeStatus = await DiagnosticService.getIBGEStatus();
+      const ibgeHealthy = ibgeStatus.sectors.success && ibgeStatus.income.success;
+      
+      console.log('📊 Status dos secrets:', { googleMapsExists, stripeExists, n8nExists, ibgeHealthy });
       
       // Atualizar status baseado na existência das chaves
       setIntegrations(prev => prev.map(integration => {
@@ -76,6 +83,12 @@ export const IntegrationsConfig: React.FC = () => {
               ...integration,
               configured: n8nExists,
               status: n8nExists ? 'warning' : 'disconnected'
+            };
+          case 'ibge-apis':
+            return {
+              ...integration,
+              configured: true,
+              status: ibgeHealthy ? 'connected' : 'warning'
             };
           default:
             return integration;
@@ -112,6 +125,9 @@ export const IntegrationsConfig: React.FC = () => {
           break;
         case 'n8n-webhook':
           result = await SecretsService.testSecret('N8N_WEBHOOK_URL', 'n8n-webhook');
+          break;
+        case 'ibge-apis':
+          result = await DiagnosticService.runIntegrationTest('location-analysis');
           break;
         default:
           result = await DiagnosticService.runIntegrationTest(integrationId);
@@ -163,11 +179,12 @@ export const IntegrationsConfig: React.FC = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="google-maps">Google Maps</TabsTrigger>
           <TabsTrigger value="stripe">Stripe</TabsTrigger>
           <TabsTrigger value="n8n">n8n</TabsTrigger>
+          <TabsTrigger value="ibge">IBGE</TabsTrigger>
           <TabsTrigger value="supabase">Supabase</TabsTrigger>
         </TabsList>
 
@@ -188,7 +205,7 @@ export const IntegrationsConfig: React.FC = () => {
                     configured={integration.configured}
                     lastTested={integration.lastTested}
                     onTest={testIntegration}
-                    onConfigure={(id) => setActiveTab(id === 'n8n-webhook' ? 'n8n' : id)}
+                    onConfigure={(id) => setActiveTab(id === 'n8n-webhook' ? 'n8n' : id === 'ibge-apis' ? 'ibge' : id)}
                     isLoading={loading}
                   />
                 ))}
@@ -225,6 +242,10 @@ export const IntegrationsConfig: React.FC = () => {
 
         <TabsContent value="n8n" className="space-y-4">
           <N8nConfig />
+        </TabsContent>
+
+        <TabsContent value="ibge" className="space-y-4">
+          <IBGEConfig />
         </TabsContent>
 
         <TabsContent value="supabase" className="space-y-4">
@@ -269,6 +290,8 @@ function getIntegrationIcon(id: string) {
       return <CreditCard className="h-4 w-4" />;
     case 'n8n-webhook':
       return <MessageCircle className="h-4 w-4" />;
+    case 'ibge-apis':
+      return <MapPin className="h-4 w-4" />;
     case 'supabase':
       return <Database className="h-4 w-4" />;
     default:
