@@ -1,4 +1,3 @@
-
 export interface Tutor {
   tutor_id: number;
   id_whatsapp: string;
@@ -104,4 +103,59 @@ export interface AtribuirAtendimentoRequest {
 export interface StatusAtendimentoResponse {
   status: 'BOT_ATIVO' | 'AGUARDANDO_NA_FILA' | 'ATRIBUIDO_HUMANO' | 'FINALIZADO';
   atendente?: Atendente;
+}
+
+// Novos tipos para análise IBGE
+export interface LocationAnalysis {
+  address: string;
+  coordinates: { lat: number; lng: number } | null;
+  sectorData: {
+    id: string;
+    name: string;
+    municipio: string;
+    uf: string;
+  } | null;
+  incomeData: {
+    averageIncome: number;
+    populationCount: number;
+    dataYear: number;
+  } | null;
+  score: number;
+  scoreReason: string;
+  analysisDate: string;
+  success: boolean;
+}
+
+export interface PerfilAnalysis {
+  profissionScore: number;
+  profissionReason: string;
+  localizacaoScore: number;
+  localizacaoAnalysis: LocationAnalysis;
+  totalScore: number;
+  perfilCalculado: 'Padrão' | 'Intermediário' | 'Luxo';
+  calculationDate: string;
+}
+
+export interface IBGESectorData {
+  id: string;
+  name: string;
+  municipio: string;
+  uf: string;
+}
+
+export interface IBGEIncomeData {
+  sectorId: string;
+  averageIncome: number;
+  populationCount: number;
+  dataYear: number;
+}
+
+// Atualizar interface Tutor para incluir análise detalhada
+export interface TutorEnhanced extends Tutor {
+  perfilAnalysis?: PerfilAnalysis;
+}
+
+// Atualizar interface Atendimento para incluir análise detalhada
+export interface AtendimentoEnhanced extends Atendimento {
+  tutor?: TutorEnhanced;
 }

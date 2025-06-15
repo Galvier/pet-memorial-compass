@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -128,10 +127,14 @@ export const AtendimentoDetail: React.FC = () => {
         />
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <PetInfo pet={atendimento.pet} />
-        <TutorInfo tutor={atendimento.tutor} />
-        <AtendimentoInfo atendimento={atendimento} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <PetInfo pet={atendimento.pet} />
+          <AtendimentoInfo atendimento={atendimento} />
+        </div>
+        <div className="space-y-6">
+          <TutorInfo tutor={atendimento.tutor} />
+        </div>
       </div>
 
       {/* Seção de Pagamento */}
