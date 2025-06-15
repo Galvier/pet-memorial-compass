@@ -1,15 +1,13 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { navItems } from "./nav-items";
 import Index from "./pages/Index";
-import Planos from "./pages/Planos";
-import Itens from "./pages/Itens";
-import Atendimentos from "./pages/Atendimentos";
-import AtendimentoDetailPage from "./pages/AtendimentoDetail";
-import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import FilaAtendimentos from "./pages/FilaAtendimentos";
 
 const queryClient = new QueryClient();
 
@@ -17,15 +15,29 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <Sonner />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/planos" element={<Planos />} />
-          <Route path="/itens" element={<Itens />} />
-          <Route path="/atendimentos" element={<Atendimentos />} />
-          <Route path="/atendimentos/:id" element={<AtendimentoDetailPage />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="/auth" element={<Auth />} />
+          {navItems.map(({ to, page }) => (
+            <Route
+              key={to}
+              path={to}
+              element={
+                <ProtectedRoute>
+                  {page}
+                </ProtectedRoute>
+              }
+            />
+          ))}
+          <Route 
+            path="/fila-atendimentos" 
+            element={
+              <ProtectedRoute>
+                <FilaAtendimentos />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

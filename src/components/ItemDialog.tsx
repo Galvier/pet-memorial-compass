@@ -1,190 +1,127 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PetMemorialAPI } from '@/lib/api';
+import { Textarea } from '@/components/ui/textarea';
 import { ItemDeVenda } from '@/types';
-import { useToast } from '@/hooks/use-toast';
 
 interface ItemDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  item: ItemDeVenda | null;
-  onSave: () => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (item: ItemDeVenda | Omit<ItemDeVenda, 'item_id'>) => void;
+  item?: ItemDeVenda;
 }
 
 export const ItemDialog: React.FC<ItemDialogProps> = ({
-  open,
-  onOpenChange,
-  item,
-  onSave
+  isOpen,
+  onClose,
+  onSubmit,
+  item
 }) => {
   const [formData, setFormData] = useState({
-    nome: '',
-    descricao: '',
-    preco: '',
-    categoria: 'Cremação' as ItemDeVenda['categoria'],
-    perfil_afinidade: 'Padrão' as ItemDeVenda['perfil_afinidade']
+    nome_item: item?.nome_item || '',
+    descricao: item?.descricao || '',
+    preco: item?.preco || 0,
+    categoria: item?.categoria || '',
+    perfil_indicado: item?.perfil_indicado || 'Padrão' as 'Padrão' | 'Intermediário' | 'Luxo'
   });
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
-  useEffect(() => {
-    if (item) {
-      setFormData({
-        nome: item.nome,
-        descricao: item.descricao,
-        preco: item.preco.toString(),
-        categoria: item.categoria,
-        perfil_afinidade: item.perfil_afinidade
-      });
-    } else {
-      setFormData({
-        nome: '',
-        descricao: '',
-        preco: '',
-        categoria: 'Cremação',
-        perfil_afinidade: 'Padrão'
-      });
-    }
-  }, [item, open]);
+  const handleChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.nome || !formData.preco) {
-      toast({
-        title: "Erro",
-        description: "Nome e preço são obrigatórios.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const precoNumber = parseFloat(formData.preco);
-    if (isNaN(precoNumber) || precoNumber <= 0) {
-      toast({
-        title: "Erro",
-        description: "Preço deve ser um número válido maior que zero.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const itemData = {
-        nome: formData.nome,
+    if (item) {
+      // Editando item existente
+      onSubmit({
+        item_id: item.item_id,
+        nome_item: formData.nome_item,
+        nome: formData.nome_item, // Alias para compatibilidade
         descricao: formData.descricao,
-        preco: precoNumber,
+        preco: formData.preco,
         categoria: formData.categoria,
-        perfil_afinidade: formData.perfil_afinidade
-      };
-
-      if (item) {
-        await PetMemorialAPI.updateItemDeVenda({
-          ...itemData,
-          item_id: item.item_id
-        });
-        toast({
-          title: "Sucesso",
-          description: "Item atualizado com sucesso."
-        });
-      } else {
-        await PetMemorialAPI.createItemDeVenda(itemData);
-        toast({
-          title: "Sucesso",
-          description: "Item criado com sucesso."
-        });
-      }
-      
-      onSave();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar o item.",
-        variant: "destructive"
+        perfil_indicado: formData.perfil_indicado,
+        perfil_afinidade: formData.perfil_indicado // Alias para compatibilidade
       });
-    } finally {
-      setLoading(false);
+    } else {
+      // Criando novo item
+      onSubmit({
+        nome_item: formData.nome_item,
+        nome: formData.nome_item, // Alias para compatibilidade
+        descricao: formData.descricao,
+        preco: formData.preco,
+        categoria: formData.categoria,
+        perfil_indicado: formData.perfil_indicado,
+        perfil_afinidade: formData.perfil_indicado // Alias para compatibilidade
+      });
     }
+    
+    onClose();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[#04422c]">
+          <DialogTitle>
             {item ? 'Editar Item' : 'Novo Item'}
           </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nome">Nome do Item *</Label>
+          <div>
+            <Label htmlFor="nome_item">Nome do Item</Label>
             <Input
-              id="nome"
-              value={formData.nome}
-              onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-              placeholder="Digite o nome do item"
+              id="nome_item"
+              value={formData.nome_item}
+              onChange={(e) => handleChange('nome_item', e.target.value)}
               required
             />
           </div>
 
-          <div className="space-y-2">
+          <div>
             <Label htmlFor="descricao">Descrição</Label>
             <Textarea
               id="descricao"
               value={formData.descricao}
-              onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-              placeholder="Digite a descrição do item"
-              rows={3}
+              onChange={(e) => handleChange('descricao', e.target.value)}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="preco">Preço (R$) *</Label>
-              <Input
-                id="preco"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.preco}
-                onChange={(e) => setFormData(prev => ({ ...prev, preco: e.target.value }))}
-                placeholder="0,00"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Categoria</Label>
-              <Select
-                value={formData.categoria}
-                onValueChange={(value: any) => setFormData(prev => ({ ...prev, categoria: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cremação">Cremação</SelectItem>
-                  <SelectItem value="Urna">Urna</SelectItem>
-                  <SelectItem value="Acessório">Acessório</SelectItem>
-                  <SelectItem value="Cerimônia">Cerimônia</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="preco">Preço</Label>
+            <Input
+              id="preco"
+              type="number"
+              step="0.01"
+              value={formData.preco}
+              onChange={(e) => handleChange('preco', parseFloat(e.target.value))}
+              required
+            />
           </div>
 
-          <div className="space-y-2">
-            <Label>Perfil de Afinidade</Label>
+          <div>
+            <Label htmlFor="categoria">Categoria</Label>
+            <Input
+              id="categoria"
+              value={formData.categoria}
+              onChange={(e) => handleChange('categoria', e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="perfil_indicado">Perfil Indicado</Label>
             <Select
-              value={formData.perfil_afinidade}
-              onValueChange={(value: any) => setFormData(prev => ({ ...prev, perfil_afinidade: value }))}
+              value={formData.perfil_indicado}
+              onValueChange={(value) => handleChange('perfil_indicado', value)}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -197,21 +134,12 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
             </Select>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
-              disabled={loading}
-              className="bg-[#04422c] hover:bg-[#04422c]/90"
-            >
-              {loading ? 'Salvando...' : 'Salvar'}
+            <Button type="submit">
+              {item ? 'Salvar' : 'Criar'}
             </Button>
           </div>
         </form>

@@ -208,10 +208,10 @@ export const ItensDeVendaList: React.FC = () => {
       )}
 
       <ItemDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        isOpen={dialogOpen}
+        onClose={() => setDialogOpen(false)}
         item={editingItem}
-        onSave={handleSave}
+        onSubmit={handleSave}
       />
     </div>
   );

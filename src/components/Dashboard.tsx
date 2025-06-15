@@ -1,43 +1,61 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { CalendarDays, Users, MousePointer, TrendingUp } from 'lucide-react';
-import { PetMemorialAPI } from '@/lib/api';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { CalendarDays, Users, MousePointer, TrendingUp, DollarSign, Target, Clock, Award } from 'lucide-react';
+import { getDashboardAnalytics } from '@/api/analytics';
+import { AdvancedMetrics } from './AdvancedMetrics';
+import { InsightsPanel } from './InsightsPanel';
+import { HeatmapVisualization } from './HeatmapVisualization';
+
+const COLORS = ['#550c74', '#7c2d9e', '#a855f7', '#c084fc', '#ddd6fe'];
 
 export const Dashboard: React.FC = () => {
-  const [stats, setStats] = useState({
-    atendimentosHoje: 0,
-    totalClientes: 0,
-    clicksVenda: 0,
+  const [dashboardData, setDashboardData] = useState({
+    summary: {
+      totalAtendimentos: 0,
+      atendimentosHoje: 0,
+      atendimentosMes: 0,
+      taxaConversao: '0%',
+      ticketMedio: 0,
+      tempoMedioAtendimento: '0min',
+      satisfacaoCliente: '0/5',
+      atendimentosEmAndamento: 0
+    },
+    charts: {
+      atendimentosPorDia: [],
+      produtosMaisVendidos: [],
+      performanceAtendentes: [],
+      distribuicaoTipos: []
+    },
+    insights: {
+      melhorAtendente: 'N/A',
+      picoAtendimento: 'N/A',
+      produtoDestaque: 'N/A',
+      recomendacoes: []
+    },
     atendimentosRecentes: []
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const data = await PetMemorialAPI.getDashboardStats();
-        setStats(data);
+        const data = await getDashboardAnalytics();
+        setDashboardData({
+          ...data,
+          atendimentosRecentes: [] // Manter vazio por agora
+        });
       } catch (error) {
-        console.error('Erro ao carregar estatísticas:', error);
+        console.error('Erro ao carregar dados do dashboard:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStats();
+    fetchDashboardData();
   }, []);
-
-  const chartData = [
-    { name: 'Seg', atendimentos: 4 },
-    { name: 'Ter', atendimentos: 3 },
-    { name: 'Qua', atendimentos: 6 },
-    { name: 'Qui', atendimentos: 8 },
-    { name: 'Sex', atendimentos: 5 },
-    { name: 'Sáb', atendimentos: 7 },
-    { name: 'Dom', atendimentos: 2 },
-  ];
 
   if (loading) {
     return (
@@ -56,91 +74,102 @@ export const Dashboard: React.FC = () => {
     );
   }
 
+  const { summary, charts, insights } = dashboardData;
+
   return (
     <div className="space-y-4 lg:space-y-6">
       <div className="text-center lg:text-left">
-        <h1 className="text-2xl lg:text-3xl font-bold text-purple-primary mb-1 lg:mb-2">Dashboard Terranova Pet</h1>
-        <p className="text-sm lg:text-base text-gray-600">Visão geral dos atendimentos e operações</p>
+        <h1 className="text-2xl lg:text-3xl font-bold text-purple-primary mb-1 lg:mb-2">Dashboard Analytics Terranova Pet</h1>
+        <p className="text-sm lg:text-base text-gray-600">Performance e métricas de atendimento em tempo real</p>
       </div>
 
-      {/* Stats Cards */}
+      {/* Métricas Principais */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         <Card className="border-l-4 border-purple-primary bg-white hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs lg:text-sm font-medium text-gray-600">
-              Atendimentos Hoje
+              Total de Atendimentos
             </CardTitle>
-            <CalendarDays className="h-4 w-4 lg:h-5 lg:w-5 text-purple-primary" />
+            <Users className="h-4 w-4 lg:h-5 lg:w-5 text-purple-primary" />
           </CardHeader>
           <CardContent className="pb-2 lg:pb-4">
-            <div className="text-2xl lg:text-3xl font-bold text-purple-primary">{stats.atendimentosHoje}</div>
-            <p className="text-xs text-green-600 font-medium">
-              +20% desde ontem
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-purple-primary/60 bg-white hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium text-gray-600">
-              Total de Clientes
-            </CardTitle>
-            <Users className="h-4 w-4 lg:h-5 lg:w-5 text-purple-primary/70" />
-          </CardHeader>
-          <CardContent className="pb-2 lg:pb-4">
-            <div className="text-2xl lg:text-3xl font-bold text-purple-primary">{stats.totalClientes}</div>
+            <div className="text-2xl lg:text-3xl font-bold text-purple-primary">{summary.totalAtendimentos}</div>
             <p className="text-xs text-gray-500">
-              Clientes atendidos
+              {summary.atendimentosMes} este mês
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-gray-300 bg-white hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium text-gray-600">
-              Clicks em Vendas
-            </CardTitle>
-            <MousePointer className="h-4 w-4 lg:h-5 lg:w-5 text-gray-500" />
-          </CardHeader>
-          <CardContent className="pb-2 lg:pb-4">
-            <div className="text-2xl lg:text-3xl font-bold text-gray-700">{stats.clicksVenda}</div>
-            <p className="text-xs text-gray-500">
-              Links de venda acessados
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-gray-300 bg-white hover:shadow-md transition-shadow">
+        <Card className="border-l-4 border-green-500 bg-white hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs lg:text-sm font-medium text-gray-600">
               Taxa de Conversão
             </CardTitle>
-            <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5 text-gray-500" />
+            <Target className="h-4 w-4 lg:h-5 lg:w-5 text-green-500" />
           </CardHeader>
           <CardContent className="pb-2 lg:pb-4">
-            <div className="text-2xl lg:text-3xl font-bold text-gray-700">78%</div>
+            <div className="text-2xl lg:text-3xl font-bold text-green-600">{summary.taxaConversao}</div>
             <p className="text-xs text-green-600 font-medium">
-              +5% desde a semana passada
+              +5% desde o mês passado
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-blue-500 bg-white hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs lg:text-sm font-medium text-gray-600">
+              Ticket Médio
+            </CardTitle>
+            <DollarSign className="h-4 w-4 lg:h-5 lg:w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent className="pb-2 lg:pb-4">
+            <div className="text-2xl lg:text-3xl font-bold text-blue-600">
+              R$ {summary.ticketMedio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <p className="text-xs text-blue-600 font-medium">
+              +12% desde o mês passado
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-orange-500 bg-white hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs lg:text-sm font-medium text-gray-600">
+              Atendimentos Hoje
+            </CardTitle>
+            <CalendarDays className="h-4 w-4 lg:h-5 lg:w-5 text-orange-500" />
+          </CardHeader>
+          <CardContent className="pb-2 lg:pb-4">
+            <div className="text-2xl lg:text-3xl font-bold text-orange-600">{summary.atendimentosHoje}</div>
+            <p className="text-xs text-orange-600 font-medium">
+              +3 desde ontem
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts and Recent Activity */}
+      {/* Métricas Avançadas */}
+      <AdvancedMetrics analytics={{ summary, insights }} />
+
+      {/* Mapa de Calor - Nova seção */}
+      <HeatmapVisualization />
+
+      {/* Gráficos Principais */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
-        {/* Chart */}
+        {/* Atendimentos por Dia */}
         <Card className="bg-white border-gray-200 hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg lg:text-xl text-purple-primary">Atendimentos da Semana</CardTitle>
+            <CardTitle className="text-lg lg:text-xl text-purple-primary">Atendimentos por Dia (Última Semana)</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250} className="lg:h-[300px]">
-              <BarChart data={chartData}>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={charts.atendimentosPorDia}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                <XAxis dataKey="name" stroke="#6b7280" fontSize={11} />
+                <XAxis dataKey="day" stroke="#6b7280" fontSize={11} />
                 <YAxis stroke="#6b7280" fontSize={11} />
+                <Tooltip />
                 <Bar 
-                  dataKey="atendimentos" 
+                  dataKey="count" 
                   fill="rgb(85, 12, 116)" 
                   opacity={0.8}
                   radius={[4, 4, 0, 0]}
@@ -150,33 +179,89 @@ export const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
+        {/* Produtos Mais Vendidos */}
         <Card className="bg-white border-gray-200 hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg lg:text-xl text-purple-primary">Atendimentos Recentes</CardTitle>
+            <CardTitle className="text-lg lg:text-xl text-purple-primary">Produtos Mais Vendidos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3 lg:space-y-4">
-              {stats.atendimentosRecentes.slice(0, 5).map((atendimento: any) => (
-                <div key={atendimento.atendimento_id} className="flex items-center space-x-3 lg:space-x-4 p-2 lg:p-3 rounded-lg bg-gray-50 hover:bg-purple-primary/5 transition-colors border border-gray-100">
-                  <div className="w-2 h-2 bg-purple-primary rounded-full flex-shrink-0"></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-purple-primary truncate">
-                      {atendimento.tutor?.nome_tutor}
-                    </p>
-                    <p className="text-xs lg:text-sm text-gray-500 truncate">
-                      {atendimento.tipo_atendimento} - {atendimento.status}
-                    </p>
-                  </div>
-                  <div className="text-xs text-gray-400 flex-shrink-0">
-                    {new Date(atendimento.data_inicio).toLocaleDateString('pt-BR')}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={charts.produtosMaisVendidos}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="count"
+                  label={({ name, percentage }) => `${percentage}%`}
+                >
+                  {charts.produtosMaisVendidos.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
+
+      {/* Performance da Equipe */}
+      <Card className="bg-white border-gray-200 hover:shadow-md transition-shadow">
+        <CardHeader>
+          <CardTitle className="text-lg lg:text-xl text-purple-primary flex items-center gap-2">
+            <Award className="h-5 w-5" />
+            Performance da Equipe
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Atendente</TableHead>
+                <TableHead className="text-center">Atribuídos</TableHead>
+                <TableHead className="text-center">Concluídos</TableHead>
+                <TableHead className="text-center">Taxa</TableHead>
+                <TableHead className="text-center">Eficiência</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {charts.performanceAtendentes.map((atendente, index) => (
+                <TableRow key={index}>
+                  <TableCell className="font-medium">{atendente.nome}</TableCell>
+                  <TableCell className="text-center">{atendente.atribuidos}</TableCell>
+                  <TableCell className="text-center">{atendente.concluidos}</TableCell>
+                  <TableCell className="text-center">
+                    <span className={`font-medium ${parseFloat(atendente.taxaConversao) > 50 ? 'text-green-600' : 'text-orange-600'}`}>
+                      {atendente.taxaConversao}%
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className="text-purple-600 font-medium">
+                      {atendente.eficiencia}%
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      atendente.status === 'Online' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {atendente.status}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Insights e Recomendações */}
+      <InsightsPanel insights={insights} />
     </div>
   );
 };

@@ -1,144 +1,141 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { PetMemorialAPI } from '@/lib/api';
 import { Plano } from '@/types';
-import { useToast } from '@/hooks/use-toast';
 
 interface PlanoDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  plano: Plano | null;
-  onSave: () => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (plano: Plano | Omit<Plano, 'plano_id'>) => void;
+  plano?: Plano;
 }
 
 export const PlanoDialog: React.FC<PlanoDialogProps> = ({
-  open,
-  onOpenChange,
-  plano,
-  onSave
+  isOpen,
+  onClose,
+  onSubmit,
+  plano
 }) => {
   const [formData, setFormData] = useState({
-    nome_plano: '',
-    descricao_curta: ''
+    nome_plano: plano?.nome_plano || '',
+    preco_base: plano?.preco_base || 0,
+    descricao: plano?.descricao || '',
+    descricao_curta: plano?.descricao_curta || '',
+    perfil_indicado: plano?.perfil_indicado || 'Padrão' as 'Padrão' | 'Intermediário' | 'Luxo'
   });
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
-  useEffect(() => {
-    if (plano) {
-      setFormData({
-        nome_plano: plano.nome_plano,
-        descricao_curta: plano.descricao_curta
-      });
-    } else {
-      setFormData({
-        nome_plano: '',
-        descricao_curta: ''
-      });
-    }
-  }, [plano, open]);
+  const handleChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.nome_plano || !formData.descricao_curta) {
-      toast({
-        title: "Erro",
-        description: "Nome e descrição são obrigatórios.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const planoData = {
+    if (plano) {
+      // Editando plano existente
+      onSubmit({
+        plano_id: plano.plano_id,
         nome_plano: formData.nome_plano,
-        descricao_curta: formData.descricao_curta
-      };
-
-      if (plano) {
-        await PetMemorialAPI.updatePlano({
-          ...planoData,
-          plano_id: plano.plano_id
-        });
-        toast({
-          title: "Sucesso",
-          description: "Plano atualizado com sucesso."
-        });
-      } else {
-        await PetMemorialAPI.createPlano(planoData);
-        toast({
-          title: "Sucesso",
-          description: "Plano criado com sucesso."
-        });
-      }
-      
-      onSave();
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar o plano.",
-        variant: "destructive"
+        preco_base: formData.preco_base,
+        descricao: formData.descricao,
+        descricao_curta: formData.descricao_curta,
+        perfil_indicado: formData.perfil_indicado
       });
-    } finally {
-      setLoading(false);
+    } else {
+      // Criando novo plano
+      onSubmit({
+        nome_plano: formData.nome_plano,
+        preco_base: formData.preco_base,
+        descricao: formData.descricao,
+        descricao_curta: formData.descricao_curta,
+        perfil_indicado: formData.perfil_indicado
+      });
     }
+    
+    onClose();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[#04422c]">
+          <DialogTitle>
             {plano ? 'Editar Plano' : 'Novo Plano'}
           </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nome_plano">Nome do Plano *</Label>
+          <div>
+            <Label htmlFor="nome_plano">Nome do Plano</Label>
             <Input
               id="nome_plano"
               value={formData.nome_plano}
-              onChange={(e) => setFormData(prev => ({ ...prev, nome_plano: e.target.value }))}
-              placeholder="Ex: Plano Bronze"
+              onChange={(e) => handleChange('nome_plano', e.target.value)}
               required
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="descricao_curta">Descrição Curta *</Label>
+          <div>
+            <Label htmlFor="preco_base">Preço Base</Label>
+            <Input
+              id="preco_base"
+              type="number"
+              step="0.01"
+              value={formData.preco_base}
+              onChange={(e) => handleChange('preco_base', parseFloat(e.target.value))}
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="descricao">Descrição</Label>
             <Textarea
+              id="descricao"
+              value={formData.descricao}
+              onChange={(e) => handleChange('descricao', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="descricao_curta">Descrição Curta</Label>
+            <Input
               id="descricao_curta"
               value={formData.descricao_curta}
-              onChange={(e) => setFormData(prev => ({ ...prev, descricao_curta: e.target.value }))}
-              placeholder="Descrição dos benefícios do plano"
-              rows={3}
+              onChange={(e) => handleChange('descricao_curta', e.target.value)}
               required
             />
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
+          <div>
+            <Label htmlFor="perfil_indicado">Perfil Indicado</Label>
+            <Select
+              value={formData.perfil_indicado}
+              onValueChange={(value) => handleChange('perfil_indicado', value)}
             >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Padrão">Padrão</SelectItem>
+                <SelectItem value="Intermediário">Intermediário</SelectItem>
+                <SelectItem value="Luxo">Luxo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
-              disabled={loading}
-              className="bg-[#04422c] hover:bg-[#04422c]/90"
-            >
-              {loading ? 'Salvando...' : 'Salvar'}
+            <Button type="submit">
+              {plano ? 'Salvar' : 'Criar'}
             </Button>
           </div>
         </form>
