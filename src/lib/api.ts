@@ -1,3 +1,4 @@
+
 import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento, Pet, Atendente, AtribuirAtendimentoRequest, StatusAtendimentoResponse } from '@/types';
 import { mockItensDeVenda, mockPlanos, mockTutores, mockAtendimentos, mockPets, mockAtendentes } from './mockData';
 import { NotificationService } from '@/services/NotificationService';
@@ -614,7 +615,18 @@ export class PetMemorialAPI {
       }
 
       console.log(`✅ ${data?.length || 0} tutores encontrados`);
-      return data || [];
+      
+      // Map the data to ensure proper typing
+      const tutores: Tutor[] = (data || []).map(tutor => ({
+        tutor_id: tutor.tutor_id,
+        id_whatsapp: tutor.id_whatsapp,
+        nome_tutor: tutor.nome_tutor,
+        profissao: tutor.profissao,
+        endereco: tutor.endereco,
+        perfil_calculado: (tutor.perfil_calculado as 'Padrão' | 'Intermediário' | 'Luxo') || 'Padrão'
+      }));
+      
+      return tutores;
     } catch (error) {
       console.error('❌ Erro na busca de tutores:', error);
       throw error;
