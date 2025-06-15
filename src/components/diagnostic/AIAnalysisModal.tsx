@@ -61,6 +61,13 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({
     }
   };
 
+  const handleApplySuggestion = () => {
+    if (onApplySuggestion) {
+      onApplySuggestion(result.bairro, result.fator_sugerido);
+    }
+    onClose();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -173,12 +180,7 @@ export const AIAnalysisModal: React.FC<AIAnalysisModalProps> = ({
           {/* Ações */}
           <div className="flex gap-3 pt-4 border-t">
             <Button
-              onClick={() => {
-                if (onApplySuggestion) {
-                  onApplySuggestion(result.bairro, result.fator_sugerido);
-                }
-                onClose();
-              }}
+              onClick={handleApplySuggestion}
               className="flex-1"
             >
               <CheckCircle className="h-4 w-4 mr-2" />
