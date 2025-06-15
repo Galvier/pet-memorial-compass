@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,14 +45,21 @@ export const AtendimentosList: React.FC = () => {
 
         if (atendentesError) throw atendentesError;
 
-        // Combinar dados
-        const atendimentosCompletos = (atendimentosData || []).map(atendimento => ({
+        // Combinar dados com type assertions
+        const atendimentosCompletos: Atendimento[] = (atendimentosData || []).map(atendimento => ({
           ...atendimento,
-          tutor: tutoresData?.find(t => t.tutor_id === atendimento.tutor_id),
+          status: atendimento.status as 'Em andamento' | 'Sugestão enviada' | 'Finalizado',
+          status_atendimento: atendimento.status_atendimento as 'BOT_ATIVO' | 'AGUARDANDO_NA_FILA' | 'ATRIBUIDO_HUMANO' | 'FINALIZADO',
+          tipo_atendimento: atendimento.tipo_atendimento as 'Imediato' | 'Preventivo',
+          tutor: tutoresData?.find(t => t.tutor_id === atendimento.tutor_id) ? {
+            ...tutoresData.find(t => t.tutor_id === atendimento.tutor_id)!,
+            perfil_calculado: tutoresData.find(t => t.tutor_id === atendimento.tutor_id)!.perfil_calculado as 'Padrão' | 'Intermediário' | 'Luxo'
+          } : undefined,
           pet: petsData?.find(p => p.pet_id === atendimento.pet_id),
-          atendente: atendimento.atendente_responsavel_id 
-            ? atendentesData?.find(a => a.atendente_id === atendimento.atendente_responsavel_id)
-            : undefined
+          atendente: atendimento.atendente_responsavel_id && atendentesData?.find(a => a.atendente_id === atendimento.atendente_responsavel_id) ? {
+            ...atendentesData.find(a => a.atendente_id === atendimento.atendente_responsavel_id)!,
+            status_disponibilidade: atendentesData.find(a => a.atendente_id === atendimento.atendente_responsavel_id)!.status_disponibilidade as 'Online' | 'Offline'
+          } : undefined
         }));
 
         console.log('✅ Atendimentos carregados:', atendimentosCompletos.length);

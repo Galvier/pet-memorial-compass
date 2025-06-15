@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -79,16 +78,30 @@ export const AtendimentoDetail: React.FC = () => {
           .select('*')
           .eq('status_disponibilidade', 'Online');
 
-        const atendimentoCompleto = {
+        const atendimentoCompleto: Atendimento = {
           ...atendimentoData,
-          tutor: tutorData,
+          status: atendimentoData.status as 'Em andamento' | 'Sugestão enviada' | 'Finalizado',
+          status_atendimento: atendimentoData.status_atendimento as 'BOT_ATIVO' | 'AGUARDANDO_NA_FILA' | 'ATRIBUIDO_HUMANO' | 'FINALIZADO',
+          tipo_atendimento: atendimentoData.tipo_atendimento as 'Imediato' | 'Preventivo',
+          tutor: tutorData ? {
+            ...tutorData,
+            perfil_calculado: tutorData.perfil_calculado as 'Padrão' | 'Intermediário' | 'Luxo'
+          } : undefined,
           pet: petData,
-          atendente: atendenteData
+          atendente: atendenteData ? {
+            ...atendenteData,
+            status_disponibilidade: atendenteData.status_disponibilidade as 'Online' | 'Offline'
+          } : undefined
         };
+
+        const atendentesOnlineTyped: Atendente[] = (atendentesData || []).map(atendente => ({
+          ...atendente,
+          status_disponibilidade: atendente.status_disponibilidade as 'Online' | 'Offline'
+        }));
 
         console.log('✅ Atendimento carregado:', atendimentoCompleto);
         setAtendimento(atendimentoCompleto);
-        setAtendentesOnline(atendentesData || []);
+        setAtendentesOnline(atendentesOnlineTyped);
       } catch (error) {
         console.error('❌ Erro ao carregar dados:', error);
       } finally {
