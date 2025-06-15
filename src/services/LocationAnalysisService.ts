@@ -1,7 +1,7 @@
 import { GeocodingService } from './GeocodingService';
 import { IBGEApiService } from './IBGEApiService';
 import { EnhancedLocationAnalysisService } from './EnhancedLocationAnalysisService';
-import { EnhancedMontesClarosService } from './EnhancedMontesClarosService';
+import { EnhancedMontesClarosService, EnhancedAnalysisResult } from './EnhancedMontesClarosService';
 
 export interface LocationAnalysis {
   address: string;
@@ -47,14 +47,14 @@ export class LocationAnalysisService {
         // Converter para formato padrão
         return {
           address: enhancedResult.address,
-          coordinates: enhancedResult.coordinates,
-          municipioData: enhancedResult.municipioData,
-          incomeData: enhancedResult.incomeData,
+          coordinates: enhancedResult.coordinates || null,
+          municipioData: enhancedResult.municipioData || null,
+          incomeData: enhancedResult.incomeData || null,
           score: enhancedResult.score,
-          scoreReason: enhancedResult.scoreReason,
-          analysisDate: enhancedResult.analysisDate,
-          success: enhancedResult.success,
-          fallbackUsed: enhancedResult.fallbackUsed
+          scoreReason: enhancedResult.scoreReason || 'Análise aprimorada de Montes Claros',
+          analysisDate: enhancedResult.analysisDate || new Date().toISOString(),
+          success: enhancedResult.success || false,
+          fallbackUsed: enhancedResult.fallbackUsed || false
         };
       }
 
@@ -198,20 +198,22 @@ export class LocationAnalysisService {
       // Processar endereços de Montes Claros com sistema aprimorado
       if (montesClarosAddresses.length > 0) {
         console.log(`🎯 Processando ${montesClarosAddresses.length} endereços de Montes Claros`);
-        const montesResults = await EnhancedMontesClarosService.batchAnalyzeAddresses(montesClarosAddresses);
-        
-        // Converter para formato padrão
-        results.push(...montesResults.map(result => ({
-          address: result.address,
-          coordinates: result.coordinates,
-          municipioData: result.municipioData,
-          incomeData: result.incomeData,
-          score: result.score,
-          scoreReason: result.scoreReason,
-          analysisDate: result.analysisDate,
-          success: result.success,
-          fallbackUsed: result.fallbackUsed
-        })));
+        for (const address of montesClarosAddresses) {
+          const montesResult = await EnhancedMontesClarosService.analyzeAddress(address);
+          
+          // Converter para formato padrão
+          results.push({
+            address: montesResult.address,
+            coordinates: montesResult.coordinates || null,
+            municipioData: montesResult.municipioData || null,
+            incomeData: montesResult.incomeData || null,
+            score: montesResult.score,
+            scoreReason: montesResult.scoreReason || 'Análise de Montes Claros',
+            analysisDate: montesResult.analysisDate || new Date().toISOString(),
+            success: montesResult.success || false,
+            fallbackUsed: montesResult.fallbackUsed || false
+          });
+        }
       }
       
       // Processar outros endereços com sistema padrão
@@ -288,7 +290,7 @@ export class LocationAnalysisService {
         success: true,
         message: `Cache limpo: ${totalCleared} entradas removidas (Montes Claros: ${montesResult.cleared}, IBGE: ${ibgeResult.cleared})${ibgeResult.errors > 0 ? `, ${ibgeResult.errors} erros` : ''}`,
         details: {
-          montesClaros: montesResult.details,
+          montesClaros: montesResult.services,
           ibge: ibgeResult,
           total: totalCleared
         }

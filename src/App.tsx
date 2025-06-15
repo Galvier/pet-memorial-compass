@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import DevAuth from "./pages/DevAuth";
 import Diagnostico from "./pages/Diagnostico";
+import Analytics from "./pages/Analytics";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DeveloperProtectedRoute } from "./components/DeveloperProtectedRoute";
 import FilaAtendimentos from "./pages/FilaAtendimentos";
@@ -28,6 +29,14 @@ const App = () => (
             element={
               <DeveloperProtectedRoute>
                 <Diagnostico />
+              </DeveloperProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/analytics" 
+            element={
+              <DeveloperProtectedRoute>
+                <Analytics />
               </DeveloperProtectedRoute>
             } 
           />

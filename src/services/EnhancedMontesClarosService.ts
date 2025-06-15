@@ -1,5 +1,5 @@
 
-import { LocationAnalysisService } from './LocationAnalysisService';
+import { BairrosMontesService } from './BairrosMontesService';
 import { IntelligentRealEstateService } from './IntelligentRealEstateService';
 import { BusinessProfileService } from './BusinessProfileService';
 
@@ -14,6 +14,21 @@ export interface EnhancedAnalysisResult {
     businessFactor: number;
     finalScore: number;
   };
+  coordinates?: { lat: number; lng: number } | null;
+  municipioData?: {
+    id: string;
+    nome: string;
+    uf: string;
+  } | null;
+  incomeData?: {
+    averageIncome: number;
+    populationCount: number;
+    dataYear: number;
+  } | null;
+  scoreReason?: string;
+  analysisDate?: string;
+  success?: boolean;
+  fallbackUsed?: boolean;
 }
 
 /**
@@ -28,10 +43,10 @@ export class EnhancedMontesClarosService {
     console.log(`🔍 Análise aprimorada para: ${address}`);
 
     try {
-      // Análise base usando serviço de localização
-      const locationResult = await LocationAnalysisService.analyzeLocation(address);
+      // Verificar se é endereço de Montes Claros
+      const isMontesClaros = this.isMontesClarosAddress(address);
       
-      if (!locationResult.isMontesClaros) {
+      if (!isMontesClaros) {
         return {
           address,
           isMontesClaros: false,
@@ -41,11 +56,16 @@ export class EnhancedMontesClarosService {
             realEstateFactor: 1.0,
             businessFactor: 1.0,
             finalScore: 0
-          }
+          },
+          success: false,
+          fallbackUsed: true,
+          analysisDate: new Date().toISOString(),
+          scoreReason: 'Endereço fora de Montes Claros'
         };
       }
 
-      const baseScore = locationResult.score;
+      // Score base padrão para Montes Claros
+      const baseScore = 45;
       
       // Detectar bairro do endereço
       const bairroDetected = this.extractBairroFromAddress(address);
@@ -64,10 +84,11 @@ export class EnhancedMontesClarosService {
           console.warn('Erro ao obter fator imobiliário:', error);
         }
 
-        // Fator de perfil comercial
+        // Fator de perfil comercial usando CEP simulado
         try {
-          const businessProfile = await BusinessProfileService.getAreaBusinessProfile(bairroDetected);
-          businessFactor = businessProfile.marketMultiplier;
+          const cepSimulado = this.getCepFromBairro(bairroDetected);
+          const businessProfile = await BusinessProfileService.getBusinessProfile(cepSimulado);
+          businessFactor = businessProfile.multiplier;
         } catch (error) {
           console.warn('Erro ao obter perfil comercial:', error);
         }
@@ -88,25 +109,62 @@ export class EnhancedMontesClarosService {
           realEstateFactor,
           businessFactor,
           finalScore
-        }
+        },
+        success: true,
+        fallbackUsed: false,
+        analysisDate: new Date().toISOString(),
+        scoreReason: `Análise completa: Base ${baseScore} × Imob ${realEstateFactor} × Neg ${businessFactor} = ${finalScore} pontos`
       };
     } catch (error) {
       console.error('Erro na análise aprimorada:', error);
       
-      // Fallback para análise básica
-      const fallbackResult = await LocationAnalysisService.analyzeLocation(address);
       return {
         address,
-        isMontesClaros: fallbackResult.isMontesClaros,
-        score: fallbackResult.score,
+        isMontesClaros: true,
+        score: 25,
         breakdown: {
-          baseScore: fallbackResult.score,
+          baseScore: 25,
           realEstateFactor: 1.0,
           businessFactor: 1.0,
-          finalScore: fallbackResult.score
-        }
+          finalScore: 25
+        },
+        success: false,
+        fallbackUsed: true,
+        analysisDate: new Date().toISOString(),
+        scoreReason: `Erro na análise: ${error.message || 'Erro desconhecido'}`
       };
     }
+  }
+
+  /**
+   * Verifica se endereço é de Montes Claros
+   */
+  private static isMontesClarosAddress(address: string): boolean {
+    const normalized = address.toLowerCase();
+    const patterns = [
+      'montes claros',
+      'moc',
+      '39400', '39401', '39402', '39403', '39404', '39405'
+    ];
+    
+    return patterns.some(pattern => normalized.includes(pattern));
+  }
+
+  /**
+   * Simula um CEP baseado no bairro
+   */
+  private static getCepFromBairro(bairro: string): string {
+    const cepMap: Record<string, string> = {
+      'centro': '39400010',
+      'ibituruna': '39401234',
+      'morada do sol': '39402345', 
+      'todos os santos': '39400567',
+      'major prates': '39403890',
+      'augusta mota': '39404123'
+    };
+    
+    const normalized = bairro.toLowerCase();
+    return cepMap[normalized] || '39400000';
   }
 
   /**
@@ -217,13 +275,8 @@ export class EnhancedMontesClarosService {
     const services: string[] = [];
 
     try {
-      // Limpar cache do LocationAnalysisService
-      const locationResult = LocationAnalysisService.clearCache();
-      totalCleared += locationResult.cleared;
-      if (locationResult.cleared > 0) services.push('LocationAnalysis');
-
       // Limpar cache do BusinessProfileService
-      const businessResult = BusinessProfileService.clearCache();
+      const businessResult = BusinessProfileService.clearOldCache();
       totalCleared += businessResult.cleared;
       if (businessResult.cleared > 0) services.push('BusinessProfile');
       
