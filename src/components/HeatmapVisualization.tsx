@@ -7,16 +7,14 @@ import { getHeatmapData, generateMockHeatmapData, HeatmapDataPoint } from '@/api
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Importar o plugin de heatmap
-declare global {
-  namespace L {
-    function heatLayer(data: [number, number, number][], options?: any): any;
-  }
+// Properly type the heatLayer plugin
+declare module 'leaflet' {
+  function heatLayer(data: [number, number, number][], options?: any): L.Layer;
 }
 
-// Carregar o plugin dinamicamente
+// Load the heatmap plugin dynamically
 const loadHeatmapPlugin = async () => {
-  if (typeof window !== 'undefined' && !window.L?.heatLayer) {
+  if (typeof window !== 'undefined' && !(L as any).heatLayer) {
     await import('leaflet.heat');
   }
 };
@@ -24,14 +22,14 @@ const loadHeatmapPlugin = async () => {
 export const HeatmapVisualization: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
-  const heatLayerRef = useRef<any>(null);
+  const heatLayerRef = useRef<L.Layer | null>(null);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dataPoints, setDataPoints] = useState<HeatmapDataPoint[]>([]);
   const [useMockData, setUseMockData] = useState(false);
 
-  // Inicializar o mapa
+  // Initialize map
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
@@ -39,22 +37,22 @@ export const HeatmapVisualization: React.FC = () => {
       try {
         await loadHeatmapPlugin();
 
-        // Criar o mapa centrado em Montes Claros, MG
+        // Create map centered on Montes Claros, MG
         const map = L.map(mapRef.current!).setView([-16.7249, -43.8609], 12);
 
-        // Adicionar tiles do OpenStreetMap
+        // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Adicionar marcador do centro (Montes Claros)
+        // Add center marker (Montes Claros)
         L.marker([-16.7249, -43.8609])
           .addTo(map)
           .bindPopup('Montes Claros - MG<br>Centro de Operações');
 
         mapInstanceRef.current = map;
         
-        // Carregar dados iniciais
+        // Load initial data
         loadHeatmapData();
       } catch (error) {
         console.error('Erro ao inicializar mapa:', error);
@@ -91,7 +89,7 @@ export const HeatmapVisualization: React.FC = () => {
           setUseMockData(false);
           
           if (data.length === 0) {
-            // Se não há dados reais, usar dados de demonstração
+            // If no real data, use demo data
             data = generateMockHeatmapData();
             setUseMockData(true);
           }
@@ -104,21 +102,21 @@ export const HeatmapVisualization: React.FC = () => {
 
       setDataPoints(data);
 
-      // Remover camada anterior se existir
+      // Remove previous layer if exists
       if (heatLayerRef.current) {
         mapInstanceRef.current.removeLayer(heatLayerRef.current);
       }
 
-      // Converter dados para o formato do leaflet.heat: [lat, lng, intensity]
+      // Convert data to leaflet.heat format: [lat, lng, intensity]
       const heatData: [number, number, number][] = data.map(point => [
         point.lat,
         point.lng,
         point.intensity || 1
       ]);
 
-      // Criar nova camada de calor
-      if (heatData.length > 0 && window.L?.heatLayer) {
-        heatLayerRef.current = L.heatLayer(heatData, {
+      // Create new heat layer
+      if (heatData.length > 0 && (L as any).heatLayer) {
+        heatLayerRef.current = (L as any).heatLayer(heatData, {
           radius: 25,
           blur: 15,
           maxZoom: 17,
