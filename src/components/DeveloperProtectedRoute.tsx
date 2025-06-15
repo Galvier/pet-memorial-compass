@@ -12,6 +12,9 @@ export const DeveloperProtectedRoute = ({ children }: DeveloperProtectedRoutePro
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Lista de rotas permitidas para desenvolvedores
+  const allowedDeveloperRoutes = ['/diagnostico', '/analytics'];
+
   useEffect(() => {
     if (!loading) {
       if (!user) {
@@ -24,9 +27,8 @@ export const DeveloperProtectedRoute = ({ children }: DeveloperProtectedRoutePro
         return;
       }
 
-      // Restringir desenvolvedor apenas à página de diagnóstico
-      // Se não estiver na página de diagnóstico, redirecionar para lá
-      if (location.pathname !== '/diagnostico') {
+      // Se estiver em uma rota não permitida para desenvolvedor, redirecionar para diagnóstico
+      if (!allowedDeveloperRoutes.includes(location.pathname)) {
         navigate('/diagnostico');
         return;
       }
