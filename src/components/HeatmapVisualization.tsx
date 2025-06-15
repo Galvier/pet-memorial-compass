@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -153,8 +152,8 @@ export const HeatmapVisualization: React.FC = () => {
       mapInstanceRef.current.setView([data.center.lat, data.center.lng], data.zoom);
 
       if (data.points.length > 0) {
-        if (data.useMarkers || data.points.length < 4) {
-          // Use individual markers for few points
+        if (data.useMarkers) {
+          // Use individual markers only for single points
           data.points.forEach(point => {
             const marker = L.marker([point.lat, point.lng], {
               icon: createCustomIcon(point.intensity)
@@ -174,7 +173,7 @@ export const HeatmapVisualization: React.FC = () => {
 
           console.log(`📍 ${data.points.length} marcadores adicionados ao mapa`);
         } else {
-          // Use heatmap for many points
+          // Use heatmap - configuração melhorada para poucos pontos
           const heatData: [number, number, number][] = data.points.map(point => [
             point.lat,
             point.lng,
@@ -183,14 +182,16 @@ export const HeatmapVisualization: React.FC = () => {
 
           if ((L as any).heatLayer) {
             heatLayerRef.current = (L as any).heatLayer(heatData, {
-              radius: Math.max(25, 40 - data.points.length),
-              blur: 20,
+              radius: data.points.length < 5 ? 50 : Math.max(25, 40 - data.points.length), // Raio maior para poucos pontos
+              blur: data.points.length < 5 ? 30 : 20, // Blur maior para poucos pontos
               maxZoom: 17,
+              minOpacity: 0.4, // Opacidade mínima aumentada
               gradient: {
                 0.0: '#059669',
-                0.3: '#ca8a04',
-                0.5: '#ea580c',
-                0.7: '#dc2626',
+                0.2: '#16a34a',
+                0.4: '#ca8a04',
+                0.6: '#ea580c',
+                0.8: '#dc2626',
                 1.0: '#7c2d12'
               }
             }).addTo(mapInstanceRef.current!);
@@ -334,9 +335,13 @@ export const HeatmapVisualization: React.FC = () => {
                   <strong>Zoom:</strong> {mapData.zoom}
                 </div>
               </div>
-              {mapData.useMarkers && (
+              {mapData.useMarkers ? (
                 <p className="text-xs mt-2 text-blue-600">
-                  💡 Poucos pontos detectados - usando marcadores para melhor visualização
+                  💡 Ponto único detectado - usando marcador para melhor visualização
+                </p>
+              ) : (
+                <p className="text-xs mt-2 text-green-600">
+                  🔥 Mapa de calor ativo - mostrando concentração de clientes
                 </p>
               )}
             </div>

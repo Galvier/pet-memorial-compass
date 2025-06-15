@@ -136,8 +136,8 @@ export async function getProcessedHeatmapData(): Promise<ProcessedHeatmapData> {
     const groupedPoints = groupNearbyPoints(coordinates);
     const { center, zoom } = calculateMapBounds(groupedPoints);
     
-    // Decidir se usar marcadores ou heatmap
-    const useMarkers = groupedPoints.length < 4;
+    // MUDANÇA: Sempre preferir heatmap, só usar marcadores se tiver apenas 1 ponto
+    const useMarkers = groupedPoints.length === 1;
     
     // Calcular estatísticas
     let coverage = 'Local';
@@ -176,20 +176,20 @@ export async function getHeatmapData(): Promise<HeatmapDataPoint[]> {
 }
 
 /**
- * Gera dados sintéticos para demonstração (melhorados)
+ * Gera dados sintéticos para demonstração (melhorados para sempre mostrar heatmap)
  */
 export function generateMockHeatmapData(): ProcessedHeatmapData {
   // Coordenadas aproximadas de Montes Claros, MG e arredores
   const baseCenter = { lat: -16.7249, lng: -43.8609 };
   const mockPoints: HeatmapDataPoint[] = [];
 
-  // Gerar clusters em diferentes regiões
+  // Gerar clusters em diferentes regiões com mais intensidade
   const clusters = [
-    { center: baseCenter, count: 15 },
-    { center: { lat: -16.7349, lng: -43.8509 }, count: 8 },
-    { center: { lat: -16.7149, lng: -43.8709 }, count: 12 },
-    { center: { lat: -16.7449, lng: -43.8409 }, count: 6 },
-    { center: { lat: -16.7049, lng: -43.8809 }, count: 9 }
+    { center: baseCenter, count: 20 },
+    { center: { lat: -16.7349, lng: -43.8509 }, count: 15 },
+    { center: { lat: -16.7149, lng: -43.8709 }, count: 18 },
+    { center: { lat: -16.7449, lng: -43.8409 }, count: 12 },
+    { center: { lat: -16.7049, lng: -43.8809 }, count: 14 }
   ];
 
   clusters.forEach(cluster => {
@@ -200,7 +200,7 @@ export function generateMockHeatmapData(): ProcessedHeatmapData {
       mockPoints.push({
         lat: cluster.center.lat + latOffset,
         lng: cluster.center.lng + lngOffset,
-        intensity: Math.random() * 3 + 1
+        intensity: Math.random() * 5 + 2 // Intensidade entre 2 e 7
       });
     }
   });
@@ -209,7 +209,7 @@ export function generateMockHeatmapData(): ProcessedHeatmapData {
     points: mockPoints,
     center: baseCenter,
     zoom: 12,
-    useMarkers: false,
+    useMarkers: false, // Sempre usar heatmap para dados mock
     stats: {
       totalPoints: mockPoints.length,
       uniqueLocations: clusters.length,
