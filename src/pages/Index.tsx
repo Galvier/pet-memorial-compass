@@ -9,15 +9,24 @@ import { Heart, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
-  const { user, userProfile, loading, isAtendente } = useAuth();
+  const { user, userProfile, loading, isAtendente, isDeveloper } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Se o usuário está logado e é atendente, redirecionar para seus atendimentos
-    if (!loading && user && userProfile && isAtendente()) {
-      navigate('/meus-atendimentos');
+    if (!loading && user && userProfile) {
+      // Se o usuário é atendente, redirecionar para fila de atendimentos
+      if (isAtendente()) {
+        navigate('/fila-atendimentos');
+        return;
+      }
+      
+      // Se o usuário é desenvolvedor, redirecionar para diagnóstico
+      if (isDeveloper()) {
+        navigate('/diagnostico');
+        return;
+      }
     }
-  }, [user, userProfile, loading, isAtendente, navigate]);
+  }, [user, userProfile, loading, isAtendente, isDeveloper, navigate]);
 
   // Se não está logado, mostrar página de boas-vindas
   if (!user) {

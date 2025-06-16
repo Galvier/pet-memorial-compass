@@ -8,9 +8,12 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import DevAuth from "./pages/DevAuth";
 import Diagnostico from "./pages/Diagnostico";
+import Analytics from "./pages/Analytics";
+import AnalyticsAdmin from "./pages/AnalyticsAdmin";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DeveloperProtectedRoute } from "./components/DeveloperProtectedRoute";
 import FilaAtendimentos from "./pages/FilaAtendimentos";
+import AtendimentoDetailPage from "./pages/AtendimentoDetail";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +34,22 @@ const App = () => (
               </DeveloperProtectedRoute>
             } 
           />
+          <Route 
+            path="/analytics" 
+            element={
+              <DeveloperProtectedRoute>
+                <Analytics />
+              </DeveloperProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/analytics-admin" 
+            element={
+              <ProtectedRoute>
+                <AnalyticsAdmin />
+              </ProtectedRoute>
+            } 
+          />
           {navItems.map(({ to, page }) => (
             <Route
               key={to}
@@ -42,6 +61,14 @@ const App = () => (
               }
             />
           ))}
+          <Route 
+            path="/atendimentos/:id" 
+            element={
+              <ProtectedRoute>
+                <AtendimentoDetailPage />
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="/fila-atendimentos" 
             element={

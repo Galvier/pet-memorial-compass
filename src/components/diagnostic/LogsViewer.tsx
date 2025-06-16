@@ -11,7 +11,7 @@ interface LogEntry {
   id: string;
   timestamp: string;
   level: 'info' | 'warn' | 'error' | 'debug';
-  source: 'frontend' | 'postgres' | 'edge-function' | 'auth';
+  source: 'frontend' | 'postgres' | 'edge-function' | 'auth' | 'ibge-api';
   message: string;
   metadata?: any;
 }
@@ -68,7 +68,8 @@ export const LogsViewer: React.FC = () => {
       frontend: 'text-blue-600',
       postgres: 'text-green-600',
       'edge-function': 'text-purple-600',
-      auth: 'text-orange-600'
+      auth: 'text-orange-600',
+      'ibge-api': 'text-indigo-600'
     };
     return colors[source as keyof typeof colors] || 'text-gray-600';
   };
@@ -89,6 +90,7 @@ export const LogsViewer: React.FC = () => {
               <SelectItem value="postgres">Postgres</SelectItem>
               <SelectItem value="edge-function">Edge Functions</SelectItem>
               <SelectItem value="auth">Autenticação</SelectItem>
+              <SelectItem value="ibge-api">IBGE API</SelectItem>
             </SelectContent>
           </Select>
 

@@ -119,6 +119,138 @@ export type Database = {
           },
         ]
       }
+      bairros_montes_claros: {
+        Row: {
+          ativo: boolean | null
+          base_price_override: number | null
+          categoria: string
+          created_at: string
+          fator_atualizacao_calculado: number | null
+          fator_comercial: number | null
+          fator_imobiliario: number | null
+          id: string
+          last_market_update: string | null
+          market_analysis_enabled: boolean | null
+          nome_bairro: string
+          perfil_comercial: string | null
+          preco_medio_m2: number | null
+          ultima_atualizacao: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          base_price_override?: number | null
+          categoria: string
+          created_at?: string
+          fator_atualizacao_calculado?: number | null
+          fator_comercial?: number | null
+          fator_imobiliario?: number | null
+          id?: string
+          last_market_update?: string | null
+          market_analysis_enabled?: boolean | null
+          nome_bairro: string
+          perfil_comercial?: string | null
+          preco_medio_m2?: number | null
+          ultima_atualizacao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          base_price_override?: number | null
+          categoria?: string
+          created_at?: string
+          fator_atualizacao_calculado?: number | null
+          fator_comercial?: number | null
+          fator_imobiliario?: number | null
+          id?: string
+          last_market_update?: string | null
+          market_analysis_enabled?: boolean | null
+          nome_bairro?: string
+          perfil_comercial?: string | null
+          preco_medio_m2?: number | null
+          ultima_atualizacao?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      city_estimates: {
+        Row: {
+          city_name: string
+          created_at: string
+          estimated_income: number
+          id: string
+          population_range: string | null
+          region: string | null
+          score: number
+          state_code: string
+          updated_at: string
+        }
+        Insert: {
+          city_name: string
+          created_at?: string
+          estimated_income: number
+          id?: string
+          population_range?: string | null
+          region?: string | null
+          score: number
+          state_code: string
+          updated_at?: string
+        }
+        Update: {
+          city_name?: string
+          created_at?: string
+          estimated_income?: number
+          id?: string
+          population_range?: string | null
+          region?: string | null
+          score?: number
+          state_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      geocache: {
+        Row: {
+          created_at: string
+          id: string
+          last_checked: string
+          location_key: string
+          municipio_id: string | null
+          municipio_nome: string | null
+          renda_media: number | null
+          score: number
+          source: string
+          uf: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_checked?: string
+          location_key: string
+          municipio_id?: string | null
+          municipio_nome?: string | null
+          renda_media?: number | null
+          score: number
+          source: string
+          uf?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_checked?: string
+          location_key?: string
+          municipio_id?: string | null
+          municipio_nome?: string | null
+          renda_media?: number | null
+          score?: number
+          source?: string
+          uf?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -206,6 +338,36 @@ export type Database = {
             referencedColumns: ["tutor_id"]
           },
         ]
+      }
+      settings: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
       }
       tutores: {
         Row: {

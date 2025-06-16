@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +27,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      // Primeiro verificar os metadados do usuário para role
+      const { data: userData } = await supabase.auth.getUser();
+      const userRole = userData.user?.user_metadata?.role;
+      
+      console.log('Metadados do usuário:', userData.user?.user_metadata);
+      console.log('Role detectado nos metadados:', userRole);
+
+      // Se é developer, usar diretamente os metadados
+      if (userRole === 'developer') {
+        setUserProfile({
+          id: userId,
+          email: userData.user?.email || '',
+          role: 'developer',
+          nome: userData.user?.user_metadata?.nome_atendente || userData.user?.user_metadata?.nome || 'Desenvolvedor'
+        });
+        return;
+      }
+
+      // Para atendentes e admins, verificar na tabela atendentes
       const { data: atendenteData } = await supabase
         .from('atendentes')
         .select('*')
@@ -33,27 +53,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (atendenteData) {
-        // Determinar role baseado nos metadados do usuário ou usar 'atendente' como padrão
-        const { data: userData } = await supabase.auth.getUser();
-        const userRole = userData.user?.user_metadata?.role || 'atendente';
+        // Usar role dos metadados se disponível, senão usar 'atendente' como padrão
+        const finalRole = userRole === 'admin' ? 'admin' : 'atendente';
         
         setUserProfile({
           id: userId,
           email: atendenteData.email,
-          role: userRole as 'atendente' | 'admin' | 'developer',
+          role: finalRole as 'atendente' | 'admin',
           nome: atendenteData.nome_atendente
         });
       } else {
-        // Se não é atendente, verificar se é admin ou developer nos metadados
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData.user) {
-          const userRole = userData.user.user_metadata?.role || 'cliente';
+        // Se não está na tabela atendentes e não é developer, usar role dos metadados
+        if (userRole === 'admin') {
           setUserProfile({
             id: userId,
-            email: userData.user.email || '',
-            role: userRole as 'atendente' | 'admin' | 'cliente' | 'developer',
-            nome: userData.user.user_metadata?.nome_atendente || userData.user.user_metadata?.nome || 'Usuário'
+            email: userData.user?.email || '',
+            role: 'admin',
+            nome: userData.user?.user_metadata?.nome_atendente || userData.user?.user_metadata?.nome || 'Administrador'
           });
+        } else {
+          console.warn('Usuário não encontrado na tabela atendentes e não é developer/admin');
+          setUserProfile(null);
         }
       }
     } catch (error) {

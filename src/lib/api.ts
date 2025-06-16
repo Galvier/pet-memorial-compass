@@ -1,7 +1,8 @@
-
 import { RecomendacaoRequest, RecomendacaoResponse, ItemDeVenda, Plano, Tutor, Atendimento, Pet, Atendente, AtribuirAtendimentoRequest, StatusAtendimentoResponse } from '@/types';
 import { mockItensDeVenda, mockPlanos, mockTutores, mockAtendimentos, mockPets, mockAtendentes } from './mockData';
 import { NotificationService } from '@/services/NotificationService';
+import { LocationAnalysisService } from '@/services/LocationAnalysisService';
+import { PerfilAnalysis } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 
 // Simula delay de API
@@ -22,13 +23,81 @@ export class PetMemorialAPI {
     return 'Padrão';
   }
 
+  static async calcularPerfilCompleto(profissao: string, endereco: string): Promise<PerfilAnalysis> {
+    const startTime = Date.now();
+    console.log('🧮 Iniciando cálculo de perfil completo...');
+
+    // Passo 1: Calcular pontuação por profissão (lógica existente)
+    console.log('👔 Calculando pontuação por profissão...');
+    const profissaoLower = profissao.toLowerCase();
+    
+    let profissionScore = 15;
+    let profissionReason = 'Profissão não categorizada';
+
+    if (['médico', 'advogado', 'empresário', 'dentista', 'engenheiro', 'arquiteto', 'juiz', 'promotor'].some(p => profissaoLower.includes(p))) {
+      profissionScore = 50;
+      profissionReason = 'Profissão de alto prestígio';
+    } else if (['professor', 'analista', 'enfermeiro', 'técnico', 'contador', 'administrador', 'farmacêutico'].some(p => profissaoLower.includes(p))) {
+      profissionScore = 35;
+      profissionReason = 'Profissão de prestígio médio';
+    } else if (['vendedor', 'operador', 'auxiliar', 'assistente', 'funcionário'].some(p => profissaoLower.includes(p))) {
+      profissionScore = 25;
+      profissionReason = 'Profissão de prestígio básico';
+    } else {
+      profissionScore = 20;
+      profissionReason = 'Profissão não especificada';
+    }
+
+    console.log(`✅ Pontuação profissão: ${profissionScore} (${profissionReason})`);
+
+    // Passo 2: Análise de localização com IBGE
+    console.log('🗺️ Iniciando análise de localização...');
+    const localizacaoAnalysis = await LocationAnalysisService.getScoreFromAddress(endereco);
+    
+    console.log(`✅ Pontuação localização: ${localizacaoAnalysis.score} (${localizacaoAnalysis.scoreReason})`);
+
+    // Passo 3: Calcular pontuação total e perfil
+    const totalScore = profissionScore + localizacaoAnalysis.score;
+    
+    let perfilCalculado: 'Padrão' | 'Intermediário' | 'Luxo';
+    if (totalScore >= 76) {
+      perfilCalculado = 'Luxo';      // 76-100 pontos
+    } else if (totalScore >= 51) {
+      perfilCalculado = 'Intermediário'; // 51-75 pontos
+    } else {
+      perfilCalculado = 'Padrão';    // 30-50 pontos
+    }
+
+    const elapsedTime = Date.now() - startTime;
+    console.log(`🎯 Perfil calculado: ${perfilCalculado} (${totalScore} pontos) em ${elapsedTime}ms`);
+
+    const perfilAnalysis: PerfilAnalysis = {
+      profissionScore,
+      profissionReason,
+      localizacaoScore: localizacaoAnalysis.score,
+      localizacaoAnalysis,
+      totalScore,
+      perfilCalculado,
+      calculationDate: new Date().toISOString()
+    };
+
+    return perfilAnalysis;
+  }
+
   static async processarRecomendacao(request: RecomendacaoRequest): Promise<RecomendacaoResponse> {
     await delay(1000);
     
     console.log('📥 Processando nova estrutura de dados:', request);
     
-    // Registrar/Atualizar Tutor
+    // Registrar/Atualizar Tutor com análise completa
     let tutor = mockTutores.find(t => t.id_whatsapp === request.id_whatsapp);
+    
+    // Usar nova análise completa se disponível, senão usar método tradicional
+    const perfilAnalysis = await this.calcularPerfilCompleto(
+      request.tutor.profissao, 
+      request.tutor.endereco
+    );
+
     if (!tutor) {
       const novoTutor: Tutor = {
         tutor_id: Math.max(...mockTutores.map(t => t.tutor_id)) + 1,
@@ -36,13 +105,17 @@ export class PetMemorialAPI {
         nome_tutor: request.nome_tutor,
         profissao: request.tutor.profissao,
         endereco: request.tutor.endereco,
-        perfil_calculado: await this.calcularPerfil(request.tutor.profissao)
+        perfil_calculado: perfilAnalysis.perfilCalculado
       };
       mockTutores.push(novoTutor);
       tutor = novoTutor;
-      console.log('🆕 Novo tutor criado:', tutor);
+      console.log('🆕 Novo tutor criado com análise IBGE:', tutor);
+    } else {
+      // Atualizar perfil existente com nova análise
+      tutor.perfil_calculado = perfilAnalysis.perfilCalculado;
+      console.log('🔄 Perfil do tutor atualizado com análise IBGE:', tutor);
     }
-    
+
     // Registrar Pet
     const novoPet: Pet = {
       pet_id: Math.max(...mockPets.map(p => p.pet_id)) + 1,
